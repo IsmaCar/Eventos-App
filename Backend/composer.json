@@ -7,14 +7,18 @@
         "php": ">=8.1",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "api-platform/core": "^4.1",
+        "doctrine/orm": "^3.3",
+        "nelmio/cors-bundle": "^2.5",
         "symfony/console": "6.4.*",
         "symfony/dotenv": "6.4.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "6.4.*",
+        "symfony/maker-bundle": "^1.62",
         "symfony/runtime": "6.4.*",
+        "symfony/serializer": "6.4.*",
+        "symfony/validator": "6.4.*",
         "symfony/yaml": "6.4.*"
-    },
-    "require-dev": {
     },
     "config": {
         "allow-plugins": {

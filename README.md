@@ -74,7 +74,7 @@ La aplicación permite a los usuarios:
 
 ---
 
-## 🛠️ Tecnologías Utilizadas (Ejemplo)
+## 🛠️ Tecnologías Utilizadas 
 
 - **Frontend**: HTML, CSS, JavaScript, React/Vue, tailwind
 - **Backend**: Symfony

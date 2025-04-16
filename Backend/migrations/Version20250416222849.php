@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250415172552 extends AbstractMigration
+final class Version20250416222849 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -51,7 +51,7 @@ final class Version20250415172552 extends AbstractMigration
             CREATE TABLE Songs_playlist (id INT AUTO_INCREMENT NOT NULL, playlist_id INT DEFAULT NULL, event_id INT DEFAULT NULL, song_url LONGTEXT NOT NULL, name VARCHAR(100) NOT NULL, artist VARCHAR(100) NOT NULL, image LONGTEXT DEFAULT NULL, deleted TINYINT(1) DEFAULT 0 NOT NULL, INDEX IDX_19EBDA3F6BBD148 (playlist_id), INDEX IDX_19EBDA3F71F7E88B (event_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
         SQL);
         $this->addSql(<<<'SQL'
-            CREATE TABLE Users (id INT AUTO_INCREMENT NOT NULL, username VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, password VARCHAR(255) NOT NULL, UNIQUE INDEX UNIQ_D5428AEDF85E0677 (username), UNIQUE INDEX UNIQ_D5428AEDE7927C74 (email), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
+            CREATE TABLE user (id INT AUTO_INCREMENT NOT NULL, email VARCHAR(180) NOT NULL, username VARCHAR(50) NOT NULL, roles JSON NOT NULL, UNIQUE INDEX UNIQ_IDENTIFIER_EMAIL (email), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
         SQL);
         $this->addSql(<<<'SQL'
             CREATE TABLE messenger_messages (id BIGINT AUTO_INCREMENT NOT NULL, body LONGTEXT NOT NULL, headers LONGTEXT NOT NULL, queue_name VARCHAR(190) NOT NULL, created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)', available_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)', delivered_at DATETIME DEFAULT NULL COMMENT '(DC2Type:datetime_immutable)', INDEX IDX_75EA56E0FB7336F0 (queue_name), INDEX IDX_75EA56E0E3BD61CE (available_at), INDEX IDX_75EA56E016BA31DB (delivered_at), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
@@ -60,7 +60,7 @@ final class Version20250415172552 extends AbstractMigration
             ALTER TABLE Comments ADD CONSTRAINT FK_A6E8F47C71F7E88B FOREIGN KEY (event_id) REFERENCES Events (id)
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE Comments ADD CONSTRAINT FK_A6E8F47CA76ED395 FOREIGN KEY (user_id) REFERENCES Users (id)
+            ALTER TABLE Comments ADD CONSTRAINT FK_A6E8F47CA76ED395 FOREIGN KEY (user_id) REFERENCES user (id)
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE Contains ADD CONSTRAINT FK_778C08286BBD148 FOREIGN KEY (playlist_id) REFERENCES Playlists (id)
@@ -69,7 +69,7 @@ final class Version20250415172552 extends AbstractMigration
             ALTER TABLE Contains ADD CONSTRAINT FK_778C0828A0BDB2F3 FOREIGN KEY (song_id) REFERENCES Songs_playlist (id)
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE Events ADD CONSTRAINT FK_542B527CA76ED395 FOREIGN KEY (user_id) REFERENCES Users (id)
+            ALTER TABLE Events ADD CONSTRAINT FK_542B527CA76ED395 FOREIGN KEY (user_id) REFERENCES user (id)
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE History_playlists ADD CONSTRAINT FK_E6EC707771F7E88B FOREIGN KEY (event_id) REFERENCES Events (id)
@@ -78,16 +78,16 @@ final class Version20250415172552 extends AbstractMigration
             ALTER TABLE History_playlists ADD CONSTRAINT FK_E6EC70776BBD148 FOREIGN KEY (playlist_id) REFERENCES Playlists (id)
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE History_playlists ADD CONSTRAINT FK_E6EC7077A76ED395 FOREIGN KEY (user_id) REFERENCES Users (id)
+            ALTER TABLE History_playlists ADD CONSTRAINT FK_E6EC7077A76ED395 FOREIGN KEY (user_id) REFERENCES user (id)
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE Invitations ADD CONSTRAINT FK_A5BB9F7971F7E88B FOREIGN KEY (event_id) REFERENCES Events (id)
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE Invitations ADD CONSTRAINT FK_A5BB9F7920AF6010 FOREIGN KEY (user_organiser_id) REFERENCES Users (id)
+            ALTER TABLE Invitations ADD CONSTRAINT FK_A5BB9F7920AF6010 FOREIGN KEY (user_organiser_id) REFERENCES user (id)
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE Invitations ADD CONSTRAINT FK_A5BB9F797AC74258 FOREIGN KEY (user_guest_id) REFERENCES Users (id)
+            ALTER TABLE Invitations ADD CONSTRAINT FK_A5BB9F797AC74258 FOREIGN KEY (user_guest_id) REFERENCES user (id)
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE Locations ADD CONSTRAINT FK_9517C81971F7E88B FOREIGN KEY (event_id) REFERENCES Events (id)
@@ -96,13 +96,13 @@ final class Version20250415172552 extends AbstractMigration
             ALTER TABLE Pictures ADD CONSTRAINT FK_760A4D9671F7E88B FOREIGN KEY (event_id) REFERENCES Events (id)
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE Pictures ADD CONSTRAINT FK_760A4D96A76ED395 FOREIGN KEY (user_id) REFERENCES Users (id)
+            ALTER TABLE Pictures ADD CONSTRAINT FK_760A4D96A76ED395 FOREIGN KEY (user_id) REFERENCES user (id)
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE Playlists ADD CONSTRAINT FK_DCF793CC71F7E88B FOREIGN KEY (event_id) REFERENCES Events (id)
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE Saved_photos ADD CONSTRAINT FK_7441403AA76ED395 FOREIGN KEY (user_id) REFERENCES Users (id)
+            ALTER TABLE Saved_photos ADD CONSTRAINT FK_7441403AA76ED395 FOREIGN KEY (user_id) REFERENCES user (id)
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE Saved_photos ADD CONSTRAINT FK_7441403AEE45BDBF FOREIGN KEY (picture_id) REFERENCES Pictures (id)
@@ -206,7 +206,7 @@ final class Version20250415172552 extends AbstractMigration
             DROP TABLE Songs_playlist
         SQL);
         $this->addSql(<<<'SQL'
-            DROP TABLE Users
+            DROP TABLE user
         SQL);
         $this->addSql(<<<'SQL'
             DROP TABLE messenger_messages

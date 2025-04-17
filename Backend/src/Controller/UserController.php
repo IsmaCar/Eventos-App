@@ -74,6 +74,7 @@ final class UserController extends AbstractController
             Response::HTTP_UNPROCESSABLE_ENTITY
         );
     }
+    
 
     // 5. Persistir en la base de datos
     try {

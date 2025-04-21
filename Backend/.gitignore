@@ -1,5 +1,6 @@
 
 ###> symfony/framework-bundle ###
+ /jwt/
 .env/
 .env.local/
 .env.local.php/

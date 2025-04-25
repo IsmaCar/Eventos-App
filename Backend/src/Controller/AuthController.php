@@ -2,22 +2,25 @@
 
 namespace App\Controller;
 
+use ApiPlatform\Validator\ValidatorInterface;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-final class UserController extends AbstractController
+final class AuthController extends AbstractController
 {
-    #[Route('/user', name: 'app_user')]
-    public function index(): JsonResponse
+    #[Route('/auth', name: 'app_auth')]
+    public function index(): Response
     {
-        return $this->json(['message' => 'API response']);
+        return $this->render('auth/index.html.twig', [
+            'controller_name' => 'AuthController',
+        ]);
     }
 
     #[Route('/api/register', name: 'user_create', methods: ['POST'])]
@@ -63,7 +66,7 @@ final class UserController extends AbstractController
         $user->setRoles($data['roles'] ?? ['ROLE_USER']); // Rol por defecto
 
         // 4. Validar la entidad
-        $errors = $validator->validate($user);
+        $errors = $validator->validate($user) ?? [];
         if (count($errors) > 0) {
             $errorMessages = [];
             foreach ($errors as $error) {
@@ -99,53 +102,59 @@ final class UserController extends AbstractController
             ['groups' => 'user:read']
         );
     }
-    #[Route('/api/me', name: 'current_user', methods: ['GET'])]
-    public function getCurrentUser(): JsonResponse
-    {
-        // Obtener el usuario autenticado
-        $user = $this->getUser();
-
-        // Verificar si hay un usuario autenticado
-        if (!$user) {
-            return $this->json(['error' => 'No authenticated user'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        // Devolver la información del usuario
-        return $this->json(
-            $user,
-            Response::HTTP_OK,
-            [],
-            ['groups' => 'user:read']
-        );
-    }
-    #[Route('/api/users', name: 'get_all_users', methods: ['GET'])]
-    public function getAllUsers(EntityManagerInterface $entityManager): JsonResponse
-    {
+    #[Route('/api/login', name: 'user_login', methods: ['POST'])]
+    public function login(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher,
+        JWTTokenManagerInterface $JWTManager
+    ): JsonResponse {
         try {
-            // Obtener todos los usuarios desde el repositorio
-            $users = $entityManager->getRepository(User::class)->findAll();
-
-            // Verificar si hay usuarios
-            if (empty($users)) {
-                return $this->json([
-                    'message' => 'No users found in the database'
-                ], Response::HTTP_OK);
+            // Decodificar JSON del request
+            if (empty($request->getContent())) {
+                return $this->json(['error' => 'Empty request body'], Response::HTTP_BAD_REQUEST);
             }
 
-            // Retornar la lista de usuarios
-            return $this->json(
-                [
-                    'total' => count($users),
-                    'users' => $users
-                ],
-                Response::HTTP_OK,
-                [],
-                ['groups' => 'user:read']
-            );
+            try {
+                $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
+                return $this->json(['error' => 'Invalid JSON format'], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Validar campos obligatorios
+            $requiredFields = ['email', 'password'];
+            foreach ($requiredFields as $field) {
+                if (!isset($data[$field]) || empty($data[$field])) {
+                    return $this->json(
+                        ['error' => "Field '$field' is required"],
+                        Response::HTTP_BAD_REQUEST
+                    );
+                }
+            }
+
+            // Buscar usuario por email
+            $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+            if (!$user) {
+                return $this->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+            }
+
+            // Verificar contraseña
+            if (!$passwordHasher->isPasswordValid($user, $data['password'])) {
+                return $this->json(['error' => 'Invalid password'], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Generar token JWT
+            $token = $JWTManager->create($user);
+
+            // Devolver token y datos de usuario
+            return $this->json([
+                'token' => $token,
+                'user' => $user
+            ], Response::HTTP_OK, [], ['groups' => 'user:read']);
+            
         } catch (\Exception $e) {
-            // Capturar cualquier error
             return $this->json(
-                ['error' => 'Error retrieving users', 'details' => $e->getMessage()],
+                ['error' => 'An error occurred', 'message' => $e->getMessage()],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }

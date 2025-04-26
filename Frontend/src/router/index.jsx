@@ -3,6 +3,7 @@ import RootLayout from "../layouts/RootLayout";
 import ErrorPage from "../pages/ErrorPage";
 import Home from "../pages/Home";
 import FormLogin from "../components/FormLogin";
+import RegisterLogin from "../components/RegisterForm";
 
 export const router = createBrowserRouter([
     {
@@ -15,7 +16,11 @@ export const router = createBrowserRouter([
                 element: <Home/>,
             },
             {
-                path: "/login",
+                path: "register",
+                element: <RegisterLogin/>,
+            },
+            {
+                path: "login",
                 element: <FormLogin/>,
             }
         ],

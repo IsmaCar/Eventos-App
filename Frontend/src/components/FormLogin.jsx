@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-const LoginPage = () => {
+import { useAuth } from "../context/AuthContext";
+const LoginForm = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,7 +21,7 @@ const LoginPage = () => {
       // aquí hacemos un login.
       await loginUser(formData);
       // redirigir a la página de productos si hay éxito
-      navigate("home");
+      navigate("/");
     } catch (error) {
       console.log("Error al iniciar sesión", error);
     }
@@ -74,8 +74,16 @@ const LoginPage = () => {
           Iniciar Sesión
         </button>
       </form>
+      <div className="mt-4 text-center">
+        <p className="text-gray-600">
+          ¿No tienes una cuenta?{" "}
+          <a href="/register" className="text-blue-500 hover:underline">
+            Regístrate aquí
+          </a>
+        </p>
+      </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default LoginForm;

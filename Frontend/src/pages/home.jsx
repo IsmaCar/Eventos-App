@@ -13,7 +13,8 @@ function home() {
         <p className="text-xl text-center mt-4">Da vida a invitaciones tan únicas como los momentos que celebras.</p>
 
         <section className="mt-8 flex justify-center">
-            <Link to="/login" className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white px-9 py-2 rounded-full hover:bg-zinc-500 transition duration-300">
+            <Link to="/login" className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white px-9 py-2 
+                                         rounded-full hover:scale-107 transition duration-300 ease-in-out">
                 Iniciar sesión
             </Link>
         </section>

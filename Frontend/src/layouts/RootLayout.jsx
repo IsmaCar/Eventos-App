@@ -1,6 +1,17 @@
 import React from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 const RootLayout = () => {
+  //token inicio de sesion
+  const token = localStorage.getItem("token") || null;
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/"); 
+  }
+
   return (
     <div className="flex flex-col min-h-screen ">
       {/* barra de navegación  */}
@@ -14,6 +25,15 @@ const RootLayout = () => {
                      className=" max-w-17"/>
               </Link>
             </div>
+            {/* Enlaces de navegación */}
+            {token ? (
+              <div className="flex items-center ml-auto space-x-4">
+                <button onClick={handleLogout} className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white px-4 py-2 
+                                                          rounded-full hover:scale-103 transition duration-300 ease-in-out">
+                  Cerrar sesión
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </nav>

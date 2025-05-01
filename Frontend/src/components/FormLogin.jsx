@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+
+
 const LoginForm = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [error, setError] = useState('')
   const { loginUser } = useAuth();
   const navigate = useNavigate();
 
@@ -16,14 +19,20 @@ const LoginForm = () => {
   // voy a realizar un petición a la api con los datos del formulario para verificar
   // si el usuario existe en la base de datos
   const handleSubmit = async (e) => {
+    setError('')
     e.preventDefault();
     try {
       // aquí hacemos un login.
-      await loginUser(formData);
+      const response = await loginUser(formData);
       // redirigir a la página de productos si hay éxito
-      navigate("/");
+      if (response && !response.error) {
+        navigate("/");
+      } else {
+        setError(response.error || 'Error al iniciar sesión')
+      }
     } catch (error) {
       console.log("Error al iniciar sesión", error);
+      setError(error.message || "Error al iniciar sesión, intenta de nuevo");
     }
   };
 
@@ -32,6 +41,14 @@ const LoginForm = () => {
       <h2 className="text-2xl font-semibold text-center text-gray-800">
         INICIAR SESIÓN
       </h2>
+
+      {/* Mostrar mensaje de error */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4 mb-4">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
@@ -69,7 +86,7 @@ const LoginForm = () => {
         </div>
         <button
           type="submit"
-          className="w-full px-4 py-2 text-lg font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-700 transition duration-200"
+          className="w-full px-4 py-2 text-lg font-semibold text-white bg-gradient-to-r from-fuchsia-400 to-indigo-400 rounded-lg hover:scale-105 transition duration-300"
         >
           Iniciar Sesión
         </button>
@@ -77,7 +94,7 @@ const LoginForm = () => {
       <div className="mt-4 text-center">
         <p className="text-gray-600">
           ¿No tienes una cuenta?{" "}
-          <a href="/register" className="text-blue-500 hover:underline">
+          <a href="/register" className="text-indigo-500 hover:underline">
             Regístrate aquí
           </a>
         </p>

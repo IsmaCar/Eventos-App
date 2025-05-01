@@ -28,8 +28,12 @@ const RootLayout = () => {
             {/* Enlaces de navegación */}
             {token ? (
               <div className="flex items-center ml-auto space-x-4">
-                <button onClick={handleLogout} className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white px-4 py-2 
+                <Link to="/" className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white px-4 py-2 
                                                           rounded-full hover:scale-103 transition duration-300 ease-in-out">
+                Perfil
+                </Link>
+                <button onClick={handleLogout} className="bg-red-500 text-black px-4 py-2 
+                                                          rounded-xl hover:scale-103 transition duration-300 ease-in-out">
                   Cerrar sesión
                 </button>
               </div>

@@ -1,9 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
 import RootLayout from "../layouts/RootLayout";
 import ErrorPage from "../pages/ErrorPage";
-import Home from "../pages/Home";
+import Home from "../pages/home";
 import FormLogin from "../components/FormLogin";
 import RegisterLogin from "../components/FormRegister";
+import FormCreateEvent from "../components/FormCreateEvent";
 
 export const router = createBrowserRouter([
     {
@@ -22,6 +23,10 @@ export const router = createBrowserRouter([
             {
                 path: "login",
                 element: <FormLogin/>,
+            },
+            {
+                path: "create-event",
+                element: <FormCreateEvent/>,
             }
         ],
     }

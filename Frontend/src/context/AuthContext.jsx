@@ -39,14 +39,19 @@ export const AuthProvider = ({ children }) => {
       if (!response.ok) {
         throw new Error("Usuario o contraseña incorrectos");
       }
+
       // Si estoy aquí es porque el usuario se ha logueado correctamente
       const data = await response.json();
       setUser(data.user);
       setToken(data.token);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+
+      return data; 
     } catch (error) {
       console.log("Error al iniciar sesión", error);
+      throw error;
+      
     }
   };
 

@@ -75,7 +75,10 @@ final class EventController extends AbstractController
         $event->setTitle($data['title']);
         $event->setDescription($data['description']);
         $event->setEventDate($date);
-        $event->setUser($user);
+        $event->setUser($user);   
+        if (isset($data['image'])) {
+            $event->setImage($data['image']);
+        }
         
         // 5. Validar la entidad
         $errors = $validator->validate($event) ?? [];

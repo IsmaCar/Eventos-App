@@ -9,24 +9,31 @@ const mapContainerStyle = {
 };
 const center = { lat: 40.416775, lng: -3.70379 }; // Madrid como centro predeterminado
 
-const LocationPicker = ({ onLocationChange }) => {
+// Añade parámetros readOnly e initialLocation
+const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = null }) => {
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: apiKey,
         libraries: ['places'],
     });
 
-    const [tempMarker, setTempMarker] = useState(null);
-    const [tempAddress, setTempAddress] = useState('');
+    // Usar initialLocation si se proporciona y estamos en modo readOnly
+    const [tempMarker, setTempMarker] = useState(
+        readOnly && initialLocation ? 
+        { lat: initialLocation.lat, lng: initialLocation.lng } : 
+        null
+    );
+    const [tempAddress, setTempAddress] = useState(
+        readOnly && initialLocation ? initialLocation.address : ''
+    );
     const autocompleteRef = useRef(null);
     
-    // Usamos useRef para rastrear si ya enviamos esta ubicación
-    // Esto evitará el bucle infinito
     const previousLocationRef = useRef({ lat: null, lng: null, address: '' });
 
     // Efecto para actualizar la ubicación solo cuando realmente cambia
     useEffect(() => {
-        if (tempMarker && tempAddress) {
-            // Verificar si la ubicación realmente cambió antes de notificar
+        // Solo notificar cambios si no estamos en modo readOnly
+        if (!readOnly && tempMarker && tempAddress) {
+            // Resto del código igual...
             const currentLocation = {
                 lat: tempMarker.lat,
                 lng: tempMarker.lng,
@@ -35,21 +42,24 @@ const LocationPicker = ({ onLocationChange }) => {
             
             const prevLoc = previousLocationRef.current;
             
-            // Solo notificar si la ubicación cambió significativamente
             if (prevLoc.lat !== currentLocation.lat || 
                 prevLoc.lng !== currentLocation.lng || 
                 prevLoc.address !== currentLocation.address) {
                 
-                // Actualizar la referencia con la ubicación actual
                 previousLocationRef.current = { ...currentLocation };
                 
-                // Notificar el cambio
-                onLocationChange(currentLocation);
+                // Solo llamar a onLocationChange si existe y no estamos en modo readOnly
+                if (onLocationChange) {
+                    onLocationChange(currentLocation);
+                }
             }
         }
-    }, [tempMarker, tempAddress, onLocationChange]);
+    }, [tempMarker, tempAddress, onLocationChange, readOnly]);
 
     const handlePlaceChanged = () => {
+        // Solo permitir cambios si no estamos en modo readOnly
+        if (readOnly) return;
+        
         const place = autocompleteRef.current.getPlace();
         if (place && place.geometry) {
             const location = place.geometry.location;
@@ -57,13 +67,15 @@ const LocationPicker = ({ onLocationChange }) => {
             const lng = location.lng();
             const formattedAddress = place.formatted_address;
 
-            // Actualizar el marcador y la dirección
             setTempMarker({ lat, lng });
             setTempAddress(formattedAddress);
         }
     };
 
     const handleMapClick = (e) => {
+        // Solo permitir cambios si no estamos en modo readOnly
+        if (readOnly) return;
+        
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
 
@@ -73,7 +85,6 @@ const LocationPicker = ({ onLocationChange }) => {
         geocoder.geocode({ location: latlng }, (results, status) => {
             if (status === 'OK' && results[0]) {
                 const formattedAddress = results[0].formatted_address;
-                // Actualizar el marcador y la dirección
                 setTempMarker({ lat, lng });
                 setTempAddress(formattedAddress);
             }
@@ -81,42 +92,57 @@ const LocationPicker = ({ onLocationChange }) => {
     };
 
     const handleClearLocation = (e) => {
-        // Importante: evitar que se envíe el formulario
+        // Solo permitir cambios si no estamos en modo readOnly
+        if (readOnly) return;
+        
         e.preventDefault();
         
         setTempMarker(null);
         setTempAddress('');
         
-        // Reiniciar la referencia previa
         previousLocationRef.current = { lat: null, lng: null, address: '' };
         
-        // Notificar que no hay ubicación
-        onLocationChange(null);
+        if (onLocationChange) {
+            onLocationChange(null);
+        }
     };
 
     if (loadError) return <p>Error cargando mapa</p>;
     if (!isLoaded) return <p>Cargando mapa...</p>;
 
+    // Definir opciones del mapa para modo readOnly
+    const mapOptions = readOnly ? {
+        disableDefaultUI: true,
+        zoomControl: true,
+        scrollwheel: false,
+        draggable: false
+    } : {};
+
     return (
         <div className="space-y-2">
-            <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={handlePlaceChanged}>
-                <input
-                    type="text"
-                    placeholder="Busca una dirección"
-                    className="w-full p-2 border rounded"
-                />
-            </Autocomplete>
+            {/* Solo mostrar el campo de búsqueda si no estamos en modo readOnly */}
+            {!readOnly && (
+                <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={handlePlaceChanged}>
+                    <input
+                        type="text"
+                        placeholder="Busca una dirección"
+                        className="w-full p-2 border rounded"
+                    />
+                </Autocomplete>
+            )}
 
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={tempMarker || center}
                 zoom={tempMarker ? 15 : 10}
-                onClick={handleMapClick}
+                onClick={readOnly ? undefined : handleMapClick}
+                options={mapOptions}
             >
                 {tempMarker && <Marker position={tempMarker} />}
             </GoogleMap>
             
-            {tempAddress && (
+            {/* Solo mostrar los controles si no estamos en modo readOnly */}
+            {tempAddress && !readOnly && (
                 <div className="flex justify-between items-center mt-2">
                     <p className="text-sm text-green-600">
                         Ubicación: {tempAddress}
@@ -129,12 +155,16 @@ const LocationPicker = ({ onLocationChange }) => {
                     </button>
                 </div>
             )}
+            
+            {/* Mostrar solo la dirección en modo readOnly */}
+            {readOnly && tempAddress && (
+                <p className="text-sm text-gray-600 mt-1">
+                    {tempAddress}
+                </p>
+            )}
         </div>
     );
 };
 
-// Exportación predeterminada para usar con "import LocationPicker from './Maps'"
 export default LocationPicker;
-
-// Exportación nombrada para usar con "import { LocationPicker } from './Maps'"
 export { LocationPicker };

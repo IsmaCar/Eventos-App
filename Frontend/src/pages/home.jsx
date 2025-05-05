@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useEvent } from '../context/EventContext';
+import { eventCardClasses } from '../helper/Imagehelper'
 
 function home() {
     const token = localStorage.getItem("token") || null;
-    const { events, fetchEvents } = useEvent()
+    const { events, fetchEvents, getImageUrl } = useEvent()
 
     useEffect(() => {
         fetchEvents();
@@ -51,51 +52,47 @@ function home() {
                         <div className="mt-6">
                             <div className="container mx-auto p-4">
                                 <h1 className="text-3xl font-bold mb-6">Eventos Disponibles</h1>
-                                
+
                                 {/* Verificar si events existe y tiene elementos */}
                                 {events && events.length > 0 ? (
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         {events.map((event) => (
-                                            <div
+                                            <Link
                                                 key={event.id}
-                                                className="bg-white rounded-xl p-6 hover:shadow-md shadow-sm"
+                                                to={`/event/${event.id}`}
+                                                className="block group"
                                             >
-                                                <div className="relative group">
-                                                    {event.image ? (
-                                                        <img
-                                                            className="mx-auto h-40 w-full object-cover rounded"
-                                                            src={`http://127.0.0.1:8000/uploads/${event.image}`}
-                                                            alt={event.title}
-                                                        />
-                                                    ) : (
-                                                        <div className="h-40 w-full bg-gray-200 rounded flex items-center justify-center">
-                                                            <span className="text-gray-500">Sin imagen</span>
-                                                        </div>
-                                                    )}
-                                                    <h2 className="text-xl font-bold mt-4">
-                                                        {event.title}
-                                                    </h2>
-                                                    <p className="text-gray-600 mt-2">
-                                                        {event.event_date}
-                                                    </p>
-                                                    <div className="flex justify-end space-x-2 mt-4">
-                                                        <Link
-                                                            className="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
-                                                            to={`/event/${event.id}`}
-                                                        >
-                                                            Ver Detalles
-                                                        </Link>
+                                                <div
+                                                    className={`${eventCardClasses(event).replace('h-64', 'h-100')} 
+                                                                cursor-pointer transform transition-transform duration-300 hover:scale-[1.02]`}
+                                                    style={event.image ? { backgroundImage: `url(${getImageUrl(event.image)})` } : {}}
+                                                >
+                                                    {/* Capa de gradiente para mejorar legibilidad */}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+
+                                                    {/* Contenido de la tarjeta */}
+                                                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
+                                                        <h2 className="text-xl font-bold drop-shadow-md">
+                                                            {event.title}
+                                                        </h2>
+                                                        <p className="text-gray-200 mt-1 drop-shadow-sm">
+                                                            {event.event_date}
+                                                        </p>
                                                     </div>
+
+                                                    {/* Efecto hover para la tarjeta */}
+                                                    <div className="absolute inset-0 bg-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                                 </div>
-                                            </div>
+                                            </Link>
                                         ))}
                                     </div>
                                 ) : (
                                     <div className="text-center py-8">
                                         <p className="text-gray-500">No hay eventos disponibles.</p>
-                                        <Link 
+                                        <Link
                                             to="/create-event"
-                                            className="inline-block mt-4 bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
+                                            className="inline-block mt-4 bg-gradient-to-r from-fuchsia-400/80 to-indigo-400/80 backdrop-blur-sm 
+                                               text-white px-4 py-2 rounded hover:from-fuchsia-400 hover:to-indigo-400 transition-colors"
                                         >
                                             Crear mi primer evento
                                         </Link>

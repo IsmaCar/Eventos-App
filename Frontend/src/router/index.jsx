@@ -5,6 +5,7 @@ import Home from "../pages/home";
 import FormLogin from "../components/FormLogin";
 import RegisterLogin from "../components/FormRegister";
 import FormCreateEvent from "../components/FormCreateEvent";
+import CardDetail from "../components/CardDetail";
 
 export const router = createBrowserRouter([
     {
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
             {
                 path: "create-event",
                 element: <FormCreateEvent/>,
+            },
+            {
+                path: "event/:id",
+                element: <CardDetail/>,
             }
         ],
     }

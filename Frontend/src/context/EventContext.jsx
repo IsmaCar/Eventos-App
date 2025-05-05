@@ -118,8 +118,42 @@ export const EventProvider = ({ children }) => {
         }
     }
 
+    const getEventById = async (id) => {
+        try {
+          const response = await fetch(`${API_URL}/api/event/${id}`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+        });
+          if (!response.ok) {
+            throw new Error(`Error: ${response.status}`);
+          }
+          const data = await response.json();
+          return data;
+        } catch (error) {
+          console.error("Error fetching event:", error);
+          throw error;
+        }
+      };
+
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return null;
+        
+        // Si la ruta ya incluye el dominio completo, devolverla tal cual
+        if (imagePath.startsWith('http')) return imagePath;
+        
+        // Normalizar la ruta para asegurar que comienza con /
+        const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+        
+        // Usar la variable de entorno para la URL base
+        return `${API_URL}${normalizedPath}`;
+    };
+
     return (
-        <EventContext.Provider value={{ fetchEvents, createEvent, events, loading,}}>
+        <EventContext.Provider value={{ fetchEvents, createEvent, getImageUrl, getEventById, events, loading,}}>
             {children}
         </EventContext.Provider>
     );

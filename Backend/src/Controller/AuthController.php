@@ -102,7 +102,7 @@ final class AuthController extends AbstractController
             ['groups' => 'user:read']
         );
     }
-    #[Route('/api/login', name: 'user_login', methods: ['POST'])]
+    #[Route('/api/auth/login', name: 'user_login', methods: ['POST'])]
     public function login(
         Request $request,
         EntityManagerInterface $entityManager,
@@ -147,11 +147,15 @@ final class AuthController extends AbstractController
             $token = $JWTManager->create($user);
 
             // Devolver token y datos de usuario
-            return $this->json([
+            return new JsonResponse([
                 'token' => $token,
-                'user' => $user
-            ], Response::HTTP_OK, [], ['groups' => 'user:read']);
-            
+                'user' => [
+                    'id' => $user->getId(),
+                    'email' => $user->getEmail(),
+                    'username' => $user->getUsername(),
+                    'roles' => $user->getRoles()
+                ]
+            ], Response::HTTP_OK);
         } catch (\Exception $e) {
             return $this->json(
                 ['error' => 'An error occurred', 'message' => $e->getMessage()],

@@ -193,5 +193,41 @@ final class EventController extends AbstractController
             'events' => $eventData
         ], Response::HTTP_OK);
     }
+
+    #[Route('/api/event/{id}', name: 'event_get_by_id', methods: ['GET'])]
+    public function getEventById(
+        EntityManagerInterface $entityManager,
+        int $id
+    ): JsonResponse {
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Obtener el evento por ID
+        $event = $entityManager->getRepository(Event::class)->find($id);
+
+        if (!$event || $event->getUser() !== $user) {
+            return $this->json(['error' => 'Event not found or not authorized'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Devolver respuesta con el evento y la ubicación si existe
+        $location = $event->getLocation();
+        return $this->json([
+            'event' => [
+                'id' => $event->getId(),
+                'title' => $event->getTitle(),
+                'description' => $event->getDescription(),
+                'event_date' => $event->getEventDate()->format('Y-m-d'),
+                'location' => $location ? [
+                    'address' => $location->getAddress(),
+                    'latitude' => $location->getLatitude(),
+                    'longitude' => $location->getLongitude()
+                ] : null,
+                'image' => $event->getImage() ? '/uploads/' . $event->getImage() : null
+            ]
+        ], Response::HTTP_OK);
+    }
 }
 

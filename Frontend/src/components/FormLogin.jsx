@@ -14,7 +14,7 @@ const LoginForm = () => {
 
   const handleChange = (e) => {
     const nombre = e.target.name;
-    setFormData({ ...formData, [nombre]: e.target.value.trim() });
+    setFormData(prev => ({ ...prev, [nombre]: e.target.value.trim() }));
   };
   // voy a realizar un petición a la api con los datos del formulario para verificar
   // si el usuario existe en la base de datos

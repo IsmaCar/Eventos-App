@@ -1,10 +1,15 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useEvent } from '../context/EventContext';
 
 function home() {
-    //token inicio de sesion
-
     const token = localStorage.getItem("token") || null;
+    const { events, fetchEvents } = useEvent()
+
+    useEffect(() => {
+        fetchEvents();
+    }, []);
+
     return (
         token ? (
             <div className="max-w-6xl mx-auto px-4 py-6">
@@ -44,11 +49,58 @@ function home() {
 
                         {/* Aquí irá el listado de eventos según el filtro */}
                         <div className="mt-6">
-                            {/* Ejemplo de placeholder para eventos */}
-                            <div className="border-b border-gray-200 py-4 flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600">Aquí se mostrarán los eventos según el filtro seleccionado</p>
-                                </div>
+                            <div className="container mx-auto p-4">
+                                <h1 className="text-3xl font-bold mb-6">Eventos Disponibles</h1>
+                                
+                                {/* Verificar si events existe y tiene elementos */}
+                                {events && events.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {events.map((event) => (
+                                            <div
+                                                key={event.id}
+                                                className="bg-white rounded-xl p-6 hover:shadow-md shadow-sm"
+                                            >
+                                                <div className="relative group">
+                                                    {event.image ? (
+                                                        <img
+                                                            className="mx-auto h-40 w-full object-cover rounded"
+                                                            src={`http://127.0.0.1:8000/uploads/${event.image}`}
+                                                            alt={event.title}
+                                                        />
+                                                    ) : (
+                                                        <div className="h-40 w-full bg-gray-200 rounded flex items-center justify-center">
+                                                            <span className="text-gray-500">Sin imagen</span>
+                                                        </div>
+                                                    )}
+                                                    <h2 className="text-xl font-bold mt-4">
+                                                        {event.title}
+                                                    </h2>
+                                                    <p className="text-gray-600 mt-2">
+                                                        {event.event_date}
+                                                    </p>
+                                                    <div className="flex justify-end space-x-2 mt-4">
+                                                        <Link
+                                                            className="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
+                                                            to={`/event/${event.id}`}
+                                                        >
+                                                            Ver Detalles
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <p className="text-gray-500">No hay eventos disponibles.</p>
+                                        <Link 
+                                            to="/create-event"
+                                            className="inline-block mt-4 bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
+                                        >
+                                            Crear mi primer evento
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -1,0 +1,3 @@
+lexik_jwt_authentication_login:
+    path: /api/login
+    methods: [POST]

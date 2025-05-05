@@ -23,7 +23,7 @@ class Location
     private ?float $latitude = null;
 
     #[ORM\Column]
-    private ?float $length = null;
+    private ?float $longitude = null;
 
     #[ORM\Column(length: 255)]
     private ?string $address = null;
@@ -57,14 +57,14 @@ class Location
         return $this;
     }
 
-    public function getLength(): ?float
+    public function getLongitude(): ?float
     {
-        return $this->length;
+        return $this->longitude;
     }
 
-    public function setLength(float $length): static
+    public function setLongitude(float $longitude): static
     {
-        $this->length = $length;
+        $this->longitude = $longitude;
 
         return $this;
     }

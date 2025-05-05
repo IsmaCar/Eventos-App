@@ -18,7 +18,7 @@ security:
             pattern: ^/api/login
             stateless: true
             json_login:
-                check_path: /api/login_check
+                check_path: /api/login
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
@@ -40,7 +40,11 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-         - { path: ^/api, roles: PUBLIC_ACCESS }
+         # Rutas públicas (no requieren autenticación)
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/register, roles: PUBLIC_ACCESS }
+        # Rutas que requieren autenticación
+        - { path: ^/api/event/create, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

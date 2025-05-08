@@ -15,6 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class AuthController extends AbstractController
 {
+
     #[Route('/auth', name: 'app_auth')]
     public function index(): Response
     {
@@ -94,7 +95,13 @@ final class AuthController extends AbstractController
         return $this->json(
             [
                 'message' => 'User created successfully',
-                'user' => $user,
+                'user' => [
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'username' => $user->getUsername(),
+            'roles' => $user->getRoles(),
+            'avatar' => $user->getAvatar() ?? null,
+        ],
                 'next' => 'Use /api/login_check with email and password to get your JWT token'
             ],
             Response::HTTP_CREATED,
@@ -102,6 +109,8 @@ final class AuthController extends AbstractController
             ['groups' => 'user:read']
         );
     }
+
+    
     #[Route('/api/auth/login', name: 'user_login', methods: ['POST'])]
     public function login(
         Request $request,
@@ -153,7 +162,8 @@ final class AuthController extends AbstractController
                     'id' => $user->getId(),
                     'email' => $user->getEmail(),
                     'username' => $user->getUsername(),
-                    'roles' => $user->getRoles()
+                    'roles' => $user->getRoles(),
+                    'avatarUrl' => '/uploads/avatars/' . $user->getAvatar(),
                 ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {

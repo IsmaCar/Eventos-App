@@ -18,15 +18,15 @@ const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = 
 
     // Usar initialLocation si se proporciona y estamos en modo readOnly
     const [tempMarker, setTempMarker] = useState(
-        readOnly && initialLocation ? 
-        { lat: initialLocation.lat, lng: initialLocation.lng } : 
-        null
+        readOnly && initialLocation ?
+            { lat: initialLocation.lat, lng: initialLocation.lng } :
+            null
     );
     const [tempAddress, setTempAddress] = useState(
         readOnly && initialLocation ? initialLocation.address : ''
     );
     const autocompleteRef = useRef(null);
-    
+
     const previousLocationRef = useRef({ lat: null, lng: null, address: '' });
 
     // Efecto para actualizar la ubicación solo cuando realmente cambia
@@ -39,15 +39,15 @@ const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = 
                 lng: tempMarker.lng,
                 address: tempAddress
             };
-            
+
             const prevLoc = previousLocationRef.current;
-            
-            if (prevLoc.lat !== currentLocation.lat || 
-                prevLoc.lng !== currentLocation.lng || 
+
+            if (prevLoc.lat !== currentLocation.lat ||
+                prevLoc.lng !== currentLocation.lng ||
                 prevLoc.address !== currentLocation.address) {
-                
+
                 previousLocationRef.current = { ...currentLocation };
-                
+
                 // Solo llamar a onLocationChange si existe y no estamos en modo readOnly
                 if (onLocationChange) {
                     onLocationChange(currentLocation);
@@ -59,7 +59,7 @@ const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = 
     const handlePlaceChanged = () => {
         // Solo permitir cambios si no estamos en modo readOnly
         if (readOnly) return;
-        
+
         const place = autocompleteRef.current.getPlace();
         if (place && place.geometry) {
             const location = place.geometry.location;
@@ -75,7 +75,7 @@ const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = 
     const handleMapClick = (e) => {
         // Solo permitir cambios si no estamos en modo readOnly
         if (readOnly) return;
-        
+
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
 
@@ -94,14 +94,14 @@ const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = 
     const handleClearLocation = (e) => {
         // Solo permitir cambios si no estamos en modo readOnly
         if (readOnly) return;
-        
+
         e.preventDefault();
-        
+
         setTempMarker(null);
         setTempAddress('');
-        
+
         previousLocationRef.current = { lat: null, lng: null, address: '' };
-        
+
         if (onLocationChange) {
             onLocationChange(null);
         }
@@ -112,10 +112,13 @@ const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = 
 
     // Definir opciones del mapa para modo readOnly
     const mapOptions = readOnly ? {
-        disableDefaultUI: true,
-        zoomControl: true,
-        scrollwheel: false,
-        draggable: false
+        disableDefaultUI: false,   // Cambiar a false para mostrar controles UI
+        zoomControl: true,        // Mantener el control de zoom
+        scrollwheel: true,        // Permitir zoom con rueda del ratón
+        draggable: true,          // Permitir arrastrar el mapa
+        fullscreenControl: true,  // Añadir opción de pantalla completa
+        mapTypeControl: false,    // Opcional: controles de tipo de mapa
+        streetViewControl: false  // Opcional: ocultar Street View
     } : {};
 
     return (
@@ -140,14 +143,14 @@ const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = 
             >
                 {tempMarker && <Marker position={tempMarker} />}
             </GoogleMap>
-            
+
             {/* Solo mostrar los controles si no estamos en modo readOnly */}
             {tempAddress && !readOnly && (
                 <div className="flex justify-between items-center mt-2">
                     <p className="text-sm text-green-600">
                         Ubicación: {tempAddress}
                     </p>
-                    <button 
+                    <button
                         onClick={handleClearLocation}
                         className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
                     >
@@ -155,7 +158,7 @@ const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = 
                     </button>
                 </div>
             )}
-            
+
             {/* Mostrar solo la dirección en modo readOnly */}
             {readOnly && tempAddress && (
                 <p className="text-sm text-gray-600 mt-1">

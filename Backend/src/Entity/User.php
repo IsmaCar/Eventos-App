@@ -57,6 +57,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Photo::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $photos;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $avatar = 'default-avatar.png';
+
     public function __construct()
     {
         $this->events = new ArrayCollection();
@@ -206,6 +210,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $photo->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): static
+    {
+        $this->avatar = $avatar;
 
         return $this;
     }

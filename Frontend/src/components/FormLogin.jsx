@@ -11,6 +11,7 @@ const LoginForm = () => {
   const [error, setError] = useState('')
   const { loginUser } = useAuth();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
     const nombre = e.target.name;
@@ -21,6 +22,7 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     setError('')
     e.preventDefault();
+    setLoading(true)
     try {
       // aquí hacemos un login.
       const response = await loginUser(formData);
@@ -33,6 +35,8 @@ const LoginForm = () => {
     } catch (error) {
       console.log("Error al iniciar sesión", error);
       setError(error.message || "Error al iniciar sesión, intenta de nuevo");
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -72,7 +76,7 @@ const LoginForm = () => {
             htmlFor="password"
             className="block text-xl font-semibold text-gray-900"
           >
-            Password
+            Contraseña
           </label>
           <input
             type="password"
@@ -88,7 +92,14 @@ const LoginForm = () => {
           type="submit"
           className="w-full px-4 py-2 text-lg font-semibold text-white bg-gradient-to-r from-fuchsia-400 to-indigo-400 rounded-lg hover:scale-105 transition duration-300"
         >
-          Iniciar Sesión
+          {loading ? (
+            <div className="flex items-center justify-center gap-3 w-full">
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+              <span>Iniciando sesión...</span>
+            </div>
+          ) : (
+            'Iniciar Sesión'
+          )}
         </button>
       </form>
       <div className="mt-4 text-center">

@@ -66,7 +66,7 @@ final class EventController extends AbstractController
 
         if ($imageFile) {
             // Asegurar que el directorio existe y es escribible
-            $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads';
+            $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/backgrounds/';
             if (!file_exists($uploadsDir)) {
                 mkdir($uploadsDir, 0777, true);
             }
@@ -186,7 +186,7 @@ final class EventController extends AbstractController
                     'latitude' => $location->getLatitude(),
                     'longitude' => $location->getLongitude()
                 ] : null,
-                'image' => $event->getImage() ? '/uploads/' . $event->getImage() : null
+                'image' => $event->getImage() ? '/uploads/backgrounds/' . $event->getImage() : null
             ];
         }
         return $this->json([
@@ -225,7 +225,7 @@ final class EventController extends AbstractController
                     'latitude' => $location->getLatitude(),
                     'longitude' => $location->getLongitude()
                 ] : null,
-                'image' => $event->getImage() ? '/uploads/' . $event->getImage() : null
+                'image' => $event->getImage() ? '/uploads/backgrounds/' . $event->getImage() : null
             ]
         ], Response::HTTP_OK);
     }

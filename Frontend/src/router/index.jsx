@@ -5,7 +5,10 @@ import Home from "../pages/home";
 import FormLogin from "../components/FormLogin";
 import RegisterLogin from "../components/FormRegister";
 import FormCreateEvent from "../components/FormCreateEvent";
-import CardDetail from "../components/CardDetail";
+import CardDetail from "../pages/CardDetail";
+import Profile from "../pages/Profile";
+import ProtectedRoute from "../components/ProtectedRoute";
+import EditProfile from "../pages/EditProfile";
 
 export const router = createBrowserRouter([
     {
@@ -27,11 +30,31 @@ export const router = createBrowserRouter([
             },
             {
                 path: "create-event",
-                element: <FormCreateEvent/>,
+                element: 
+                <ProtectedRoute>
+                    <FormCreateEvent/>,
+                </ProtectedRoute>
             },
             {
                 path: "event/:id",
-                element: <CardDetail/>,
+                element: 
+                <ProtectedRoute>
+                    <CardDetail/>,
+                </ProtectedRoute>
+            },
+            {
+                path: "profile",
+                element: 
+                <ProtectedRoute>
+                    <Profile/>,
+                </ProtectedRoute>
+            },
+            {
+                path: "edit-profile",
+                element:
+                <ProtectedRoute>
+                    <EditProfile/>,
+                </ProtectedRoute>
             }
         ],
     }

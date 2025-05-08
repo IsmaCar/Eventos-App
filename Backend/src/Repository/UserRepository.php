@@ -33,6 +33,74 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
+/**
+ * Obtiene las estadísticas de un usuario específico
+ * @param User $user El usuario del que queremos las estadísticas
+ * @return array Array con las estadísticas del usuario
+ */
+public function getUserStats(User $user): array
+{
+    // Eventos creados por el usuario
+    $eventsCreated = $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select('COUNT(e.id)')
+        ->from('App\Entity\Event', 'e')
+        ->where('e.user_id = :userId')
+        ->setParameter('userId', $user->getId())
+        ->getQuery()
+        ->getSingleScalarResult();
+    
+    // Fotos subidas por el usuario
+    $photosUploaded = $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select('COUNT(p.id)')
+        ->from('App\Entity\Photo', 'p')
+        ->where('p.user = :userId')
+        ->setParameter('userId', $user->getId())
+        ->getQuery()
+        ->getSingleScalarResult();
+    
+ 
+    
+    return [
+        'eventsCreated' => (int) $eventsCreated,
+        'photosUploaded' => (int) $photosUploaded,
+    ];
+}
+
+/**
+ * Obtiene las estadísticas de un usuario por ID
+ * @param int $userId ID del usuario
+ * @return array Array con las estadísticas del usuario
+ */
+public function getUserStatsById(int $userId): array
+{
+    // Eventos creados por el usuario
+    $eventsCreated = $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select('COUNT(e.id)')
+        ->from('App\Entity\Event', 'e')
+        ->where('e.user = :user')
+        ->setParameter('user', $userId)
+        ->getQuery()
+        ->getSingleScalarResult();
+    
+    // Fotos subidas por el usuario
+    $photosUploaded = $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select('COUNT(p.id)')
+        ->from('App\Entity\Photo', 'p')
+        ->where('p.user = :user')
+        ->setParameter('user', $userId)
+        ->getQuery()
+        ->getSingleScalarResult();
+    
+    return [
+        'eventsCreated' => (int) $eventsCreated,
+        'photosUploaded' => (int) $photosUploaded,
+    ];
+}
+
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */

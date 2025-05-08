@@ -1,15 +1,29 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useEvent } from '../context/EventContext';
 import { eventCardClasses } from '../helper/Imagehelper'
+import { useAuth } from '../context/AuthContext';
 
 function home() {
-    const token = localStorage.getItem("token") || null;
+    const { token } = useAuth()
     const { events, fetchEvents, getImageUrl } = useEvent()
-
+    const [loading, setLoading] = useState(true)
     useEffect(() => {
-        fetchEvents();
+        if (token) {
+            setLoading(true)
+            fetchEvents();
+        }
+        setLoading(false)
     }, []);
+
+    // Mostrar estado de carga
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-96">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
+            </div>
+        )
+    }
 
     return (
         token ? (
@@ -109,14 +123,14 @@ function home() {
                     <img src="../public/images/logo.png" alt="logo web" className="max-w-40" />
                 </div>
                 <h1 className="text-5xl font-bold text-center mt-2">
-                    INVITACIONES
+                    EVENTOS
                 </h1>
                 <p className="text-xl text-center mt-4">Da vida a invitaciones tan únicas como los momentos que celebras.</p>
 
                 <section className="mt-8 flex justify-center">
                     <Link to="/login" className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white px-9 py-2 
                                              rounded-full hover:scale-107 transition duration-300 ease-in-out">
-                        Iniciar sesión
+                        Iniciar Sesión
                     </Link>
                 </section>
             </div>

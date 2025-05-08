@@ -10,14 +10,13 @@ function CardDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-
   useEffect(() => {
     async function loadEventData() {
       try {
         setLoading(true)
         const data = await getEventById(id)
         console.log("Datos del evento:", data)
-        setEvent(data.event || data) 
+        setEvent(data.event || data)
         setLoading(false)
       } catch (err) {
         console.error("Error cargando el evento:", err)
@@ -38,6 +37,7 @@ function CardDetail() {
       return dateString
     }
   }
+
   // Mostrar estado de carga
   if (loading) {
     return (
@@ -60,6 +60,7 @@ function CardDetail() {
       </div>
     )
   }
+
   return (
     <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-6xl mx-auto">
       {/* Imagen de cabecera */}
@@ -82,65 +83,52 @@ function CardDetail() {
       {/* Información principal */}
       <div className="p-6">
         {/* Detalles principales */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {/* Fecha */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          {/* Fecha - ahora más pequeña */}
           <div className="bg-gradient-to-br from-fuchsia-50 to-indigo-50 p-4 rounded-lg border border-fuchsia-100 shadow-sm">
-            <h3 className="font-semibold text-fuchsia-600 mb-2">Fecha</h3>
+            <h3 className="font-semibold text-fuchsia-600 mb-1">Fecha</h3>
             <p className="text-gray-700">{formatDate(event.event_date)}</p>
             {event.time && <p className="text-gray-700 mt-1">{event.time}</p>}
-          </div>
-
-          {/* Ubicación */}
-          <div className="bg-gradient-to-br from-fuchsia-50 to-indigo-50 p-4 rounded-lg border border-fuchsia-100 shadow-sm md:col-span-2">
-            <h3 className="font-semibold text-fuchsia-600 mb-2">Ubicación</h3>
-
-            {typeof event.location === 'object' ? (
-              <div>
-                {event.location.latitude && event.location.longitude ? (
-                  <LocationPicker
-                    readOnly={true}
-                    initialLocation={{
-                      lat: parseFloat(event.location.latitude),
-                      lng: parseFloat(event.location.longitude),
-                      address: event.location.address
-                    }}
-                  />
-                ) : (
-                  <p className="text-gray-500 italic">Ubicación no disponible</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-gray-700">
-                {typeof event.location === 'string' ? event.location : "No especificada"}
-              </p>
-            )}
+            <div className="mb-3 mt-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-3">Acerca de este evento</h2>
+              <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
             </div>
           </div>
 
-          {/* Descripción */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-3">Acerca de este evento</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
+          {/* Ubicación - ahora más grande */}
+          <div className="bg-gradient-to-br from-fuchsia-50 to-indigo-50 p-4 rounded-lg border border-fuchsia-100 shadow-sm md:col-span-3">
+            <h3 className="font-semibold text-fuchsia-600 mb-2">Ubicación</h3>
+
+            {event.location ? (
+              typeof event.location === 'object' && event.location !== null ? (
+                <div>
+                  {/* Verificación adicional para latitude y longitude */}
+                  {event.location.latitude && event.location.longitude ? (
+                    <LocationPicker
+                      readOnly={true}
+                      initialLocation={{
+                        lat: parseFloat(event.location.latitude),
+                        lng: parseFloat(event.location.longitude),
+                        address: event.location.address || ''
+                      }}
+                    />
+                  ) : (
+                    <p className="text-gray-500 italic">Coordenadas no disponibles</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-700">
+                  {typeof event.location === 'string' ? event.location : "No especificada"}
+                </p>
+              )
+            ) : (
+              <p className="text-gray-500 italic">Ubicación no especificada</p>
+            )}
           </div>
         </div>
-        {/* Botones de acción */}
-        <div className="flex flex-wrap gap-4 justify-between mt-8">
-          <Link
-            to="/"
-            className="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-50 transition-colors"
-          >
-            Volver a Eventos
-          </Link>
-
-          <button
-            className="bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white px-6 py-2 
-                    rounded-full hover:from-fuchsia-600 hover:to-indigo-600 transition-colors shadow-md"
-          >
-            Confirmar asistencia
-          </button>
-        </div>
+    </div>
       </div>
-      )
+  );
 }
 
-      export default CardDetail
+export default CardDetail;

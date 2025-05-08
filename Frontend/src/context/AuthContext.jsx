@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const AuthContext = createContext();
@@ -6,6 +6,13 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   const registerUser = async ({ username, email, password })=> {
     try {
@@ -18,13 +25,13 @@ export const AuthProvider = ({ children }) => {
         if(!response.ok)
             throw new Error("Error al registrarse");
         
-         await response.json();
+         return await response.json();
         
         
     } catch (error) {
         console.log('Error al registrarse');
-    }
-}
+    } 
+  }
 
   const loginUser = async ({ email, password }) => {
     try {
@@ -51,7 +58,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.log("Error al iniciar sesión", error);
       throw error;
-      
     }
   };
 
@@ -61,8 +67,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   };
+
   return (
-    <AuthContext.Provider value={{ user, token, registerUser,loginUser, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      registerUser,
+      loginUser, 
+      logout,
+      
+    }}>
       {children}
     </AuthContext.Provider>
   );

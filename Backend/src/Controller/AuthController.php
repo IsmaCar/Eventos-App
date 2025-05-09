@@ -163,7 +163,7 @@ final class AuthController extends AbstractController
                     'email' => $user->getEmail(),
                     'username' => $user->getUsername(),
                     'roles' => $user->getRoles(),
-                    'avatarUrl' => '/uploads/avatars/' . $user->getAvatar(),
+                    'avatar' => $user->getAvatar(),
                 ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {

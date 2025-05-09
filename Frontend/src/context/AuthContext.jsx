@@ -43,11 +43,11 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!response.ok) {
-        throw new Error("Usuario o contraseña incorrectos");
-      }
 
-      // Si estoy aquí es porque el usuario se ha logueado correctamente
+      if (!response.ok)
+        throw new Error("Usuario o contraseña incorrectos");
+      
+      
       const data = await response.json();
       setUser(data.user);
       setToken(data.token);
@@ -61,6 +61,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Función para actualizar el usuario
+   // Función mejorada para actualizar el usuario
+   const updateUser = (userData) => {
+    // Si se pasa un objeto, actualiza todo el usuario
+    if (typeof userData === 'object' && userData !== null) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      // Actualizar el localStorage
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      return updatedUser;
+    }
+    return user;
+  };
+
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -69,14 +84,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      token, 
-      registerUser,
-      loginUser, 
-      logout,
-      
-    }}>
+    <AuthContext.Provider value={{ user, token, registerUser,loginUser, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

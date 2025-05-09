@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 const API_URL = import.meta.env.VITE_API_URL;
@@ -6,16 +6,22 @@ const API_URL = import.meta.env.VITE_API_URL;
 const RootLayout = () => {
   //token inicio de sesion
   const { user, token, logout } = useAuth();
-  const avatarUrl = user?.avatarUrl;
-  const fullAvatarUrl = avatarUrl ? 
-    (avatarUrl.startsWith('http') ? avatarUrl : `${API_URL}${avatarUrl}`) : 
-    `${API_URL}/uploads/avatars/default-avatar.png`;
+  const [avatarKey, setAvatarKey] = useState(Date.now());
   const navigate = useNavigate();
   
   const handleLogout = () => {
     logout();
     navigate("/"); 
   }
+
+  const avatarUrl = user?.avatar
+    ? `${API_URL}/uploads/avatars/${user?.avatar}?v=${avatarKey}`
+    : `${API_URL}/uploads/avatars/default-avatar.png`;
+
+  // Forzar la actualización del avatar
+  useEffect(() => {
+    setAvatarKey(Date.now()); 
+  }, [user]);
 
   return (
     <div className="flex flex-col min-h-screen ">
@@ -39,7 +45,7 @@ const RootLayout = () => {
               {/* Avatar - Ahora está explícitamente configurado en fila */}
               <div className="w-7 h-7 rounded-full overflow-hidden mr-2 border-2 border-white flex-shrink-0">
                   <img 
-                    src={fullAvatarUrl} 
+                    src={avatarUrl} 
                     alt="Avatar" 
                     className="w-full h-full object-cover"
                     onError={(e) => {

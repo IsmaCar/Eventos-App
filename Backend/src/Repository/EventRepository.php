@@ -16,6 +16,35 @@ class EventRepository extends ServiceEntityRepository
         parent::__construct($registry, Event::class);
     }
 
+    public function getAllEvents(bool $futureOnly = false, ?int $limit = null, int $offset = 0): array
+    {
+        try {
+            $queryBuilder = $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select('e') 
+                ->from('App\Entity\Event', 'e');
+            
+            // Si solo queremos eventos futuros
+            if ($futureOnly) {
+                $queryBuilder->andWhere('e.event_date >= :now')
+                            ->setParameter('now', new \DateTime());
+            }
+            
+            // Ordenar por fecha ascendente (primero los más próximos)
+            $queryBuilder->orderBy('e.event_date', 'ASC');
+            
+            // Aplicar límite si se especifica
+            if ($limit !== null) {
+                $queryBuilder->setMaxResults($limit)
+                            ->setFirstResult($offset);
+            }
+            
+            return $queryBuilder->getQuery()->getResult();
+        } catch (\Exception $e) {
+            error_log('Error en getAllEvents: ' . $e->getMessage());
+            return [];
+        }
+    }
     //    /**
     //     * @return Event[] Returns an array of Event objects
     //     */

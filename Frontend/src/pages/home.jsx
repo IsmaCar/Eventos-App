@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useEvent } from '../context/EventContext';
 import { eventCardClasses } from '../helper/Imagehelper'
@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 function home() {
     const { token } = useAuth()
     const { events, fetchEvents, getImageUrl } = useEvent()
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(false)
     useEffect(() => {
         if (token) {
             setLoading(true)
@@ -29,8 +29,10 @@ function home() {
         token ? (
             <div className="max-w-6xl mx-auto px-4 py-6">
                 <section className="mb-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800">Mis Eventos</h2>
+                    
+
+                    <div className="bg-white rounded-lg shadow-md p-4">
+                    <div className="flex justify-end items-center mb-6">
                         <Link
                             to="/create-event"
                             className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white px-4 py-2 
@@ -39,8 +41,6 @@ function home() {
                             Crear Evento
                         </Link>
                     </div>
-
-                    <div className="bg-white rounded-lg shadow-md p-4">
                         <div className="relative w-64">
                             <select
                                 // value={filter}

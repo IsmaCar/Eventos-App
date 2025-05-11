@@ -139,17 +139,17 @@ export const EventProvider = ({ children }) => {
         }
       };
 
-    const getImageUrl = (imagePath) => {
+      const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
-        
         // Si la ruta ya incluye el dominio completo, devolverla tal cual
-        if (imagePath.startsWith('http')) return imagePath;
-        
-        // Normalizar la ruta para asegurar que comienza con /
-        const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-        
-        // Usar la variable de entorno para la URL base
-        return `${API_URL}${normalizedPath}`;
+        if (imagePath.startsWith('http')) return imagePath;     
+        // Si la ruta incluye 'uploads/events' o similar, ya está en formato correcto
+        if (imagePath.includes('uploads/') || imagePath.startsWith('/uploads/')) {
+            const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+            return `${API_URL}${normalizedPath}`;
+        }
+        // De lo contrario, asumimos que es solo el nombre del archivo y añadimos la ruta
+        return `${API_URL}/uploads/backgrounds/${imagePath}`;
     };
 
     return (

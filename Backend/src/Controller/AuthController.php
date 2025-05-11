@@ -65,6 +65,7 @@ final class AuthController extends AbstractController
         $user->setEmail($data['email']);
         $user->setPassword($passwordHasher->hashPassword($user, $data['password']));
         $user->setRoles($data['roles'] ?? ['ROLE_USER']); // Rol por defecto
+        $user->setBanned(false);
 
         // 4. Validar la entidad
         $errors = $validator->validate($user) ?? [];
@@ -96,13 +97,12 @@ final class AuthController extends AbstractController
             [
                 'message' => 'User created successfully',
                 'user' => [
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'username' => $user->getUsername(),
-            'roles' => $user->getRoles(),
-            'avatar' => $user->getAvatar() ?? null,
-        ],
-                'next' => 'Use /api/login_check with email and password to get your JWT token'
+                    'id' => $user->getId(),
+                    'email' => $user->getEmail(),
+                    'username' => $user->getUsername(),
+                    'roles' => $user->getRoles(),
+                    'avatar' => $user->getAvatar() ?? null,
+                ],
             ],
             Response::HTTP_CREATED,
             [],
@@ -110,7 +110,7 @@ final class AuthController extends AbstractController
         );
     }
 
-    
+
     #[Route('/api/auth/login', name: 'user_login', methods: ['POST'])]
     public function login(
         Request $request,
@@ -147,9 +147,16 @@ final class AuthController extends AbstractController
                 return $this->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
             }
 
+            if ($user->isBanned()) {
+                return $this->json(
+                    ['error' => 'Access denied', 'message' => 'Tu cuenta ha sido suspendida'],
+                    Response::HTTP_FORBIDDEN
+                );
+            }
+
             // Verificar contraseña
             if (!$passwordHasher->isPasswordValid($user, $data['password'])) {
-                return $this->json(['error' => 'Invalid password'], Response::HTTP_UNAUTHORIZED);
+                return $this->json(['error' => 'Contraseña incorrecta'], Response::HTTP_UNAUTHORIZED);
             }
 
             // Generar token JWT
@@ -164,6 +171,7 @@ final class AuthController extends AbstractController
                     'username' => $user->getUsername(),
                     'roles' => $user->getRoles(),
                     'avatar' => $user->getAvatar(),
+                    'banned' => false,
                 ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {

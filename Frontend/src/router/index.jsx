@@ -9,6 +9,10 @@ import CardDetail from "../pages/CardDetail";
 import Profile from "../pages/Profile";
 import ProtectedRoute from "../components/ProtectedRoute";
 import EditProfile from "../pages/EditProfile";
+import EventUser from "../components/EventUser";
+import Dashboard from "../pages/Dashboard";
+import PublicProfile from "../pages/PublicProfile";
+import FavoritePhotos from "../pages/FavoritePhotos";
 
 export const router = createBrowserRouter([
     {
@@ -47,15 +51,42 @@ export const router = createBrowserRouter([
                 element: 
                 <ProtectedRoute>
                     <Profile/>,
+                </ProtectedRoute>,
+                children: [
+                    {
+                        path: "edit-profile",
+                        element:
+                            <EditProfile/>,
+                    },
+                    {
+                        path: "my-events",
+                        element:
+                            <EventUser/>,
+                    },
+                ]
+            },
+            {
+                path: "dashboard",
+                element: 
+                <ProtectedRoute>
+                    <Dashboard/>,
                 </ProtectedRoute>
             },
             {
-                path: "edit-profile",
+                path: "profile/:id",
                 element:
                 <ProtectedRoute>
-                    <EditProfile/>,
-                </ProtectedRoute>
+                    <PublicProfile/>,
+                </ProtectedRoute>,
+            },
+            {
+                path: "favorite-photos",
+                element:
+                <ProtectedRoute>
+                    <FavoritePhotos/>,
+                </ProtectedRoute>,
             }
+            
         ],
     }
 ]);

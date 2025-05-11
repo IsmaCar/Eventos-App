@@ -3,7 +3,9 @@ lexik_jwt_authentication:
     public_key: '%env(resolve:JWT_PUBLIC_KEY)%'
     pass_phrase: '%env(JWT_PASSPHRASE)%'
     token_ttl: 86400  # 1 day
-    user_id_claim: email  
+    user_id_claim: email 
+
+ 
     encoder:
         service: lexik_jwt_authentication.encoder.lcobucci
     token_extractors:

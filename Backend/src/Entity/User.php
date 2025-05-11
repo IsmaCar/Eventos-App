@@ -61,10 +61,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read'])]
     private ?string $avatar = 'default-avatar.png';
 
+    #[ORM\Column]
+    private bool $banned = false;
+
+    /**
+     * @var Collection<int, FavoritePhoto>
+     */
+    #[ORM\OneToMany(targetEntity: FavoritePhoto::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $favoritePhotos;
+
     public function __construct()
     {
         $this->events = new ArrayCollection();
         $this->photos = new ArrayCollection();
+        $this->favoritePhotos = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -225,4 +235,47 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function isBanned(): ?bool
+    {
+        return $this->banned;
+    }
+
+    public function setBanned(bool $banned): static
+    {
+        $this->banned = $banned;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FavoritePhoto>
+     */
+    public function getFavoritePhotos(): Collection
+    {
+        return $this->favoritePhotos;
+    }
+
+    public function addFavoritePhoto(FavoritePhoto $favoritePhoto): static
+    {
+        if (!$this->favoritePhotos->contains($favoritePhoto)) {
+            $this->favoritePhotos->add($favoritePhoto);
+            $favoritePhoto->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFavoritePhoto(FavoritePhoto $favoritePhoto): static
+    {
+        if ($this->favoritePhotos->removeElement($favoritePhoto)) {
+            // set the owning side to null (unless already changed)
+            if ($favoritePhoto->getUser() === $this) {
+                $favoritePhoto->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
 }

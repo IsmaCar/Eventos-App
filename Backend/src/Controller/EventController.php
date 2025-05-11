@@ -4,8 +4,13 @@ namespace App\Controller;
 
 use App\Entity\Event;
 use App\Entity\Location;
+use App\Entity\Photo;
+use App\Repository\EventRepository;
+use App\Repository\PhotoRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -102,6 +107,7 @@ final class EventController extends AbstractController
         $event->setDescription($description);
         $event->setEventDate($date);
         $event->setUser($user);
+        $event->setBanned(false);
 
         if ($imageFilename) {
             $event->setImage($imageFilename);
@@ -161,7 +167,6 @@ final class EventController extends AbstractController
     #[Route('/api/event/', name: 'event_get', methods: ['GET'])]
     public function getEvents(
         EntityManagerInterface $entityManager,
-        Request $request
     ): JsonResponse {
         $user = $this->getUser();
 
@@ -170,7 +175,10 @@ final class EventController extends AbstractController
         }
 
         // Obtener los eventos del usuario autenticado
-        $events = $entityManager->getRepository(Event::class)->findBy(['user' => $user]);
+        $events = $entityManager->getRepository(Event::class)->findBy([
+            'user' => $user,
+            'banned' => false
+        ]);
 
         // Devolver respuesta con los eventos y la ubicación si existe
         $eventData = [];
@@ -194,40 +202,156 @@ final class EventController extends AbstractController
         ], Response::HTTP_OK);
     }
 
-    #[Route('/api/event/{id}', name: 'event_get_by_id', methods: ['GET'])]
-    public function getEventById(
-        EntityManagerInterface $entityManager,
-        int $id
-    ): JsonResponse {
-        $user = $this->getUser();
+   #[Route('/api/event/{id}', name: 'event_get_by_id', methods: ['GET'])]
+public function getEventById(
+    EntityManagerInterface $entityManager,
+    int $id
+): JsonResponse {
+    $user = $this->getUser();
 
-        if (!$user) {
-            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        // Obtener el evento por ID
-        $event = $entityManager->getRepository(Event::class)->find($id);
-
-        if (!$event || $event->getUser() !== $user) {
-            return $this->json(['error' => 'Event not found or not authorized'], Response::HTTP_NOT_FOUND);
-        }
-
-        // Devolver respuesta con el evento y la ubicación si existe
-        $location = $event->getLocation();
-        return $this->json([
-            'event' => [
-                'id' => $event->getId(),
-                'title' => $event->getTitle(),
-                'description' => $event->getDescription(),
-                'event_date' => $event->getEventDate()->format('Y-m-d'),
-                'location' => $location ? [
-                    'address' => $location->getAddress(),
-                    'latitude' => $location->getLatitude(),
-                    'longitude' => $location->getLongitude()
-                ] : null,
-                'image' => $event->getImage() ? '/uploads/backgrounds/' . $event->getImage() : null
-            ]
-        ], Response::HTTP_OK);
+    if (!$user) {
+        return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
     }
+
+    // Obtener el evento por ID
+    $event = $entityManager->getRepository(Event::class)->find($id);
+
+    if (!$event) {
+        return $this->json(['error' => 'Event not found'], Response::HTTP_NOT_FOUND);
+    }
+
+    // Usar getUserIdentifier() en lugar de getId()
+    $isCreator = $event->getUser() && $event->getUser()->getUserIdentifier() === $user->getUserIdentifier();
+    $isAdmin = in_array('ROLE_ADMIN', $user->getRoles());
+
+    if (!$isCreator && !$isAdmin) {
+        return $this->json(['error' => 'Not authorized to view this event'], Response::HTTP_FORBIDDEN);
+    }
+
+    // Devolver respuesta con el evento y la ubicación si existe
+    $location = $event->getLocation();
+    return $this->json([
+        'event' => [
+            'id' => $event->getId(),
+            'title' => $event->getTitle(),
+            'description' => $event->getDescription(),
+            'event_date' => $event->getEventDate()->format('Y-m-d'),
+            'user' => [
+                'identifier' => $event->getUser()->getUserIdentifier(),
+                'username' => $event->getUser()->getUsername()
+            ],
+            'location' => $location ? [
+                'address' => $location->getAddress(),
+                'latitude' => $location->getLatitude(),
+                'longitude' => $location->getLongitude()
+            ] : null,
+            'image' => $event->getImage() ? '/uploads/backgrounds/' . $event->getImage() : null
+        ]
+    ], Response::HTTP_OK);
 }
 
+#[Route('/api/events/{id}/photos', name: 'app_event_photos', methods: ['GET'])]
+public function getEventPhotos(
+    int $id,
+    EventRepository $eventRepository,
+    PhotoRepository $photoRepository
+): JsonResponse
+{
+    $event = $eventRepository->find($id);
+    
+    if (!$event) {
+        return $this->json(['message' => 'Evento no encontrado'], Response::HTTP_NOT_FOUND);
+    }
+    
+    // Usar el campo correcto para ordenar
+    $photos = $photoRepository->findBy(['event' => $event], ['upload_date' => 'DESC']);
+    
+    $photosData = [];
+    foreach ($photos as $photo) {
+        $photosData[] = [
+            'id' => $photo->getId(),
+            // Usar el método getter correcto según tu entidad
+            'filename' => $photo->getUrlPhoto(),
+            'created_at' => $photo->getUploadDate()->format('Y-m-d H:i:s'),
+            'user' => $photo->getUser() ? [
+                'id' => $photo->getUser()->getId(),
+                'username' => $photo->getUser()->getUsername(),
+                'avatar' => $photo->getUser()->getAvatar() ?? null  // Manejo de posible campo nulo
+            ] : null
+        ];
+    }
+    
+    return $this->json([
+        'event_id' => $id,
+        'photos' => $photosData
+    ]);
+}
+
+#[Route('/api/events/{id}/photos', name: 'app_event_upload_photo', methods: ['POST'])]
+public function uploadEventPhoto(
+    Request $request,
+    int $id,
+    EventRepository $eventRepository,
+    EntityManagerInterface $entityManager,
+    Security $security
+): JsonResponse
+{
+    $user = $security->getUser();
+    if (!$user) {
+        return $this->json(['message' => 'Debes iniciar sesión para subir fotos'], Response::HTTP_UNAUTHORIZED);
+    }
+    
+    $event = $eventRepository->find($id);
+    if (!$event) {
+        return $this->json(['message' => 'Evento no encontrado'], Response::HTTP_NOT_FOUND);
+    }
+    
+    $file = $request->files->get('photo');
+    if (!$file) {
+        return $this->json(['message' => 'No se ha enviado ningún archivo'], Response::HTTP_BAD_REQUEST);
+    }
+    
+    // Validar que sea una imagen
+    $mimeType = $file->getMimeType();
+    if (!str_starts_with($mimeType, 'image/')) {
+        return $this->json(['message' => 'El archivo debe ser una imagen'], Response::HTTP_BAD_REQUEST);
+    }
+    
+    // Generar nombre único para la foto
+    $filename = uniqid() . '.' . $file->guessExtension();
+    
+    try {
+        // Crear directorio si no existe
+        $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/event_photos/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        // Mover el archivo
+        $file->move($uploadDir, $filename);
+        
+        // Crear la entidad EventPhoto
+        $photo = new Photo();
+        $photo->setEvent($event);
+        $photo->setUser($user);
+        $photo->setUrlPhoto($filename);
+        $photo->setUploadDate(new \DateTime());
+        
+        $entityManager->persist($photo);
+        $entityManager->flush();
+        
+        return $this->json([
+            'message' => 'Foto subida correctamente',
+            'photo' => [
+                'id' => $photo->getId(),
+                'filename' => $photo->getUrlPhoto(),
+                'created_at' => $photo->getUploadDate()->format('Y-m-d H:i:s')
+            ]
+        ], Response::HTTP_CREATED);
+    } catch (\Exception $e) {
+        return $this->json([
+            'message' => 'Error al subir la foto: ' . $e->getMessage()
+        ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+}
+}

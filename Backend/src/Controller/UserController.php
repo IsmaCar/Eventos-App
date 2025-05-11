@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Event;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,11 +17,13 @@ final class UserController extends AbstractController
 {
     private UserRepository $userRepository;
     private UserPasswordHasherInterface $passwordHasher;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(UserRepository $userRepository, UserPasswordHasherInterface $passwordHasher)
+    public function __construct(UserRepository $userRepository, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager)
     {
         $this->userRepository = $userRepository;
         $this->passwordHasher = $passwordHasher;
+        $this->entityManager = $entityManager;
     }
 
     #[Route('/user', name: 'app_user')]
@@ -30,6 +33,73 @@ final class UserController extends AbstractController
             'message' => 'Welcome to your new controller!',
             'path' => 'src/Controller/UserController.php',
         ]);
+    }
+
+    #[Route('/api/public/user/{id}', name: 'public_user_profile', methods: ['GET'])]
+    public function getPublicUserProfile(int $id): JsonResponse
+    {
+        try {
+            // Buscar al usuario por ID
+            $user = $this->userRepository->find($id);
+
+            if (!$user) {
+                return $this->json(['error' => 'Usuario no encontrado'], 404);
+            }
+
+            // Devolver datos públicos del usuario
+            return $this->json([
+                'user' => [
+                    'id' => $user->getId(),
+                    'username' => $user->getUsername(),
+                    'email' => $user->getEmail(),
+                    'avatar' => $user->getAvatar()
+                   
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al obtener el perfil: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/public/user/{id}/events', name: 'public_user_events', methods: ['GET'])]
+    public function getPublicUserEvents(int $id): JsonResponse
+    {
+        try {
+            $user = $this->userRepository->find($id);
+
+            if (!$user) {
+                return $this->json(['error' => 'Usuario no encontrado'], 404);
+            }
+
+            // Buscar eventos del usuario
+            $events = $this->entityManager->getRepository(Event::class)->findBy([
+                'user' => $user,
+                // Puedes añadir filtros adicionales como 'published' => true si tienes un estado para eventos publicados
+            ]);
+
+            $eventData = [];
+            foreach ($events as $event) {
+                $location = $event->getLocation();
+                $eventData[] = [
+                    'id' => $event->getId(),
+                    'title' => $event->getTitle(),
+                    'description' => $event->getDescription(),
+                    'event_date' => $event->getEventDate()->format('Y-m-d'),
+                    'location' => $location ? [
+                        'address' => $location->getAddress(),
+                        'latitude' => $location->getLatitude(),
+                        'longitude' => $location->getLongitude()
+                    ] : null,
+                    'image' => $event->getImage() ? '/uploads/backgrounds/' . $event->getImage() : null
+                ];
+            }
+
+            return $this->json([
+                'events' => $eventData
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al obtener eventos: ' . $e->getMessage()], 500);
+        }
     }
 
     #[Route('/api/users/upload-avatar', name: 'upload_avatar', methods: ['POST'])]
@@ -218,6 +288,40 @@ final class UserController extends AbstractController
             return $this->json($stats);
         } catch (\Exception $e) {
             return $this->json(['error' => 'Error al obtener estadísticas: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/user/event/', name: 'user_event', methods: ['GET'])]
+    public function getUserEvent(): JsonResponse
+    {
+        /** @var UserInterface $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['error' => 'Usuario no autenticado'], 401);
+        }
+
+        try {
+            // Obtener el identificador único del usuario
+            $identifier = $user->getUserIdentifier();
+
+            // Intentar buscar primero por email
+            $dbUser = $this->userRepository->findOneBy(['email' => $identifier]);
+
+            if (!$dbUser) {
+                $dbUser = $this->userRepository->findOneBy(['username' => $identifier]);
+            }
+
+            if (!$dbUser) {
+                return $this->json(['error' => 'Usuario no encontrado en la base de datos'], 404);
+            }
+
+            $userId = $dbUser->getId();
+
+            $events = $this->userRepository->getEventByUserId($userId);
+            return $this->json($events);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al obtener eventos: ' . $e->getMessage()], 500);
         }
     }
 }

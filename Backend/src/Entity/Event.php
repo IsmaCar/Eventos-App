@@ -44,6 +44,9 @@ class Event
     #[ORM\OneToOne(mappedBy: 'event', cascade: ['persist', 'remove'])]
     private ?Location $location = null;
 
+    #[ORM\Column]
+    private bool $banned = false;
+
     public function __construct()
     {
         $this->photos = new ArrayCollection();
@@ -158,6 +161,18 @@ class Event
         }
 
         $this->location = $location;
+
+        return $this;
+    }
+
+    public function isBanned(): ?bool
+    {
+        return $this->banned;
+    }
+
+    public function setBanned(bool $banned): static
+    {
+        $this->banned = $banned;
 
         return $this;
     }

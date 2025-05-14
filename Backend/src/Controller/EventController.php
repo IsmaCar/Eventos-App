@@ -233,6 +233,7 @@ public function getEventById(
     return $this->json([
         'event' => [
             'id' => $event->getId(),
+            'user_id' => $event->getUser()->getId(),
             'title' => $event->getTitle(),
             'description' => $event->getDescription(),
             'event_date' => $event->getEventDate()->format('Y-m-d'),

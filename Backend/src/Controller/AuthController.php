@@ -59,6 +59,23 @@ final class AuthController extends AbstractController
             }
         }
 
+        $userRepository = $entityManager->getRepository(User::class);
+
+        if($userRepository->findOneBy(['email' => $data['email']])) {
+            return $this->json(
+                ['error' => 'Este Email ya está registrado'],
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
+        }
+
+        if($userRepository->findOneBy(['username' => $data['username']])) {
+            return $this->json(
+                ['error' => 'Este Nombre de usuario ya está registrado'],
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
+        }
+
+
         // 3. Crear y configurar el usuario
         $user = new User();
         $user->setUsername($data['username']);
@@ -79,7 +96,6 @@ final class AuthController extends AbstractController
                 Response::HTTP_UNPROCESSABLE_ENTITY
             );
         }
-
 
         // 5. Persistir en la base de datos
         try {

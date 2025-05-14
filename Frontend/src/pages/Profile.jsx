@@ -10,6 +10,7 @@ function Profile() {
   const [stats, setStats] = useState({
     eventsCreated: 0,
     eventsAttended: 0,
+    invitationsPending: 0, // Añadido contador de invitaciones
   });
 
   const fetchUserStats = async () => {
@@ -30,14 +31,16 @@ function Profile() {
 
       setStats({
         eventsCreated: data.eventsCreated || 0,
-        eventsAttended: data.eventsAttended || 0
+        eventsAttended: data.eventsAttended || 0,
+        invitationsPending: data.invitationsPending || 0 // Añadido contador de invitaciones pendientes
       });
     } catch (err) {
       console.error('Error obteniendo estadísticas:', err);
       // Establecer valores por defecto si hay error
       setStats({
         eventsCreated: user.eventsCreated || 0,
-        eventsAttended: user.eventsAttended || 0
+        eventsAttended: user.eventsAttended || 0,
+        invitationsPending: 0
       });
     }
   };
@@ -75,18 +78,25 @@ function Profile() {
     : `${API_URL}/uploads/avatars/default-avatar.png`;
     
 
-    if (!isMainProfile) {
-      return (
-        <div className="min-h-screen bg-gray-50 py-10">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Contenedor para el componente anidado */}
-            <div>
-              <Outlet />
-            </div>
+  if (!isMainProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Barra de navegación para secciones anidadas */}
+          <div className="mb-6 flex space-x-2">
+            <Link to="/profile" className="px-4 py-2 bg-white rounded-md shadow hover:bg-gray-50">
+              ← Volver al perfil
+            </Link>
+          </div>
+          
+          {/* Contenedor para el componente anidado */}
+          <div>
+            <Outlet />
           </div>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-10">
@@ -142,6 +152,10 @@ function Profile() {
                 <p className="text-2xl font-bold text-fuchsia-600">{stats.eventsAttended || 0}</p>
                 <p className="text-gray-500 text-sm">Eventos asistidos</p>
               </div>
+              <div className="text-center p-3 bg-gray-50 rounded-lg col-span-2">
+                <p className="text-2xl font-bold text-fuchsia-600">{stats.invitationsPending || 0}</p>
+                <p className="text-gray-500 text-sm">Invitaciones pendientes</p>
+              </div>
             </div>
           </div>
 
@@ -176,7 +190,7 @@ function Profile() {
             <div className="space-y-3">
               <Link
                 to="edit-profile"
-                className="block w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition flex items-center"
+                className="flex w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition items-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -185,7 +199,7 @@ function Profile() {
               </Link>
               <Link
                 to="/create-event"
-                className="block w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition flex items-center"
+                className="flex w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition items-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -194,12 +208,27 @@ function Profile() {
               </Link>
               <Link
                 to="my-events"
-                className="block w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition flex items-center"
+                className="flex w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition items-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
                 Mis eventos
+              </Link>
+              {/* Nuevo enlace para invitaciones */}
+              <Link
+                to="invitations"
+                className="flex w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                </svg>
+                Invitaciones
+                {stats.invitationsPending > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-fuchsia-500 rounded-full">
+                    {stats.invitationsPending}
+                  </span>
+                )}
               </Link>
             </div>
           </div>

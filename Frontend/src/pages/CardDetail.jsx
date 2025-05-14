@@ -3,6 +3,9 @@ import { useEvent } from '../context/EventContext'
 import { useAuth } from '../context/AuthContext'  // Añadimos para verificar usuario
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { LocationPicker } from '../components/Maps'
+import InviteUsers from '../components/InviteUsers'
+import EventInvitations from '../components/EventInvitations'
+
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -22,6 +25,9 @@ function CardDetail() {
   const [uploading, setUploading] = useState(false)
   const [expandedPhoto, setExpandedPhoto] = useState(null)
   const [photoFavorites, setPhotoFavorites] = useState({}) // Objeto para rastrear estado de favoritos por ID
+  
+  // Estado para manejar las pestañas de invitaciones
+  const [activeTab, setActiveTab] = useState('invite') // 'invite' o 'manage'
 
   useEffect(() => {
     async function loadEventData() {
@@ -194,6 +200,12 @@ function CardDetail() {
     document.body.style.overflow = 'auto';
   }
 
+  // Función para manejar cuando se envía una invitación exitosamente
+  const handleInvitationSent = () => {
+    // Cambiar a la pestaña de gestión después de enviar una invitación
+    setActiveTab('manage');
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "Fecha no disponible"
 
@@ -204,6 +216,17 @@ function CardDetail() {
       return dateString
     }
   }
+
+  // Función mejorada para verificar si el usuario actual es el creador del evento
+  const isEventCreator = () => {
+     if (!user || !event) return false;
+  
+  // Convertir ambos valores a números para comparación directa
+  const currentUserId = parseInt(user.id, 10);
+  const eventUserId = parseInt(event.user_id, 10);
+  
+  return !isNaN(eventUserId) && currentUserId === eventUserId;
+};
 
   // Mostrar estado de carga
   if (loading) {
@@ -293,6 +316,53 @@ function CardDetail() {
             )}
           </div>
         </div>
+        
+        {/* SECCIÓN DE INVITACIONES (solo para el creador del evento) */}
+        {isEventCreator() && (
+          <div className="mt-8 border-t pt-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Gestionar invitaciones</h2>
+            
+            {/* Pestañas para invitar y ver invitaciones */}
+            <div className="mb-6">
+              <div className="border-b border-gray-200">
+                <nav className="flex -mb-px space-x-8">
+                  <button
+                    onClick={() => setActiveTab('invite')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'invite'
+                        ? 'border-fuchsia-500 text-fuchsia-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Invitar usuarios
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('manage')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'manage'
+                        ? 'border-fuchsia-500 text-fuchsia-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Gestionar invitaciones
+                  </button>
+                </nav>
+              </div>
+              
+              {/* Contenido de las pestañas */}
+              <div className="py-4">
+                {activeTab === 'invite' ? (
+                  <InviteUsers 
+                    eventId={id} 
+                    onInvitationSent={handleInvitationSent} 
+                  />
+                ) : (
+                  <EventInvitations eventId={id} />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* SECCIÓN: FOTOS DEL EVENTO (con favoritos) */}
         <div className="mt-8 border-t pt-6">
@@ -399,63 +469,63 @@ function CardDetail() {
           </div>
         </div>
       
-      {/* Modal para vista ampliada con botón de favorito */}
-      {expandedPhoto && (
-        <div 
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-          onClick={closeExpandedView}
-        >
-          <div className="relative max-w-5xl max-h-[90vh] w-full">
-            {/* Botón de cierre */}
-            <button 
-              className="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center z-10"
-              onClick={closeExpandedView}
-            >
-              &times;
-            </button>
-            
-            {/* Imagen ampliada */}
-            <div 
-              className="relative overflow-hidden rounded-lg"
-              onClick={e => e.stopPropagation()} // Evita que se cierre al hacer clic en la imagen
-            >
-              <img
-                src={`${API_URL}/uploads/event_photos/${expandedPhoto.filename}`}
-                alt={`Foto ampliada del evento ${event.title}`}
-                className="w-full h-auto max-h-[85vh] object-contain bg-black"
-              />
+        {/* Modal para vista ampliada con botón de favorito */}
+        {expandedPhoto && (
+          <div 
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+            onClick={closeExpandedView}
+          >
+            <div className="relative max-w-5xl max-h-[90vh] w-full">
+              {/* Botón de cierre */}
+              <button 
+                className="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center z-10"
+                onClick={closeExpandedView}
+              >
+                &times;
+              </button>
               
-              {/* Información del usuario y botón de favorito */}
-              <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium">{expandedPhoto.user?.username || "Usuario"}</p>
-                    <p className="text-sm text-gray-200">{new Date(expandedPhoto.created_at).toLocaleDateString()}</p>
+              {/* Imagen ampliada */}
+              <div 
+                className="relative overflow-hidden rounded-lg"
+                onClick={e => e.stopPropagation()} // Evita que se cierre al hacer clic en la imagen
+              >
+                <img
+                  src={`${API_URL}/uploads/event_photos/${expandedPhoto.filename}`}
+                  alt={`Foto ampliada del evento ${event.title}`}
+                  className="w-full h-auto max-h-[85vh] object-contain bg-black"
+                />
+                
+                {/* Información del usuario y botón de favorito */}
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">{expandedPhoto.user?.username || "Usuario"}</p>
+                      <p className="text-sm text-gray-200">{new Date(expandedPhoto.created_at).toLocaleDateString()}</p>
+                    </div>
+                    
+                    {/* Botón de favorito en vista ampliada */}
+                    {token && (
+                      <button 
+                        onClick={(e) => toggleFavorite(expandedPhoto.id, e)}
+                        className="text-white hover:text-pink-400 transition-colors p-2"
+                      >
+                        {photoFavorites[expandedPhoto.id] ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        )}
+                      </button>
+                    )}
                   </div>
-                  
-                  {/* Botón de favorito en vista ampliada */}
-                  {token && (
-                    <button 
-                      onClick={(e) => toggleFavorite(expandedPhoto.id, e)}
-                      className="text-white hover:text-pink-400 transition-colors p-2"
-                    >
-                      {photoFavorites[expandedPhoto.id] ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                      )}
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

@@ -70,11 +70,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: FavoritePhoto::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $favoritePhotos;
 
+    /**
+     * @var Collection<int, Invitation>
+     */
+    #[ORM\OneToMany(targetEntity: Invitation::class, mappedBy: 'invitedUser')]
+    private Collection $invitations;
+
+    /**
+     * @var Collection<int, Invitation>
+     */
+    #[ORM\OneToMany(targetEntity: Invitation::class, mappedBy: 'invitedBy')]
+    private Collection $sentInvitations;
+
     public function __construct()
     {
         $this->events = new ArrayCollection();
         $this->photos = new ArrayCollection();
         $this->favoritePhotos = new ArrayCollection();
+        $this->invitations = new ArrayCollection();
+        $this->sentInvitations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -278,4 +292,63 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * @return Collection<int, Invitation>
+     */
+    public function getInvitations(): Collection
+    {
+        return $this->invitations;
+    }
+
+    public function addInvitation(Invitation $invitation): static
+    {
+        if (!$this->invitations->contains($invitation)) {
+            $this->invitations->add($invitation);
+            $invitation->setInvitedUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeInvitation(Invitation $invitation): static
+    {
+        if ($this->invitations->removeElement($invitation)) {
+            // set the owning side to null (unless already changed)
+            if ($invitation->getInvitedUser() === $this) {
+                $invitation->setInvitedUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+ * @return Collection<int, Invitation>
+ */
+public function getSentInvitations(): Collection
+{
+    return $this->sentInvitations;
+}
+
+public function addSentInvitation(Invitation $invitation): static
+{
+    if (!$this->sentInvitations->contains($invitation)) {
+        $this->sentInvitations->add($invitation);
+        $invitation->setInvitedBy($this);
+    }
+
+    return $this;
+}
+
+public function removeSentInvitation(Invitation $invitation): static
+{
+    if ($this->sentInvitations->removeElement($invitation)) {
+        // set the owning side to null (unless already changed)
+        if ($invitation->getInvitedBy() === $this) {
+            $invitation->setInvitedBy(null);
+        }
+    }
+
+    return $this;
+}
 }

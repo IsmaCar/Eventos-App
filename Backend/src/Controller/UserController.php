@@ -53,7 +53,7 @@ final class UserController extends AbstractController
                     'username' => $user->getUsername(),
                     'email' => $user->getEmail(),
                     'avatar' => $user->getAvatar()
-                   
+
                 ]
             ]);
         } catch (\Exception $e) {
@@ -324,4 +324,40 @@ final class UserController extends AbstractController
             return $this->json(['error' => 'Error al obtener eventos: ' . $e->getMessage()], 500);
         }
     }
+
+    #[Route('/tools/users/search', name: 'search_users', methods: ['GET'])]
+    public function searchUsers(Request $request): JsonResponse
+    {
+        try {
+            // Obtener el parámetro de consulta 'query'
+            $query = $request->query->get('query');
+
+            if (!$query || strlen($query) < 2) {
+                return $this->json([
+                    'users' => [],
+                    'message' => 'La consulta debe tener al menos 2 caracteres'
+                ]);
+            }
+
+            // Buscar usuarios por nombre de usuario o email
+            $users = $this->userRepository->searchUsers($query);
+
+            $userData = [];
+            foreach ($users as $user) {
+                $userData[] = [
+                    'id' => $user->getId(),
+                    'username' => $user->getUsername(),
+                    'email' => $user->getEmail(),
+                    'avatar' => $user->getAvatar()
+                ];
+            }
+
+            return $this->json([
+                'users' => $userData
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al buscar usuarios: ' . $e->getMessage()], 500);
+        }
+    }
+
 }

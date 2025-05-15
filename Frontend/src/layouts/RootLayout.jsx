@@ -49,9 +49,19 @@ const RootLayout = () => {
               )}
             </div>
             
-            {/* Enlaces de navegación (ahora solo perfil y salir) */}
+            {/* Enlaces de navegación (ahora incluye fotos favoritas) */}
             {token ? (
               <div className="flex items-center ml-auto space-x-2">
+                {/* Nuevo enlace a fotos favoritas */}
+                <Link to="/favorite-photos"
+                  className="flex flex-row items-center text-white px-3 py-1.5 
+                         rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-pink-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm">Fotos favoritas</span>
+                </Link>
+                
                 <Link to="/profile"
                   className="flex flex-row items-center text-white px-2 py-1.5 
                          rounded-full hover:scale-103 transition duration-300 ease-in-out">

@@ -159,11 +159,11 @@ function Dashboard() {
             setUsersList(data.users || []);
 
             setUsersPagination({
-            ...usersPagination,
-            currentPage: page,
-            totalItems: data.pagination?.totalItems.users ,
-            totalPages: data.pagination?.totalPages.users
-        });
+                ...usersPagination,
+                currentPage: page,
+                totalItems: data.pagination?.totalItems.users,
+                totalPages: data.pagination?.totalPages.users
+            });
         } catch (error) {
             console.error("Error obteniendo usuarios:", error);
             setError('Error al cargar la lista de usuarios');

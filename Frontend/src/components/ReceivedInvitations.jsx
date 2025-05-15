@@ -1,7 +1,6 @@
 // ReceivedInvitations.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL;
 
 const ReceivedInvitations = () => {
@@ -20,30 +19,33 @@ const ReceivedInvitations = () => {
     };
 
     useEffect(() => {
-        fetchInvitations();
-    }, [token]); // Añadido token como dependencia
+        if (token) {
+            fetchInvitations();
+        }
+    }, [token]);
 
     const fetchInvitations = async () => {
         try {
             setLoading(true);
-            setError(''); // Limpiar errores anteriores
+            setError('');
 
-            const response = await axios.get(`${API_URL}/api/invitations/user/received`, {
-                headers: { Authorization: `Bearer ${token}` }
+            const response = await fetch(`${API_URL}/api/invitations/user/received`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             });
 
-            console.log('Invitaciones recibidas:', response.data);
-            setInvitations(response.data.invitations || []);
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log('Invitaciones recibidas:', data);
+            setInvitations(data.invitations || []);
         } catch (error) {
             console.error('Error al obtener invitaciones:', error);
-            console.error('Detalles del error:', {
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data,
-            headers: error.response?.headers,
-            config: error.config
-        });
-        setError('No se pudieron cargar las invitaciones');
             setError('No se pudieron cargar las invitaciones');
         } finally {
             setLoading(false);
@@ -52,18 +54,23 @@ const ReceivedInvitations = () => {
 
     const handleRespond = async (invitationId, responseType) => {
         try {
-            setSuccessMessage(''); // Limpiar mensajes anteriores
+            setSuccessMessage('');
             setError('');
 
-            await axios.post(
-                `/api/invitations/${invitationId}/respond`,
-                { response: responseType },
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            );
+            const response = await fetch(`${API_URL}/api/invitations/${invitationId}/respond`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ response: responseType })
+            });
 
-            fetchInvitations();
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            await fetchInvitations();
 
             setSuccessMessage(
                 responseType === 'accept'
@@ -71,11 +78,11 @@ const ReceivedInvitations = () => {
                     : 'Invitación rechazada'
             );
 
-            clearMessages(); // Limpiar después de 5 segundos
+            clearMessages();
         } catch (error) {
             console.error('Error al responder a la invitación:', error);
             setError('Error al procesar tu respuesta');
-            clearMessages(); // Limpiar después de 5 segundos
+            clearMessages();
         }
     };
 

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Event;
 use App\Entity\User;
 use App\Repository\EventRepository;
+use App\Repository\PhotoRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,7 +30,8 @@ final class AdminController extends AbstractController
 
     #[Route('/stats', name: 'app_admin_stats', methods: ['GET'])]
 public function adminStats(UserRepository $userRepository,
-                           EventRepository $eventRepository): JsonResponse
+                           EventRepository $eventRepository,
+                           PhotoRepository $photoRepository): JsonResponse
 {
     try {
         // Estadísticas de usuarios
@@ -42,6 +44,9 @@ public function adminStats(UserRepository $userRepository,
         // Estadísticas de eventos
         $events = $eventRepository->findAll();
         $eventsCount = count($events);
+
+        $photos = $photoRepository->findAll();
+        $photoCount = count($photos);
         
         // Eventos futuros
         // $futureEvents = $eventRepository->countFutureEvents();
@@ -50,7 +55,6 @@ public function adminStats(UserRepository $userRepository,
         // $newEvents = $eventRepository->countEventsCreatedSince(new \DateTime('-7 days'));
         
         // Estadísticas de fotos/imágenes
-        $photoCount = 0; // Implementar cuando tengas repositorio de fotos
         
         return $this->json([
             'users' => [

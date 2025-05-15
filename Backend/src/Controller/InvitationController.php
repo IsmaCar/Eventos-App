@@ -83,6 +83,11 @@ final class InvitationController extends AbstractController
                 if (!$invitedUser) {
                     return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
                 }
+                
+                // Verificar si el usuario está baneado
+                if ($invitedUser->isBanned()) {
+                    return $this->json(['message' => 'Este usuario está baneado y no puede ser invitado'], Response::HTTP_FORBIDDEN);
+                }
 
                 if ($invitationRepository->isUserInvited($invitedUser, $event)) {
                     return $this->json(['message' => 'Este usuario ya ha sido invitado'], Response::HTTP_CONFLICT);
@@ -107,6 +112,11 @@ final class InvitationController extends AbstractController
                 $existingUser = $userRepository->findByEmailInsensitive($email);
 
                 if ($existingUser) {
+                    // Verificar si el usuario está baneado
+                    if ($existingUser->isBanned()) {
+                        return $this->json(['message' => 'Este usuario está baneado y no puede ser invitado'], Response::HTTP_FORBIDDEN);
+                    }
+                    
                     // Usuario registrado: asociar con la invitación
                     $invitation->setInvitedUser($existingUser);
                     $userExists = true;
@@ -314,8 +324,8 @@ final class InvitationController extends AbstractController
         ]);
     }
 
-#[Route('/invitations/user/received', name: 'app_invitations_received', methods: ['GET'])]    
-public function getReceivedInvitations(
+    #[Route('/invitations/user/received', name: 'app_invitations_received', methods: ['GET'])]    
+    public function getReceivedInvitations(
         Security $security,
         InvitationRepository $invitationRepository
     ): JsonResponse {

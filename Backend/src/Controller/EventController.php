@@ -3,9 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Event;
+use App\Entity\Invitation;
 use App\Entity\Location;
 use App\Entity\Photo;
 use App\Repository\EventRepository;
+use App\Repository\InvitationRepository;
 use App\Repository\PhotoRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -165,46 +167,52 @@ final class EventController extends AbstractController
     }
 
     #[Route('/api/event/', name: 'event_get', methods: ['GET'])]
-    public function getEvents(
-        EntityManagerInterface $entityManager,
-    ): JsonResponse {
-        $user = $this->getUser();
+public function getEvents(
+    EntityManagerInterface $entityManager,
+): JsonResponse {
+    $user = $this->getUser();
 
-        if (!$user) {
-            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        // Obtener los eventos del usuario autenticado
-        $events = $entityManager->getRepository(Event::class)->findBy([
-            'user' => $user,
-            'banned' => false
-        ]);
-
-        // Devolver respuesta con los eventos y la ubicación si existe
-        $eventData = [];
-        foreach ($events as $event) {
-            $location = $event->getLocation();
-            $eventData[] = [
-                'id' => $event->getId(),
-                'title' => $event->getTitle(),
-                'description' => $event->getDescription(),
-                'event_date' => $event->getEventDate()->format('Y-m-d'),
-                'location' => $location ? [
-                    'address' => $location->getAddress(),
-                    'latitude' => $location->getLatitude(),
-                    'longitude' => $location->getLongitude()
-                ] : null,
-                'image' => $event->getImage() ? '/uploads/backgrounds/' . $event->getImage() : null
-            ];
-        }
-        return $this->json([
-            'events' => $eventData
-        ], Response::HTTP_OK);
+    if (!$user) {
+        return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
     }
+
+    // Usar el método del repositorio para obtener todos los eventos del usuario
+    $events = $entityManager->getRepository(Event::class)->findUserEvents($user);
+
+    // Formatear la respuesta
+    $eventData = [];
+    foreach ($events as $event) {
+        $location = $event->getLocation();
+        $isOwner = $event->getUser() === $user;
+        
+        $eventData[] = [
+            'id' => $event->getId(),
+            'title' => $event->getTitle(),
+            'description' => $event->getDescription(),
+            'event_date' => $event->getEventDate()->format('Y-m-d'),
+            'is_owner' => $isOwner,
+            'owner' => [
+                'id' => $event->getUser()->getId(),
+                'username' => $event->getUser()->getUsername()
+            ],
+            'location' => $location ? [
+                'address' => $location->getAddress(),
+                'latitude' => $location->getLatitude(),
+                'longitude' => $location->getLongitude()
+            ] : null,
+            'image' => $event->getImage() ? '/uploads/backgrounds/' . $event->getImage() : null
+        ];
+    }
+    
+    return $this->json([
+        'events' => $eventData
+    ], Response::HTTP_OK);
+}
 
    #[Route('/api/event/{id}', name: 'event_get_by_id', methods: ['GET'])]
 public function getEventById(
     EntityManagerInterface $entityManager,
+    InvitationRepository $invitationRepository,
     int $id
 ): JsonResponse {
     $user = $this->getUser();
@@ -220,11 +228,22 @@ public function getEventById(
         return $this->json(['error' => 'Event not found'], Response::HTTP_NOT_FOUND);
     }
 
-    // Usar getUserIdentifier() en lugar de getId()
+    // Verificar si el usuario es el creador del evento
     $isCreator = $event->getUser() && $event->getUser()->getUserIdentifier() === $user->getUserIdentifier();
+    
+    // Verificar si el usuario es administrador
     $isAdmin = in_array('ROLE_ADMIN', $user->getRoles());
-
-    if (!$isCreator && !$isAdmin) {
+    
+    // Verificar si el usuario ha sido invitado y ha aceptado la invitación
+    $invitation = $invitationRepository->findOneBy([
+        'event' => $event,
+        'invitedUser' => $user,
+        'status' => Invitation::STATUS_ACCEPTED
+    ]);
+    $isInvitedAndAccepted = $invitation !== null;
+    
+    // Permitir acceso si es el creador, administrador o invitado que aceptó
+    if (!$isCreator && !$isAdmin && !$isInvitedAndAccepted) {
         return $this->json(['error' => 'Not authorized to view this event'], Response::HTTP_FORBIDDEN);
     }
 
@@ -354,5 +373,107 @@ public function uploadEventPhoto(
             'message' => 'Error al subir la foto: ' . $e->getMessage()
         ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
+}
+
+#[Route('/api/events/{id}/attendees', name: 'event_attendees', methods: ['GET'])]
+public function getEventAttendees(
+    int $id,
+    EventRepository $eventRepository,
+    InvitationRepository $invitationRepository,
+    EntityManagerInterface $entityManager
+): JsonResponse
+{
+    $user = $this->getUser();
+    if (!$user) {
+        return $this->json(['error' => 'Usuario no autenticado'], Response::HTTP_UNAUTHORIZED);
+    }
+
+    $event = $eventRepository->find($id);
+    if (!$event) {
+        return $this->json(['error' => 'Evento no encontrado'], Response::HTTP_NOT_FOUND);
+    }
+
+    // Obtener el creador del evento (siempre es un asistente)
+    $eventCreator = $event->getUser();
+    
+    // Obtener invitaciones aceptadas para este evento
+    $acceptedInvitations = $invitationRepository->findBy([
+        'event' => $event,
+        'status' => Invitation::STATUS_ACCEPTED
+    ]);
+    
+    // Crear una lista de asistentes incluyendo al creador y las invitaciones aceptadas
+    $attendees = [];
+    
+    // Añadir al creador como asistente
+    $attendees[] = [
+        'id' => $eventCreator->getId(),
+        'username' => $eventCreator->getUsername(),
+        'avatar' => $eventCreator->getAvatar(),
+        'isCreator' => true
+    ];
+    
+    // Añadir a los usuarios que aceptaron invitaciones
+    foreach ($acceptedInvitations as $invitation) {
+        $invitedUser = $invitation->getInvitedUser();
+        if ($invitedUser) {
+            // Evitar duplicados si el creador también está en las invitaciones aceptadas
+            if ($invitedUser->getId() !== $eventCreator->getId()) {
+                $attendees[] = [
+                    'id' => $invitedUser->getId(),
+                    'username' => $invitedUser->getUsername(),
+                    'avatar' => $invitedUser->getAvatar(),
+                    'isCreator' => false
+                ];
+            }
+        }
+    }
+    
+    return $this->json([
+        'event_id' => $id,
+        'attendees' => $attendees
+    ]);
+}
+
+#[Route('/api/events/{id}/cancel-attendance', name: 'event_cancel_attendance', methods: ['POST'])]
+public function cancelAttendance(
+    int $id,
+    EventRepository $eventRepository,
+    InvitationRepository $invitationRepository,
+    EntityManagerInterface $entityManager
+): JsonResponse {
+    $user = $this->getUser();
+    if (!$user) {
+        return $this->json(['error' => 'Usuario no autenticado'], Response::HTTP_UNAUTHORIZED);
+    }
+
+    $event = $eventRepository->find($id);
+    if (!$event) {
+        return $this->json(['error' => 'Evento no encontrado'], Response::HTTP_NOT_FOUND);
+    }
+
+    // Verificar que el usuario no es el organizador
+    // Ahora comparamos usando getUserIdentifier() para mayor consistencia
+    if ($event->getUser() && $event->getUser()->getUserIdentifier() === $user->getUserIdentifier()) {
+        return $this->json(['error' => 'El organizador no puede cancelar su asistencia'], Response::HTTP_BAD_REQUEST);
+    }
+
+    // Buscar la invitación aceptada
+    $invitation = $invitationRepository->findOneBy([
+        'event' => $event,
+        'invitedUser' => $user,
+        'status' => Invitation::STATUS_ACCEPTED
+    ]);
+
+    if (!$invitation) {
+        return $this->json(['error' => 'No se encontró una invitación aceptada para este usuario'], Response::HTTP_NOT_FOUND);
+    }
+
+    // Cambiar el estado de la invitación a REJECTED
+    $invitation->setStatus(Invitation::STATUS_REJECTED);
+    $entityManager->persist($invitation);
+    $entityManager->flush();
+
+    return $this->json(['success' => true, 'message' => 'Asistencia cancelada correctamente']);
 }
 }

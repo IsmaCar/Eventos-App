@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [token, setToken] = useState(sessionStorage.getItem("token"));
   const [isAdmin, setIsAdmin] = useState(false);
 
   const checkAdminRole = (userData) => {
@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = sessionStorage.getItem("user");
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
@@ -68,8 +68,8 @@ export const AuthProvider = ({ children }) => {
       }
       setUser(data.user);
       setToken(data.token);
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      sessionStorage.setItem("token", data.token);
+      sessionStorage.setItem("user", JSON.stringify(data.user));
 
       const adminStatus = checkAdminRole(data.user);
       setIsAdmin(adminStatus);
@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }) => {
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
       // Actualizar el localStorage
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      sessionStorage.setItem("user", JSON.stringify(updatedUser));
       return updatedUser;
     }
     return user;
@@ -98,8 +98,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
   };
 
   return (

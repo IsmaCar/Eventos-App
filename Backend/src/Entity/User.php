@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Entity;
+ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\UserRepository;
@@ -82,6 +82,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Invitation::class, mappedBy: 'invitedBy')]
     private Collection $sentInvitations;
 
+    /**
+     * @var Collection<int, Friendship>
+     */
+    #[ORM\OneToMany(targetEntity: Friendship::class, mappedBy: 'requester', orphanRemoval: true)]
+    private Collection $sentFriendships;
+
+    /**
+     * @var Collection<int, Friendship>
+     */
+    #[ORM\OneToMany(mappedBy: 'addressee', targetEntity: Friendship::class, orphanRemoval: true)]
+    private Collection $receivedFriendships;
+
     public function __construct()
     {
         $this->events = new ArrayCollection();
@@ -89,6 +101,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->favoritePhotos = new ArrayCollection();
         $this->invitations = new ArrayCollection();
         $this->sentInvitations = new ArrayCollection();
+        $this->sentFriendships = new ArrayCollection();
+        $this->receivedFriendships = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -323,32 +337,88 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
- * @return Collection<int, Invitation>
- */
-public function getSentInvitations(): Collection
-{
-    return $this->sentInvitations;
-}
-
-public function addSentInvitation(Invitation $invitation): static
-{
-    if (!$this->sentInvitations->contains($invitation)) {
-        $this->sentInvitations->add($invitation);
-        $invitation->setInvitedBy($this);
+     * @return Collection<int, Invitation>
+     */
+    public function getSentInvitations(): Collection
+    {
+        return $this->sentInvitations;
     }
 
-    return $this;
-}
-
-public function removeSentInvitation(Invitation $invitation): static
-{
-    if ($this->sentInvitations->removeElement($invitation)) {
-        // set the owning side to null (unless already changed)
-        if ($invitation->getInvitedBy() === $this) {
-            $invitation->setInvitedBy(null);
+    public function addSentInvitation(Invitation $invitation): static
+    {
+        if (!$this->sentInvitations->contains($invitation)) {
+            $this->sentInvitations->add($invitation);
+            $invitation->setInvitedBy($this);
         }
+
+        return $this;
     }
 
-    return $this;
-}
+    public function removeSentInvitation(Invitation $invitation): static
+    {
+        if ($this->sentInvitations->removeElement($invitation)) {
+            // set the owning side to null (unless already changed)
+            if ($invitation->getInvitedBy() === $this) {
+                $invitation->setInvitedBy(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Friendship>
+     */
+    public function getSentFriendships(): Collection
+    {
+        return $this->sentFriendships;
+    }
+
+    public function addSentFriendship(Friendship $friendship): self
+    {
+        if (!$this->sentFriendships->contains($friendship)) {
+            $this->sentFriendships->add($friendship);
+            $friendship->setRequester($this);
+        }
+        return $this;
+    }
+
+    public function removeSentFriendship(Friendship $friendship): self
+    {
+        if ($this->sentFriendships->removeElement($friendship)) {
+            // set the owning side to null (unless already changed)
+            if ($friendship->getRequester() === $this) {
+                $friendship->setRequester(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Friendship>
+     */
+    public function getReceivedFriendships(): Collection
+    {
+        return $this->receivedFriendships;
+    }
+
+    public function addReceivedFriendship(Friendship $friendship): self
+    {
+        if (!$this->receivedFriendships->contains($friendship)) {
+            $this->receivedFriendships->add($friendship);
+            $friendship->setAddressee($this);
+        }
+        return $this;
+    }
+
+    public function removeReceivedFriendship(Friendship $friendship): self
+    {
+        if ($this->receivedFriendships->removeElement($friendship)) {
+            // set the owning side to null (unless already changed)
+            if ($friendship->getAddressee() === $this) {
+                $friendship->setAddressee(null);
+            }
+        }
+        return $this;
+    }
 }

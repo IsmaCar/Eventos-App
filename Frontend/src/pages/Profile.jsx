@@ -13,11 +13,77 @@ function Profile() {
     invitationsPending: 0,
   });
   const [friends, setFriends] = useState([]);
-  const [friendRequests, setFriendRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showFriendRequests, setShowFriendRequests] = useState(false); // Estado para controlar la visibilidad del modal
+  
+  // Estado para búsqueda de amigos (modal)
+  const [showFriendSearch, setShowFriendSearch] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Resto de funciones fetch...
+  // Función para buscar usuarios
+  const searchUsers = async (term) => {
+    if (term.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const response = await fetch(`${API_URL}/api/friends/search?term=${encodeURIComponent(term)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error en la búsqueda');
+      }
+      
+      const data = await response.json();
+      setSearchResults(data.users || []);
+    } catch (error) {
+      console.error('Error en la búsqueda:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Función para enviar solicitud de amistad
+  const sendFriendRequest = async (userId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/friends/request/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al enviar la solicitud');
+      }
+      
+      // Actualizar resultados de búsqueda para reflejar la solicitud enviada
+      setSearchResults(prev => 
+        prev.map(user => 
+          user.id === userId 
+            ? { ...user, friendship_status: 'requested', friendship_id: null } 
+            : user
+        )
+      );
+      
+      // Mostrar mensaje de éxito
+      alert('Solicitud de amistad enviada');
+    } catch (error) {
+      console.error('Error:', error);
+      alert(error.message);
+    }
+  };
 
   const fetchUserStats = async () => {
     try {
@@ -72,30 +138,6 @@ function Profile() {
     }
   };
 
-  const fetchFriendRequests = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/friends/requests/received`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al cargar las solicitudes de amistad');
-      }
-
-      const data = await response.json();
-      setFriendRequests(data.requests || []);
-      // Actualizar también el contador en las estadísticas
-      setStats(prev => ({...prev, friendRequests: data.requests?.length || 0}));
-    } catch (err) {
-      console.error('Error obteniendo solicitudes de amistad:', err);
-      setFriendRequests([]);
-    }
-  };
-
   const handleAcceptFriendRequest = async (requestId) => {
     try {
       const response = await fetch(`${API_URL}/api/friends/accept/${requestId}`, {
@@ -110,34 +152,12 @@ function Profile() {
         throw new Error('Error al aceptar la solicitud');
       }
 
-      // Actualizar la lista de solicitudes y amigos
-      fetchFriendRequests();
+      // Actualizar la lista de amigos y estadísticas
       fetchFriends();
+      fetchUserStats();
     } catch (err) {
       console.error('Error aceptando solicitud:', err);
       alert('No se pudo aceptar la solicitud de amistad');
-    }
-  };
-
-  const handleRejectFriendRequest = async (requestId) => {
-    try {
-      const response = await fetch(`${API_URL}/api/friends/reject/${requestId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al rechazar la solicitud');
-      }
-
-      // Actualizar la lista de solicitudes
-      fetchFriendRequests();
-    } catch (err) {
-      console.error('Error rechazando solicitud:', err);
-      alert('No se pudo rechazar la solicitud de amistad');
     }
   };
 
@@ -147,8 +167,7 @@ function Profile() {
       setLoading(true);
       Promise.all([
         fetchUserStats(),
-        fetchFriends(),
-        fetchFriendRequests()
+        fetchFriends()
       ]).finally(() => setLoading(false));
     }
   }, [user, token]);
@@ -199,14 +218,18 @@ function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 relative">
-      {/* Modal para solicitudes de amistad */}
-      {showFriendRequests && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col">
+      {/* Modal para búsqueda de amigos (único modal) */}
+      {showFriendSearch && (
+        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
+          <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
             <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">Solicitudes de amistad</h3>
-              <button 
-                onClick={() => setShowFriendRequests(false)}
+              <h3 className="text-lg font-semibold text-gray-800">Buscar amigos</h3>
+              <button
+                onClick={() => {
+                  setShowFriendSearch(false);
+                  setSearchTerm('');
+                  setSearchResults([]);
+                }}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -215,70 +238,126 @@ function Profile() {
               </button>
             </div>
             
-            <div className="overflow-y-auto flex-1">
-              {loading ? (
-                <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-fuchsia-500"></div>
+            {/* Barra de búsqueda */}
+            <div className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    if (e.target.value.length >= 3) {
+                      searchUsers(e.target.value);
+                    }
+                  }}
+                  placeholder="Buscar por nombre o email..."
+                  className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fuchsia-300 focus:border-fuchsia-500 transition-colors"
+                />
+                <div className="absolute left-3 top-2.5 text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
                 </div>
-              ) : friendRequests.length > 0 ? (
-                <div className="space-y-3">
-                  {friendRequests.map(request => (
-                    <div key={request.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400">
-                          {request.senderUser?.avatar ? (
-                            <img
-                              src={`${API_URL}/uploads/avatars/${request.senderUser.avatar}`}
-                              alt={`Avatar de ${request.senderUser.username}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold">
-                              {request.senderUser?.username.charAt(0).toUpperCase()}
-                            </div>
+              </div>
+              {searchTerm.length > 0 && searchTerm.length < 3 && (
+                <p className="text-xs text-gray-500 mt-1">Ingresa al menos 3 caracteres para buscar</p>
+              )}
+            </div>
+            
+            {/* Resultados de búsqueda */}
+            <div className="overflow-y-auto flex-1">
+              {isSearching ? (
+                <div className="flex justify-center py-10">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-fuchsia-500"></div>
+                </div>
+              ) : searchTerm.length >= 3 ? (
+                searchResults.length > 0 ? (
+                  <div className="space-y-3">
+                    {searchResults.map(user => (
+                      <div key={user.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400">
+                            {user.avatar ? (
+                              <img
+                                src={`${API_URL}/uploads/avatars/${user.avatar}`}
+                                alt={`Avatar de ${user.username}`}
+                                className="w-full h-full object-cover"
+                                onError={handleDefaultAvatarError}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold">
+                                {user.username.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-gray-800 font-medium">{user.username}</p>
+                          </div>
+                        </div>
+                        <div>
+                          {user.friendship_status === 'none' && (
+                            <button
+                              onClick={() => sendFriendRequest(user.id)}
+                              className="py-1.5 px-3 bg-fuchsia-500 text-white rounded hover:bg-fuchsia-600 transition-colors text-sm"
+                            >
+                              Enviar solicitud
+                            </button>
+                          )}
+                          {user.friendship_status === 'requested' && (
+                            <span className="px-3 py-1.5 bg-gray-200 text-gray-600 rounded text-sm">
+                              Solicitud enviada
+                            </span>
+                          )}
+                          {user.friendship_status === 'pending' && (
+                            <button
+                              onClick={() => handleAcceptFriendRequest(user.friendship_id)}
+                              className="py-1.5 px-3 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
+                            >
+                              Aceptar solicitud
+                            </button>
+                          )}
+                          {user.friendship_status === 'friends' && (
+                            <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded text-sm">
+                              Ya son amigos
+                            </span>
+                          )}
+                          {user.friendship_status === 'rejected' && (
+                            <button
+                              onClick={() => sendFriendRequest(user.id)}
+                              className="py-1.5 px-3 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors text-sm"
+                            >
+                              Volver a enviar
+                            </button>
                           )}
                         </div>
-                        <div className="ml-3">
-                          <p className="text-gray-800 font-medium">{request.senderUser?.username}</p>
-                          <p className="text-gray-500 text-xs">{new Date(request.createdAt).toLocaleDateString()}</p>
-                        </div>
                       </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleAcceptFriendRequest(request.id)}
-                          className="p-2 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-                          title="Aceptar"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleRejectFriendRequest(request.id)}
-                          className="p-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-                          title="Rechazar"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <p className="text-gray-500">No se encontraron usuarios</p>
+                  </div>
+                )
               ) : (
-                <div className="text-center py-10">
+                <div className="text-center py-10 text-gray-500">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  <p className="text-gray-500">No tienes solicitudes de amistad pendientes</p>
+                  <p>Busca usuarios por nombre o email</p>
                 </div>
               )}
             </div>
             
             <div className="mt-4 pt-3 border-t border-gray-100">
               <button
-                onClick={() => setShowFriendRequests(false)}
+                onClick={() => {
+                  setShowFriendSearch(false);
+                  setSearchTerm('');
+                  setSearchResults([]);
+                }}
                 className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
               >
                 Cerrar
@@ -347,7 +426,7 @@ function Profile() {
             </div>
           </div>
 
-          {/* Lista de amigos - SIN botón de buscar amigos */}
+          {/* Lista de amigos - CON botón de buscar amigos */}
           <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
@@ -363,8 +442,8 @@ function Profile() {
               <div className="max-h-60 overflow-y-auto">
                 <ul className="divide-y divide-gray-100">
                   {friends.map(friend => (
-                    <li key={friend.id} className="py-2">
-                      <Link to={`/profile/${friend.id}`} className="flex items-center hover:bg-gray-50 rounded-lg p-2 transition-colors">
+                    <li key={friend.friendship_id} className="py-2">
+                      <Link to={`/profile/${friend.user_id}`} className="flex items-center hover:bg-gray-50 rounded-lg p-2 transition-colors">
                         {/* Avatar del amigo */}
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex-shrink-0">
                           {friend.avatar ? (
@@ -372,6 +451,7 @@ function Profile() {
                               src={`${API_URL}/uploads/avatars/${friend.avatar}`}
                               alt={`Avatar de ${friend.username}`}
                               className="w-full h-full object-cover"
+                              onError={handleDefaultAvatarError}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-white text-lg font-bold">
@@ -391,10 +471,19 @@ function Profile() {
                 <p className="text-sm mt-2">Agrega amigos para verlos aquí</p>
               </div>
             )}
-            {/* Botón "Buscar amigos" eliminado */}
+            {/* Botón para buscar amigos */}
+            <button
+              onClick={() => setShowFriendSearch(true)}
+              className="mt-4 w-full py-2 px-4 bg-fuchsia-50 hover:bg-fuchsia-100 text-fuchsia-600 rounded-md font-medium transition flex items-center justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+              </svg>
+              Buscar amigos
+            </button>
           </div>
 
-          {/* Acciones rápidas - Con botón de solicitudes de amistad */}
+          {/* Acciones rápidas - Sin botones modales */}
           <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
@@ -421,6 +510,8 @@ function Profile() {
                 </svg>
                 Mis eventos
               </Link>
+              
+              {/* Links normales en lugar de botones modales */}
               <Link
                 to="invitations"
                 className="flex w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition items-center"
@@ -435,10 +526,9 @@ function Profile() {
                   </span>
                 )}
               </Link>
-              
-              {/* Botón para mostrar solicitudes de amistad */}
-              <button
-                onClick={() => setShowFriendRequests(true)}
+
+              <Link
+                to="friend-requests"
                 className="flex w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition items-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -450,7 +540,7 @@ function Profile() {
                     {stats.friendRequests}
                   </span>
                 )}
-              </button>
+              </Link>
             </div>
           </div>
         </div>

@@ -141,6 +141,30 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * Buscar usuarios por término de búsqueda (username o email)
+     */
+    public function findBySearchTerm(string $term, array $excludeIds = []): array
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->where('u.username LIKE :term OR u.email LIKE :term')
+            ->setParameter('term', '%' . $term . '%');
+
+        // Excluir IDs específicos (como el usuario actual)
+        if (!empty($excludeIds)) {
+            $qb->andWhere('u.id NOT IN (:excludeIds)')
+                ->setParameter('excludeIds', $excludeIds);
+        }
+
+        // Excluir usuarios baneados
+        $qb->andWhere('u.banned = :banned')
+            ->setParameter('banned', false)
+            ->setMaxResults(20);
+
+        return $qb->getQuery()->getResult();
+    }
+
     // public function getAllUsers(): array
     // {
     //     try {

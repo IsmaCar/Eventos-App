@@ -8,6 +8,7 @@ use App\Repository\PhotoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -170,6 +171,74 @@ final class PhotoController extends AbstractController
             // Log error para depuración
             error_log('Error en getUserFavorites: ' . $e->getMessage());
             return $this->json(['message' => 'Error interno del servidor', 'error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/photos/{id}/download', name: 'photo_download', methods: ['GET'])]
+    public function downloadPhoto(int $id, PhotoRepository $photoRepository): Response
+    {
+        try {
+            // Obtener la foto
+            $photo = $photoRepository->find($id);
+            if (!$photo) {
+                return $this->json(['error' => 'Foto no encontrada'], Response::HTTP_NOT_FOUND);
+            }
+
+            // Obtener nombre del archivo
+            $filename = $photo->getUrlPhoto();
+            if (!$filename) {
+                return $this->json(['error' => 'Archivo no disponible'], Response::HTTP_NOT_FOUND);
+            }
+
+            // Construir ruta al archivo
+            $filePath = $this->getParameter('kernel.project_dir') . '/public/uploads/event_photos/' . $filename;
+            if (!file_exists($filePath) || !is_readable($filePath)) {
+                return $this->json(['error' => 'Archivo no accesible'], Response::HTTP_NOT_FOUND);
+            }
+
+            // Detectar tipo MIME
+            $mimeType = mime_content_type($filePath) ?: 'application/octet-stream';
+
+            // Crear nombre de archivo amigable para la descarga
+            $extension = pathinfo($filename, PATHINFO_EXTENSION) ?: 'jpg';
+            $safeFilename = 'foto-';
+
+            // Intentar añadir el título del evento al nombre del archivo
+            try {
+                $event = $photo->getEvent();
+                if ($event && $event->getTitle()) {
+                    $safeFilename .= preg_replace('/[^a-zA-Z0-9]/', '-', $event->getTitle()) . '-';
+                }
+            } catch (\Exception $e) {
+                // Ignorar errores al obtener el título del evento
+            }
+
+            $safeFilename .= $photo->getId() . '.' . $extension;
+
+            // Crear respuesta optimizada
+            $response = new BinaryFileResponse($filePath);
+
+            // Configurar headers para optimizar la descarga
+            $response->headers->set('Content-Type', $mimeType);
+            $response->headers->set('Content-Disposition', 'attachment; filename="' . $safeFilename . '"');
+
+            // Configurar caché para mejorar rendimiento en descargas repetidas
+            $response->setCache([
+                'public' => true,
+                'max_age' => 86400,
+                'immutable' => true,
+            ]);
+
+            // Deshabilitar compresión para archivos que ya están comprimidos (jpg, png, etc.)
+            if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'pdf'])) {
+                $response->headers->set('Content-Encoding', 'identity');
+            }
+
+            return $response;
+        } catch (\Exception $e) {
+            // Log para depuración pero respuesta de error simplificada
+            error_log('Error en downloadPhoto: ' . $e->getMessage());
+            return $this->json(['error' => 'No se pudo procesar la descarga'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

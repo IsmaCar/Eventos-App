@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function EventInvitations({ eventId }) {
+function EventInvitations({ eventId, onInvitationProcessed }) {
   const { token } = useAuth();
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +77,10 @@ function EventInvitations({ eventId }) {
         };
       });
       
-      setInvitations(normalizedInvitations);
+      // Filtrar para mostrar solo las invitaciones pendientes
+      const pendingInvitations = normalizedInvitations.filter(inv => inv.status === 'pending');
+      
+      setInvitations(pendingInvitations);
       setError(null);
     } catch (err) {
       setError('No se pudieron cargar las invitaciones');
@@ -103,6 +106,11 @@ function EventInvitations({ eventId }) {
       if (response.ok) {
         // Actualizar la lista sin recargar todo
         setInvitations(invitations.filter(inv => inv.id !== invitationId));
+        
+        // Notificar al componente padre si existe el callback
+        if (typeof onInvitationProcessed === 'function') {
+          onInvitationProcessed();
+        }
       } else {
         throw new Error('Error al cancelar la invitación');
       }
@@ -142,7 +150,7 @@ function EventInvitations({ eventId }) {
   if (invitations.length === 0) {
     return (
       <div className="text-center py-6 bg-gray-50 rounded-lg">
-        <p className="text-gray-500">Aún no hay invitaciones para este evento.</p>
+        <p className="text-gray-500">No hay invitaciones pendientes para este evento.</p>
       </div>
     );
   }
@@ -214,12 +222,14 @@ function EventInvitations({ eventId }) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   {invitation.status === 'pending' && (
-                    <button
-                      onClick={() => handleCancelInvitation(invitation.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Cancelar
-                    </button>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleCancelInvitation(invitation.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Cancelar invitación
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>

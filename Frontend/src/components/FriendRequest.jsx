@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function FriendRequests() {
+function FriendRequests({ onRequestProcessed }) {
   const { token } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,8 +28,7 @@ function FriendRequests() {
       setRequests(data.requests || []);
       setError(null);
     } catch (err) {
-      console.error('Error obteniendo solicitudes de amistad:', err);
-      setError(err.message);
+      setError("Error al cargar las solicitudes");
       setRequests([]);
     } finally {
       setLoading(false);
@@ -54,8 +53,12 @@ function FriendRequests() {
       setRequests(prevRequests => 
         prevRequests.filter(request => request.id !== requestId)
       );
+      
+      // Notificar al componente padre que se procesó una solicitud
+      if (typeof onRequestProcessed === 'function') {
+        onRequestProcessed();
+      }
     } catch (err) {
-      console.error('Error aceptando solicitud:', err);
       alert('No se pudo aceptar la solicitud de amistad');
     }
   };
@@ -78,14 +81,20 @@ function FriendRequests() {
       setRequests(prevRequests => 
         prevRequests.filter(request => request.id !== requestId)
       );
+      
+      // Notificar al componente padre que se procesó una solicitud
+      if (typeof onRequestProcessed === 'function') {
+        onRequestProcessed();
+      }
     } catch (err) {
-      console.error('Error rechazando solicitud:', err);
       alert('No se pudo rechazar la solicitud de amistad');
     }
   };
 
   useEffect(() => {
-    fetchFriendRequests();
+    if (token) {
+      fetchFriendRequests();
+    }
   }, [token]);
 
   const handleDefaultAvatarError = (e) => {
@@ -93,10 +102,40 @@ function FriendRequests() {
     e.target.onerror = null;
   };
 
-  return (
-    <div className="bg-white rounded-xl shadow p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Solicitudes de amistad</h2>
+  // Función para formatear fechas correctamente
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Fecha desconocida';
+    
+    try {
+      const date = new Date(dateString);
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) return 'Fecha inválida';
       
+      // Formatear fecha (día/mes/año)
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return 'Fecha inválida';
+    }
+  };
+
+  // Función para obtener el nombre de usuario o un valor por defecto
+  const getUsername = (user) => {
+    if (!user) return 'Usuario desconocido';
+    return user.username || 'Sin nombre';
+  };
+
+  // Función para obtener la inicial del nombre de usuario
+  const getUserInitial = (user) => {
+    if (!user || !user.username) return '?';
+    return user.username.charAt(0).toUpperCase();
+  };
+
+  return (
+    <div className="bg-white rounded-xl p-4">
       {loading ? (
         <div className="flex justify-center py-10">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-fuchsia-500"></div>
@@ -116,35 +155,35 @@ function FriendRequests() {
           {requests.map(request => (
             <div key={request.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400">
-                  {request.senderUser?.avatar ? (
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex-shrink-0">
+                  {request.requester && request.requester.avatar ? (
                     <img
-                      src={`${API_URL}/uploads/avatars/${request.senderUser.avatar}`}
-                      alt={`Avatar de ${request.senderUser.username}`}
+                      src={`${API_URL}/uploads/avatars/${request.requester.avatar}`}
+                      alt={`Avatar de ${getUsername(request.requester)}`}
                       className="w-full h-full object-cover"
                       onError={handleDefaultAvatarError}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white text-lg font-bold">
-                      {request.senderUser?.username?.charAt(0).toUpperCase() || '?'}
+                      {getUserInitial(request.requester)}
                     </div>
                   )}
                 </div>
                 <div className="ml-4">
-                  <p className="text-gray-800 font-medium">{request.senderUser?.username}</p>
-                  <p className="text-gray-500 text-sm">{new Date(request.createdAt).toLocaleDateString()}</p>
+                  <p className="text-gray-800 font-medium">{getUsername(request.requester)}</p>
+                  <p className="text-gray-500 text-sm">{formatDate(request.created_at)}</p>
                 </div>
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={() => handleAcceptFriendRequest(request.id)}
-                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                  className="px-4 py-2 bg-fuchsia-600 text-white text-sm rounded-md hover:bg-fuchsia-700 transition-colors"
                 >
                   Aceptar
                 </button>
                 <button
                   onClick={() => handleRejectFriendRequest(request.id)}
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors"
                 >
                   Rechazar
                 </button>

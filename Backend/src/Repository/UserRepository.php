@@ -75,29 +75,33 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
      */
     public function getUserStatsById(int $userId): array
     {
-        // Eventos creados por el usuario
-        $eventsCreated = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select('COUNT(e.id)')
-            ->from('App\Entity\Event', 'e')
-            ->where('e.user = :user')
-            ->setParameter('user', $userId)
-            ->getQuery()
-            ->getSingleScalarResult();
+        // Solicitudes de amistad pendientes
+    $friendRequests = $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select('COUNT(f.id)')
+        ->from('App\Entity\Friendship', 'f')
+        ->where('f.addressee = :userId AND f.status = :status')  // ¡CORREGIDO! Era "friend", ahora es "addressee"
+        ->setParameter('userId', $userId)                          // ¡CORREGIDO! Pasamos el objeto User completo
+        ->setParameter('status', 'pending')
+        ->getQuery()
+        ->getSingleScalarResult();
+    
+    // Invitaciones a eventos pendientes
+    $invitationsPending = $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select('COUNT(i.id)')
+        ->from('App\Entity\Invitation', 'i')
+        ->where('i.invitedUser = :userId AND i.status = :status') // ¡CORREGIDO! Era "receiver", ahora es "invitedUser"
+        ->setParameter('userId', $userId)                           // ¡CORREGIDO! Pasamos el objeto User completo
+        ->setParameter('status', 'pending')
+        ->getQuery()
+        ->getSingleScalarResult();
 
-        // Fotos subidas por el usuario
-        $photosUploaded = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select('COUNT(p.id)')
-            ->from('App\Entity\Photo', 'p')
-            ->where('p.user = :user')
-            ->setParameter('user', $userId)
-            ->getQuery()
-            ->getSingleScalarResult();
+
 
         return [
-            'eventsCreated' => (int) $eventsCreated,
-            'photosUploaded' => (int) $photosUploaded,
+            'friendRequests' => (int) $friendRequests,
+            'invitationsPending' => (int) $invitationsPending,
         ];
     }
 

@@ -13,8 +13,7 @@ import EventUser from "../components/EventUser";
 import Dashboard from "../pages/Dashboard";
 import PublicProfile from "../pages/PublicProfile";
 import FavoritePhotos from "../pages/FavoritePhotos";
-import ReceivedInvitations from "../components/ReceivedInvitations";
-import FriendRequests from "../components/FriendRequest";
+;
 
 export const router = createBrowserRouter([
     {
@@ -64,16 +63,6 @@ export const router = createBrowserRouter([
                         path: "my-events",
                         element:
                             <EventUser/>,
-                    },
-                    {
-                        path: "invitations",
-                        element:
-                            <ReceivedInvitations/>,
-                    },
-                    {
-                        path: "friend-requests",
-                        element:
-                            <FriendRequests/>,
                     },
                 ]
             },

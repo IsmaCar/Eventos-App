@@ -1,296 +1,134 @@
-import React, { useEffect, useState } from 'react'
-import { useEvent } from '../context/EventContext'
-import { useAuth } from '../context/AuthContext'  // Añadimos para verificar usuario
+import React, { useState, useCallback } from 'react'
+import { useAuth } from '../context/AuthContext'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { LocationPicker } from '../components/Maps'
 import InviteUsers from '../components/InviteUsers'
-import EventInvitations from '../components/EventInvitations'
+import EventInvitationOrganizer from '../components/EventInvitationOrganizer'
 
+// Importar los hooks personalizados
+import { useEventDetails } from '../hooks/useEventDetails'
+import { useEventAttendees } from '../hooks/useEventAttends'
+import { usePhotoUploads } from '../hooks/usePhotoUploads'
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function CardDetail() {
-  const { getEventById, getImageUrl } = useEvent()
-  const { user, token } = useAuth()
   const { id } = useParams()
-  const [event, setEvent] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const navigate = useNavigate()
+  const { user, token } = useAuth()
   const [activeTab, setActiveTab] = useState('invite')
 
-  // Estados específicos para fotos
-  const [photos, setPhotos] = useState([])
-  const [loadingPhotos, setLoadingPhotos] = useState(false)
-  const [selectedFile, setSelectedFile] = useState(null)
-  const [uploading, setUploading] = useState(false)
-  const [expandedPhoto, setExpandedPhoto] = useState(null)
-  const [photoFavorites, setPhotoFavorites] = useState({}) 
+  // Hook para los detalles del evento
+  const {
+    event,
+    loading,
+    error,
+    getImageUrl,
+    photos,
+    loadingPhotos,
+    photoFavorites,
+    toggleFavorite,
+    fetchEventPhotos,
+    formatDate
+  } = useEventDetails(id);
 
-  // Estados para asistentes
-  const [attendees, setAttendees] = useState([])
-  const [loadingAttendees, setLoadingAttendees] = useState(false)
-  
-  // Nueva función para cancelar asistencia
-  const cancelAttendance = async (attendeeId) => {
-    if (!token) return;
-    
+  // Verificar si el usuario es el creador del evento
+  const isEventCreator = useCallback(() => {
+    if (!user || !event) return false;
+
+    const currentUserId = parseInt(user.id, 10);
+    const eventUserId = parseInt(event.user_id, 10);
+
+    return !isNaN(eventUserId) && currentUserId === eventUserId;
+  }, [user, event]);
+
+  // Hook para gestionar asistentes
+  const {
+    attendees,
+    loadingAttendees,
+    processingAction,
+    isCurrentUserAttending,
+    isAttendeeOrganizer,
+    cancelAttendance,
+    removeAttendee
+  } = useEventAttendees(id, isEventCreator());
+
+  // Hook para gestionar fotos
+  const {
+    selectedFile,
+    uploadError,
+    uploading,
+    handleFileChange,
+    clearSelectedFile,
+    deletingPhotoId,
+    canDeletePhoto,
+    deletePhoto,
+    expandedPhoto,
+    openExpandedView,
+    closeExpandedView,
+    maxFileSize,
+    allowedTypesFormatted,
+    handleUploadPhoto,    
+    handleDownloadPhoto  
+  } = usePhotoUploads(id, isEventCreator(), fetchEventPhotos, navigate);
+
+  // Estado para eliminar evento
+  const [deletingEvent, setDeletingEvent] = useState(false);
+
+  // Función para eliminar el evento
+  const handleDeleteEvent = async () => {
+    if (!token || !isEventCreator()) return;
+
     try {
-      if (!confirm('¿Estás seguro de que deseas cancelar tu asistencia a este evento?')) {
+      if (!confirm('¿Estás seguro de que deseas eliminar este evento? Esta acción no se puede deshacer.')) {
         return;
       }
-      
-      const response = await fetch(`${API_URL}/api/events/${id}/cancel-attendance`, {
-        method: 'POST',
+
+      setDeletingEvent(true);
+
+      const response = await fetch(`${API_URL}/api/events/${id}`, {
+        method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'No se pudo cancelar la asistencia');
+        throw new Error(errorData.error || 'No se pudo eliminar el evento');
       }
-      
-      // Actualizar la lista de asistentes quitando al usuario actual
-      setAttendees(attendees.filter(attendee => parseInt(attendee.id) !== parseInt(user.id)));
-      alert('Has cancelado tu asistencia al evento correctamente');
+
+      // Éxito: redirigir a la página de inicio
+      alert('El evento ha sido eliminado correctamente');
+      navigate('/');
     } catch (error) {
-      console.error("Error cancelando asistencia:", error);
+      console.error("Error eliminando el evento:", error);
       alert('Error: ' + error.message);
-    }
-  };
-
-  useEffect(() => {
-    const fetchEventAttendees = async () => {
-      if (!id || !token) return;
-
-      try {
-        setLoadingAttendees(true);
-        const response = await fetch(`${API_URL}/api/events/${id}/attendees`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar los asistentes');
-        }
-
-        const data = await response.json();
-        setAttendees(data.attendees || []);
-
-      } catch (error) {
-        console.error('Error al cargar los asistentes:', error);
-      } finally {
-        setLoadingAttendees(false);
-      }
-    };
-
-    if (event) {
-      fetchEventAttendees();
-    }
-  }, [id, token, event, user]);
-
-
-  useEffect(() => {
-    async function loadEventData() {
-      try {
-        setLoading(true)
-        const data = await getEventById(id)
-        console.log("Datos del evento:", data)
-        setEvent(data.event || data)
-        setLoading(false)
-
-        // Cargamos las fotos después de tener los datos del evento
-        fetchEventPhotos()
-      } catch (err) {
-        console.error("Error cargando el evento:", err)
-        setError("No se pudo cargar el evento")
-        setLoading(false)
-      }
-    }
-    loadEventData()
-  }, [id, getEventById])
-
-  // Función para cargar las fotos del evento
-  const fetchEventPhotos = async () => {
-    try {
-      setLoadingPhotos(true)
-      const response = await fetch(`${API_URL}/api/events/${id}/photos`)
-
-      if (!response.ok) {
-        throw new Error('Error al cargar las fotos')
-      }
-
-      const data = await response.json()
-      const photosArray = data.photos || []
-      setPhotos(photosArray)
-
-      // Si hay token y fotos, cargar el estado de favoritos
-      if (token && photosArray.length > 0) {
-        fetchFavoritesStatus(photosArray)
-      }
-    } catch (error) {
-      console.error('Error al cargar las fotos:', error)
     } finally {
-      setLoadingPhotos(false)
-    }
-  }
-
-  // Función para cargar el estado de favoritos
-  const fetchFavoritesStatus = async (photosArray) => {
-    if (!token) return;
-
-    try {
-      // Creamos un objeto para mapear favoritos por ID
-      const favoritesMap = {};
-
-      // Hacemos peticiones en paralelo para verificar cada foto
-      await Promise.all(photosArray.map(async (photo) => {
-        const response = await fetch(`${API_URL}/api/photos/${photo.id}/is-favorite`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          favoritesMap[photo.id] = data.isFavorite;
-        }
-      }));
-
-      setPhotoFavorites(favoritesMap);
-    } catch (error) {
-      console.error('Error al cargar estado de favoritos:', error);
+      setDeletingEvent(false);
     }
   };
 
-  // Función para marcar/desmarcar favorito
-  const toggleFavorite = async (photoId, e) => {
-    // Evitar que se abra la vista ampliada
-    e.stopPropagation()
-
-    if (!token) {
-      // Redireccionar al login o mostrar mensaje
-      navigate('/login', { state: { from: `/events/${id}` } });
+  // Función para eliminar foto con confirmación
+  const handleDeletePhoto = async (photoId, e) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar esta foto? Esta acción no se puede deshacer.')) {
       return;
     }
 
-    try {
-      const response = await fetch(`${API_URL}/api/photos/${photoId}/favorite`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+    const result = await deletePhoto(photoId, photos, e);
 
-      if (response.ok) {
-        const data = await response.json()
-        // Actualizar estado local para reflejar cambio inmediatamente
-        setPhotoFavorites(prev => ({
-          ...prev,
-          [photoId]: data.isFavorite
-        }))
-      }
-    } catch (error) {
-      console.error('Error al cambiar favorito:', error)
-    }
-  }
-
-  // Navegación a página de favoritos
-  const goToFavorites = () => {
-    navigate('/favorite-photos')
-  }
-
-  // Función para manejar la selección de archivo
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
-    if (file && file.type.startsWith('image/')) {
-      setSelectedFile(file)
+    if (result.success) {
+      alert('La foto ha sido eliminada correctamente');
     } else {
-      setSelectedFile(null)
+      alert(`Error: ${result.error}`);
     }
-  }
-
-  // Función para subir la foto
-  const handleUploadPhoto = async () => {
-    if (!selectedFile) {
-      return
-    }
-
-    if (!token) {
-      navigate('/login', { state: { from: `/events/${id}` } });
-      return;
-    }
-
-    try {
-      setUploading(true)
-
-      const formData = new FormData()
-      formData.append('photo', selectedFile)
-
-      const response = await fetch(`${API_URL}/api/events/${id}/photos`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Error al subir la foto')
-      }
-
-      // Éxito
-      setSelectedFile(null)
-      // Refrescar la lista de fotos
-      fetchEventPhotos()
-    } catch (error) {
-      console.error('Error al subir foto:', error)
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  // Funciones para vista expandida
-  const openExpandedView = (photo) => {
-    setExpandedPhoto(photo);
-    document.body.style.overflow = 'hidden';
-  }
-
-  const closeExpandedView = () => {
-    setExpandedPhoto(null);
-    document.body.style.overflow = 'auto';
-  }
+  };
 
   // Función para manejar cuando se envía una invitación exitosamente
   const handleInvitationSent = () => {
     // Cambiar a la pestaña de gestión después de enviar una invitación
     setActiveTab('manage');
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "Fecha no disponible"
-
-    try {
-      const options = { year: 'numeric', month: 'long', day: 'numeric' }
-      return new Date(dateString).toLocaleDateString('es-ES', options)
-    } catch (error) {
-      return dateString
-    }
-  }
-
-  // Función mejorada para verificar si el usuario actual es el creador del evento
-  const isEventCreator = () => {
-    if (!user || !event) return false;
-
-    // Convertir ambos valores a números para comparación directa
-    const currentUserId = parseInt(user.id, 10);
-    const eventUserId = parseInt(event.user_id, 10);
-
-    return !isNaN(eventUserId) && currentUserId === eventUserId;
   };
 
   // Mostrar estado de carga
@@ -337,6 +175,31 @@ function CardDetail() {
 
       {/* Contenido con padding */}
       <div className="p-6">
+        {/* Botón para eliminar evento - solo visible para el creador */}
+        {isEventCreator() && (
+          <div className="flex justify-end mb-6">
+            <button
+              onClick={handleDeleteEvent}
+              disabled={deletingEvent}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 transition-colors"
+            >
+              {deletingEvent ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  <span>Eliminando...</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Eliminar evento</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
         {/* Detalles principales */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
           {/* Fecha - más pequeña */}
@@ -346,7 +209,15 @@ function CardDetail() {
             {event.time && <p className="text-gray-700 mt-1">{event.time}</p>}
             <div className="mt-4">
               <h2 className="text-lg font-bold text-gray-800 mb-3">Acerca de este evento</h2>
-              <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
+              <div
+                className="max-h-60 overflow-y-auto pr-2"
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#d8b4fe #f0f0f0'
+                }}
+              >
+                <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
+              </div>
             </div>
           </div>
 
@@ -410,7 +281,8 @@ function CardDetail() {
                   {attendees.map((attendee) => {
                     // Determinar si este asistente es el usuario actual
                     const isCurrentUser = user && parseInt(user.id) === parseInt(attendee.id);
-
+                    // Determinar si este asistente es el organizador del evento
+                    const isOrganizerOfEvent = isAttendeeOrganizer(attendee.id);
                     // Ruta del enlace: profile/id para otros, /profile para el usuario actual
                     const profileLink = isCurrentUser ? '/profile' : `/profile/${attendee.id}`;
 
@@ -427,6 +299,10 @@ function CardDetail() {
                                 src={attendee.avatar ? `${API_URL}/uploads/avatars/${attendee.avatar}` : ''}
                                 alt={`${attendee.username}`}
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
+                                  e.target.onerror = null;
+                                }}
                               />
                             </div>
 
@@ -437,26 +313,52 @@ function CardDetail() {
                             </span>
 
                             {/* Indicador de organizador */}
-                            {attendee.isCreator && (
+                            {isOrganizerOfEvent && (
                               <span className="ml-auto text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">
                                 Organizador
                               </span>
                             )}
                           </Link>
-                          
-                          {/* Botón para cancelar asistencia - solo para el usuario actual que no sea organizador */}
-                          {isCurrentUser && !attendee.isCreator && (
-                            <button
-                              onClick={cancelAttendance}
-                              className="ml-2 text-sm bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-full transition-colors flex items-center"
-                              title="Cancelar asistencia"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                              no asistiré
-                            </button>
-                          )}
+
+                          <div className="flex gap-2">
+                            {/* Botón para cancelar asistencia - solo para el usuario actual que no sea organizador */}
+                            {isCurrentUser && !isOrganizerOfEvent && (
+                              <button
+                                onClick={cancelAttendance}
+                                disabled={processingAction}
+                                className="text-sm bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-full transition-colors flex items-center"
+                                title="Cancelar asistencia"
+                              >
+                                {processingAction ? (
+                                  <div className="animate-spin h-3 w-3 border-2 border-red-600 border-t-transparent rounded-full mr-1"></div>
+                                ) : (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                )}
+                                no asistiré
+                              </button>
+                            )}
+
+                            {/* Botón para que el organizador elimine asistentes que no sean él mismo */}
+                            {isEventCreator() && !isOrganizerOfEvent && !isCurrentUser && (
+                              <button
+                                onClick={() => removeAttendee(attendee.id)}
+                                disabled={processingAction}
+                                className="text-sm bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-full transition-colors flex items-center"
+                                title="Eliminar asistente"
+                              >
+                                {processingAction ? (
+                                  <div className="animate-spin h-3 w-3 border-2 border-red-600 border-t-transparent rounded-full mr-1"></div>
+                                ) : (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                )}
+                                eliminar
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </li>
                     );
@@ -511,7 +413,7 @@ function CardDetail() {
                     onInvitationSent={handleInvitationSent}
                   />
                 ) : (
-                  <EventInvitations eventId={id} />
+                  <EventInvitationOrganizer eventId={id} />
                 )}
               </div>
             </div>
@@ -520,21 +422,8 @@ function CardDetail() {
 
         {/* SECCIÓN: FOTOS DEL EVENTO (con favoritos) */}
         <div className="mt-12 border-t pt-8">
-          <div className="flex justify-between items-center mb-6">
+          <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Fotos del evento</h2>
-
-            {/* Botón para ir a favoritos */}
-            {token && (
-              <button
-                onClick={goToFavorites}
-                className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 text-sm font-medium"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                </svg>
-                Ver mis favoritas
-              </button>
-            )}
           </div>
 
           {/* Subir nueva foto */}
@@ -565,10 +454,16 @@ function CardDetail() {
                   {uploading ? 'Subiendo...' : 'Subir foto'}
                 </button>
               </div>
+              {uploadError && (
+                <p className="mt-2 text-sm text-red-600">{uploadError}</p>
+              )}
+              <p className="mt-2 text-xs text-gray-500">
+                Formatos permitidos: {allowedTypesFormatted}. Tamaño máximo: {(maxFileSize / (1024 * 1024)).toFixed(0)}MB
+              </p>
             </div>
           )}
 
-          {/* Mostrar fotos con botones de favorito */}
+          {/* Mostrar fotos con botones de acción */}
           <div className="mt-6">
             {loadingPhotos ? (
               <div className="flex justify-center py-10">
@@ -591,23 +486,56 @@ function CardDetail() {
                       <div className="flex justify-between items-center mb-1">
                         <p className="text-white text-sm font-medium">{photo.user?.username || "Usuario"}</p>
 
-                        {/* Botón de favorito */}
-                        {token && (
+                        {/* Botones de acción para la foto */}
+                        <div className="flex space-x-2">
+                          {/* Botón para marcar/desmarcar favorito */}
+                          {token && (
+                            <button
+                              onClick={(e) => toggleFavorite(photo.id, e)}
+                              className="text-white hover:text-pink-400 transition-colors"
+                              title={photoFavorites[photo.id] ? "Quitar de favoritos" : "Añadir a favoritos"}
+                            >
+                              {photoFavorites[photo.id] ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                              )}
+                            </button>
+                          )}
+
+                          {/* Botón para descargar la foto */}
                           <button
-                            onClick={(e) => toggleFavorite(photo.id, e)}
-                            className="text-white hover:text-pink-400 transition-colors"
+                            onClick={(e) => handleDownloadPhoto(photo, event?.title, e)}
+                            className="text-white hover:text-blue-300 transition-colors"
+                            title="Descargar foto"
                           >
-                            {photoFavorites[photo.id] ? (
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                              </svg>
-                            ) : (
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                              </svg>
-                            )}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
                           </button>
-                        )}
+
+                          {/* Botón para eliminar la foto (solo para el propietario o el organizador) */}
+                          {token && canDeletePhoto(photo) && (
+                            <button
+                              onClick={(e) => handleDeletePhoto(photo.id, e)}
+                              className="text-white hover:text-red-400 transition-colors"
+                              title="Eliminar foto"
+                              disabled={deletingPhotoId === photo.id}
+                            >
+                              {deletingPhotoId === photo.id ? (
+                                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <p className="text-gray-200 text-xs">{new Date(photo.created_at).toLocaleDateString()}</p>
                     </div>
@@ -622,7 +550,7 @@ function CardDetail() {
           </div>
         </div>
 
-        {/* Modal para vista ampliada con botón de favorito */}
+        {/* Modal para vista ampliada con botones de acción */}
         {expandedPhoto && (
           <div
             className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
@@ -648,7 +576,7 @@ function CardDetail() {
                   className="w-full h-auto max-h-[85vh] object-contain bg-black"
                 />
 
-                {/* Información del usuario y botón de favorito */}
+                {/* Información del usuario y botones de acción */}
                 <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-4">
                   <div className="flex justify-between items-center">
                     <div>
@@ -656,23 +584,56 @@ function CardDetail() {
                       <p className="text-sm text-gray-200">{new Date(expandedPhoto.created_at).toLocaleDateString()}</p>
                     </div>
 
-                    {/* Botón de favorito en vista ampliada */}
-                    {token && (
+                    {/* Botones de acción en vista ampliada */}
+                    <div className="flex items-center space-x-4">
+                      {/* Botón de favorito */}
+                      {token && (
+                        <button
+                          onClick={(e) => toggleFavorite(expandedPhoto.id, e)}
+                          className="text-white hover:text-pink-400 transition-colors p-2"
+                          title={photoFavorites[expandedPhoto.id] ? "Quitar de favoritos" : "Añadir a favoritos"}
+                        >
+                          {photoFavorites[expandedPhoto.id] ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                          )}
+                        </button>
+                      )}
+
+                      {/* Botón para descargar foto */}
                       <button
-                        onClick={(e) => toggleFavorite(expandedPhoto.id, e)}
-                        className="text-white hover:text-pink-400 transition-colors p-2"
+                        onClick={(e) => handleDownloadPhoto(expandedPhoto, event?.title, e)}
+                        className="text-white hover:text-blue-300 transition-colors p-2"
+                        title="Descargar foto"
                       >
-                        {photoFavorites[expandedPhoto.id] ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                          </svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                        )}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
                       </button>
-                    )}
+
+                      {/* Botón para eliminar foto (solo para propietario o creador) */}
+                      {token && canDeletePhoto(expandedPhoto) && (
+                        <button
+                          onClick={() => handleDeletePhoto(expandedPhoto.id)}
+                          className="text-white hover:text-red-400 transition-colors p-2"
+                          title="Eliminar foto"
+                          disabled={deletingPhotoId === expandedPhoto.id}
+                        >
+                          {deletingPhotoId === expandedPhoto.id ? (
+                            <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

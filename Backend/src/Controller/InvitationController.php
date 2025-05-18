@@ -67,6 +67,10 @@ final class InvitationController extends AbstractController
                 return $this->json(['message' => 'No puedes invitarte a ti mismo'], Response::HTTP_BAD_REQUEST);
             }
 
+            if(new \DateTime() > $event->getEventDate()) {
+                return $this->json(['message' => 'No puedes invitar a un evento que ya ha pasado'], Response::HTTP_BAD_REQUEST);
+            }
+
             $invitation = new Invitation();
             $invitation->setEvent($event);
             $invitation->setInvitedBy($user);
@@ -356,7 +360,7 @@ final class InvitationController extends AbstractController
                 'invitedBy' => $invitedBy ? [
                     'id' => $invitedBy->getId(),
                     'username' => $invitedBy->getUsername()
-                ] : null
+                ] : null,
             ];
         }
 

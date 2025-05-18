@@ -1,0 +1,252 @@
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../hooks/Notifications';
+import { Avatar } from '../utils/Imagehelper';
+
+/**
+ * Barra de navegación principal de la aplicación
+ * Contiene enlaces principales, notificaciones y acceso a perfil
+ */
+function Navbar() {
+    const { token, user, isAdmin, logout } = useAuth();
+    const { hasNotifications } = useNotifications();
+    const location = useLocation();
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+
+    // Detecta scroll para aplicar efectos visuales en la barra
+    useEffect(() => {
+        const handleScroll = () => {
+            const isScrolled = window.scrollY > 10;
+            if (isScrolled !== scrolled) {
+                setScrolled(isScrolled);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, [scrolled]);
+
+    // Cierra el menú móvil automáticamente al cambiar de ruta
+    useEffect(() => {
+        setMobileMenuOpen(false);
+    }, [location.pathname]);
+
+    // Clases CSS dinámicas según el estado de autenticación y scroll
+    const navbarClasses = `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${token
+        ? `bg-zinc-800 ${scrolled ? 'shadow-md' : ''}`
+        : scrolled
+            ? 'bg-zinc-900/95 backdrop-blur-sm shadow-md'
+            : 'bg-zinc-900/90'
+        }`;
+
+    const textClass = 'text-white';
+    const hoverClass = 'hover:bg-zinc-700';
+
+    return (
+        <>
+            <nav className={navbarClasses}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-16">
+                        {/* Logo y nombre de la aplicación */}
+                        <div className="flex items-center">
+                            <Link to="/" className="flex items-center">
+                                <img
+                                    src={"/images/logo.png" || null}
+                                    alt="Memento"
+                                    className="h-10 w-auto"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.style.display = 'none';
+                                    }}
+                                />
+                                <span className="ml-2 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-indigo-600">
+                                    MEMENTO
+                                </span>
+                            </Link>
+
+                            {/* Acceso al panel de administración (solo admins) */}
+                            {token && isAdmin && (
+                                <Link
+                                    to="/dashboard"
+                                    className="ml-4 bg-indigo-600 text-white px-3 py-1.5 
+                          rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out flex items-center"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                    </svg>
+                                    <span>Administrar</span>
+                                </Link>
+                            )}
+                        </div>
+
+                        {/* Menú principal para escritorio (solo usuarios autenticados) */}
+                        {token && (
+                            <div className="hidden md:flex md:items-center">
+                                <div className="flex items-center space-x-4">
+                                    {/* Fotos favoritas */}
+                                    <Link
+                                        to="/favorite-photos"
+                                        className="flex items-center text-white px-3 py-1.5 
+                            rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-pink-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                        </svg>
+                                        <span>Fotos favoritas</span>
+                                    </Link>
+
+                                    {/* Centro de notificaciones */}
+                                    <Link
+                                        to="/profile"
+                                        className="flex items-center text-white px-3 py-1.5 
+                            rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out relative"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                        </svg>
+                                        <span>Notificaciones</span>
+
+                                        {/* Indicador de notificaciones sin leer */}
+                                        {hasNotifications && (
+                                            <span className="absolute top-0 right-0 transform translate-x-1 -translate-y-1 w-3 h-3 bg-purple-500 rounded-full animate-pulse"></span>
+                                        )}
+                                    </Link>
+
+                                    {/* Acceso al perfil con avatar */}
+                                    <Link
+                                        to="/profile"
+                                        className="flex items-center text-white px-3 py-1.5 
+                           rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out"
+                                    >
+                                        <Avatar
+                                            user={user}
+                                            size="xs"
+                                            className="mr-2 border-2 border-white/30"
+                                        />
+                                        <span>Perfil</span>
+                                    </Link>
+
+                                    {/* Botón de cierre de sesión */}
+                                    <button
+                                        onClick={logout}
+                                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 
+                            rounded-lg transition duration-300 ease-in-out flex items-center"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                        <span>Cerrar Sesión</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Botón de hamburguesa para menú móvil */}
+                        {token && (
+                            <div className="md:hidden flex items-center relative">
+                                <button
+                                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                    className={`${textClass} p-2 rounded-lg ${hoverClass} transition duration-300`}
+                                    aria-label="Toggle menu"
+                                >
+                                    {mobileMenuOpen ? (
+                                        <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                        </svg>
+                                    )}
+                                </button>
+
+                                {/* Indicador de notificaciones para móvil */}
+                                {hasNotifications && (
+                                    <span className="absolute top-0 right-0 transform translate-x-1 -translate-y-1 w-2.5 h-2.5 bg-purple-500 rounded-full animate-pulse"></span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Menú desplegable para dispositivos móviles */}
+                {token && mobileMenuOpen && (
+                    <div className="md:hidden bg-zinc-800 shadow-lg">
+                        <div className="px-4 py-3 space-y-2">
+                            <Link
+                                to="/favorite-photos"
+                                className="flex items-center text-white px-3 py-2 rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-pink-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                </svg>
+                                Fotos favoritas
+                            </Link>
+
+                            {/* Notificaciones en versión móvil */}
+                            <Link
+                                to="/profile"
+                                className="flex items-center text-white px-3 py-2 rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out relative"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                                Notificaciones
+
+                                {hasNotifications && (
+                                    <span className="absolute top-1 right-1 transform w-2.5 h-2.5 bg-purple-500 rounded-full animate-pulse"></span>
+                                )}
+                            </Link>
+
+                            {/* Perfil en versión móvil */}
+                            <Link
+                                to="/profile"
+                                className="flex items-center text-white px-3 py-2 rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out"
+                            >
+                                <Avatar
+                                    user={user}
+                                    size="xs"
+                                    className="mr-2 border-2 border-white/30"
+                                />
+                                Perfil
+                            </Link>
+
+                            {/* Acceso a administración (solo admins) */}
+                            {isAdmin && (
+                                <Link
+                                    to="/dashboard"
+                                    className="flex items-center text-white px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition duration-300 ease-in-out"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                    </svg>
+                                    Administrar
+                                </Link>
+                            )}
+
+                            {/* Cerrar sesión en versión móvil */}
+                            <button
+                                onClick={logout}
+                                className="w-full flex items-center text-white px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition duration-300 ease-in-out"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                                Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </nav>
+
+            {/* Espaciador para compensar la altura del navbar fijo */}
+            <div className="h-16"></div>
+        </>
+    );
+}
+
+export default Navbar;

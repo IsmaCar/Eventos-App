@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LocationPicker from './Maps';
 import { useEvent } from '../context/EventContext';
@@ -19,11 +19,60 @@ function FormCreateEvent() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [isDragging, setIsDragging] = useState(false);
+    
+    // Nuevos estados para controlar validaciones
+    const [descriptionLength, setDescriptionLength] = useState(0);
+    const [descriptionError, setDescriptionError] = useState("");
+    const [dateError, setDateError] = useState("");
+    
+    // Constante para el límite de caracteres de la descripción
+    const MAX_DESCRIPTION_LENGTH = 500;
+    
+    // Función para validar la fecha - debe ser hoy o después
+    const isValidDate = (dateString) => {
+        if (!dateString) return false;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Resetear la hora para comparar solo fechas
+        
+        const selectedDate = new Date(dateString);
+        return selectedDate >= today;
+    };
 
     const handleChange = (e) => {
-        const nombre = e.target.name;
-        setFormData(prev => ({ ...prev, [nombre]: e.target.value }));
+        const { name, value } = e.target;
+        
+        // Validación específica para la descripción
+        if (name === 'description') {
+            // No permitir más de MAX_DESCRIPTION_LENGTH caracteres
+            if (value.length > MAX_DESCRIPTION_LENGTH) {
+                setDescriptionError(`La descripción no puede exceder los ${MAX_DESCRIPTION_LENGTH} caracteres`);
+                return;
+            }
+            
+            setDescriptionLength(value.length);
+            setDescriptionError("");
+        }
+        
+        // Validación específica para la fecha
+        if (name === 'event_date') {
+            if (!isValidDate(value)) {
+                setDateError("La fecha del evento no puede ser anterior a hoy");
+            } else {
+                setDateError("");
+            }
+        }
+        
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
+
+    // Restablecer el error cuando se desmonte el componente
+    useEffect(() => {
+        return () => {
+            setDescriptionError("");
+            setDateError("");
+        };
+    }, []);
 
     const handleLocationChange = (location) => {
         if(!location || !location.address || !location.lat || !location.lng) {
@@ -106,6 +155,19 @@ function FormCreateEvent() {
         e.preventDefault();
         setLoading(true);
         setError("");
+        
+        // Validaciones antes de enviar
+        if (descriptionLength > MAX_DESCRIPTION_LENGTH) {
+            setError(`La descripción no puede exceder los ${MAX_DESCRIPTION_LENGTH} caracteres`);
+            setLoading(false);
+            return;
+        }
+        
+        if (!isValidDate(formData.event_date)) {
+            setError("La fecha del evento no puede ser anterior a hoy");
+            setLoading(false);
+            return;
+        }
     
         try {
             const response = await createEvent(formData);
@@ -156,6 +218,13 @@ function FormCreateEvent() {
                 <div>
                     <label htmlFor="description" className="block text-lg font-medium text-gray-700 mb-2">
                         Descripción
+                        <span className={`ml-2 text-sm ${descriptionLength > MAX_DESCRIPTION_LENGTH - 50 
+                            ? descriptionLength > MAX_DESCRIPTION_LENGTH 
+                                ? 'text-red-600' 
+                                : 'text-amber-600' 
+                            : 'text-gray-500'}`}>
+                            ({descriptionLength}/{MAX_DESCRIPTION_LENGTH})
+                        </span>
                     </label>
                     <textarea
                         id="description"
@@ -164,9 +233,25 @@ function FormCreateEvent() {
                         onChange={handleChange}
                         rows="4"
                         placeholder="Describe los detalles de tu evento"
-                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-300 focus:border-transparent resize-none"
+                        className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-indigo-300 focus:border-transparent resize-none
+                            ${descriptionError ? 'border-red-500' : 'border-gray-300'}`}
                         required
+                        maxLength={MAX_DESCRIPTION_LENGTH}
                     />
+                    {descriptionError && (
+                        <p className="mt-1 text-red-600 text-sm">{descriptionError}</p>
+                    )}
+                    <p className={`text-xs mt-1 ${descriptionLength > MAX_DESCRIPTION_LENGTH - 50 
+                        ? descriptionLength > MAX_DESCRIPTION_LENGTH - 20 
+                            ? 'text-red-600' 
+                            : 'text-amber-600' 
+                        : 'text-gray-500'}`}>
+                        {descriptionLength > MAX_DESCRIPTION_LENGTH - 50 
+                            ? descriptionLength > MAX_DESCRIPTION_LENGTH - 20
+                                ? `¡Límite alcanzado! No puedes escribir más de ${MAX_DESCRIPTION_LENGTH} caracteres.`
+                                : `Te estás acercando al límite de ${MAX_DESCRIPTION_LENGTH} caracteres.`
+                            : `Máximo ${MAX_DESCRIPTION_LENGTH} caracteres.`}
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -181,9 +266,14 @@ function FormCreateEvent() {
                             name="event_date"
                             value={formData.event_date}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-300 focus:border-transparent"
+                            className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-indigo-300 focus:border-transparent
+                                ${dateError ? 'border-red-500' : 'border-gray-300'}`}
+                            min={new Date().toISOString().split('T')[0]}
                             required
                         />
+                        {dateError && (
+                            <p className="mt-1 text-red-600 text-sm">{dateError}</p>
+                        )}
                     </div>
 
                     {/* Ubicación */}
@@ -267,8 +357,9 @@ function FormCreateEvent() {
                         </button>
                         <button
                             type="submit"
-                            className="px-8 py-3 bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white rounded-lg hover:scale-105 transition duration-200 flex items-center"
-                            disabled={loading}
+                            className={`px-8 py-3 bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white rounded-lg transition duration-200 flex items-center 
+                                ${(dateError || descriptionError) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+                            disabled={loading || !!dateError || !!descriptionError}
                         >
                             {loading ? (
                                 <>

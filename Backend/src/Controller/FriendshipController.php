@@ -444,4 +444,45 @@ class FriendshipController extends AbstractController
             'count' => count($results)
         ]);
     }
+
+    #[Route('/friends/user/{id}', name: 'public_user_friends', methods: ['GET'])]
+public function getPublicUserFriends(int $id, FriendshipRepository $friendshipRepository, UserRepository $userRepository): JsonResponse
+{
+    try {
+        // Buscar al usuario por ID
+        $targetUser = $userRepository->find($id);
+
+        if (!$targetUser) {
+            return $this->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        // Obtener amistades aceptadas del usuario
+        $friendships = $friendshipRepository->findAcceptedFriendships($targetUser);
+        
+        // Transformar los datos de amistades a datos de amigos
+        $friends = [];
+        foreach ($friendships as $friendship) {
+            // Identificar quién es el amigo (el otro usuario)
+            $friend = $friendship->getRequester() === $targetUser
+                ? $friendship->getAddressee()
+                : $friendship->getRequester();
+
+            // Añadir información relevante del amigo
+            $friends[] = [
+                'friendship_id' => $friendship->getId(),
+                'user_id' => $friend->getId(),
+                'username' => $friend->getUsername(),
+                'avatar' => $friend->getAvatar(),
+                'since' => $friendship->getCreatedAt()->format('Y-m-d H:i:s')
+            ];
+        }
+
+        return $this->json([
+            'friends' => $friends,
+            'count' => count($friends)
+        ]);
+    } catch (\Exception $e) {
+        return $this->json(['error' => 'Error al obtener amigos: ' . $e->getMessage()], 500);
+    }
+}
 }

@@ -25,7 +25,7 @@ class Event
     #[ORM\Column(length: 80)]
     private ?string $title = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 500)]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -52,6 +52,9 @@ class Event
      */
     #[ORM\OneToMany(targetEntity: Invitation::class, mappedBy: 'event')]
     private Collection $invitations;
+
+    #[ORM\Column(length: 20)]
+    private ?string $status = 'activated';
 
     public function __construct()
     {
@@ -210,6 +213,18 @@ class Event
                 $invitation->setEvent(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Avatar, getImageUrl, getRandomGradient } from '../utils/Imagehelper';
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 function PublicProfile() {
@@ -11,18 +13,10 @@ function PublicProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [friends, setFriends] = useState([]);
-  const [friendRequestStatus, setFriendRequestStatus] = useState(null); // 'none', 'pending', 'friends'
-  
-  // Función para manejar errores en la imagen de avatar
-  const handleDefaultAvatarError = (e) => {
-    const username = profile?.username || '?';
-    e.target.parentNode.innerHTML = `
-      <div class="w-full h-full rounded-full bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex items-center justify-center text-white text-3xl font-bold">
-        ${username.charAt(0).toUpperCase()}
-      </div>
-    `;
-  };
+  const [friendRequestStatus, setFriendRequestStatus] = useState('none');
+  const [friendshipId, setFriendshipId] = useState(null);
 
+  // Función para enviar solicitud de amistad
   const handleFriendRequest = async () => {
     if (!token) {
       alert('Debes iniciar sesión para enviar solicitudes de amistad');
@@ -30,20 +24,18 @@ function PublicProfile() {
     }
     
     try {
-      const response = await fetch(`${API_URL}/api/friends/request`, {
+      const response = await fetch(`${API_URL}/api/friends/request/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ friendId: id })
+        }
       });
       
       if (!response.ok) {
         throw new Error('No se pudo enviar la solicitud de amistad');
       }
       
-      // Actualizar estado local
       setFriendRequestStatus('pending');
       alert('Solicitud de amistad enviada correctamente');
     } catch (error) {
@@ -52,6 +44,42 @@ function PublicProfile() {
     }
   };
 
+  // Función para eliminar amistad
+  const handleRemoveFriend = async () => {
+    if (!token || !friendshipId) {
+      alert('No se puede eliminar la amistad en este momento');
+      return;
+    }
+
+    if (!confirm('¿Estás seguro de que quieres eliminar a esta persona de tus amigos?')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_URL}/api/friends/${friendshipId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('No se pudo eliminar la amistad');
+      }
+      
+      setFriendRequestStatus('none');
+      setFriendshipId(null);
+      setFriends(friends.filter(friend => friend.id !== parseInt(id)));
+      
+      alert('Amistad eliminada correctamente');
+    } catch (error) {
+      console.error('Error eliminando amistad:', error);
+      alert('Error al eliminar la amistad');
+    }
+  };
+
+  // Cargar datos del perfil y estado de amistad
   useEffect(() => {
     async function loadProfileData() {
       if (!id) {
@@ -92,33 +120,72 @@ function PublicProfile() {
         }
         
         const eventsData = await eventsResponse.json();
-        const userEvents = eventsData.events || [];
-        setEvents(userEvents);
+        setEvents(eventsData.events || []);
         
         // Obtener amigos del usuario
-        const friendsResponse = await fetch(`${API_URL}/api/public/user/${id}/friends`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
+        try {
+          const friendsResponse = await fetch(`${API_URL}/api/friends/user/${id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            }
+          });
+          
+          if (friendsResponse.ok) {
+            const friendsData = await friendsResponse.json();
+            setFriends(friendsData.friends || []);
+            
+            if (user && friendsData.friends && friendsData.friends.length > 0) {
+              const isCurrentUserFriend = friendsData.friends.some(
+                friend => friend.id === parseInt(user.id) || friend.user_id === parseInt(user.id)
+              );
+              
+              if (isCurrentUserFriend) {
+                setFriendRequestStatus('friends');
+                
+                const friendship = friendsData.friends.find(
+                  friend => friend.id === parseInt(user.id) || friend.user_id === parseInt(user.id)
+                );
+                
+                if (friendship && friendship.friendship_id) {
+                  setFriendshipId(friendship.friendship_id);
+                }
+              }
+            }
+          } else {
+            setFriends([]);
           }
-        });
-        
-        if (friendsResponse.ok) {
-          const friendsData = await friendsResponse.json();
-          setFriends(friendsData.friends || []);
+        } catch (err) {
+          console.warn("Error al obtener amigos:", err);
+          setFriends([]);
         }
 
         // Verificar el estado de la solicitud de amistad (si el usuario está autenticado)
         if (token && user && user.id !== parseInt(id)) {
-          const friendStatusResponse = await fetch(`${API_URL}/api/friends/status/${id}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
+          try {
+            const friendStatusResponse = await fetch(`${API_URL}/api/friends/check/${id}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (friendStatusResponse.ok) {
+              const statusData = await friendStatusResponse.json();
+              
+              if (statusData.status === 'friends' || statusData.status === 'accepted') {
+                setFriendRequestStatus('friends');
+                const fId = statusData.friendship_id || statusData.id || statusData.friendshipId;
+                if (fId) {
+                  setFriendshipId(fId);
+                }
+              } else {
+                setFriendRequestStatus(statusData.status || 'none');
+              }
             }
-          });
-          
-          if (friendStatusResponse.ok) {
-            const statusData = await friendStatusResponse.json();
-            setFriendRequestStatus(statusData.status);
+          } catch (err) {
+            console.warn("Error al verificar estado de amistad:", err);
           }
         }
         
@@ -156,11 +223,6 @@ function PublicProfile() {
     );
   }
 
-  // Construir URL de avatar
-  const avatarUrl = profile.avatar 
-    ? `${API_URL}/uploads/avatars/${profile.avatar}` 
-    : '';
-
   // Determinar si mostrar el botón de amistad
   const isCurrentUser = user && parseInt(user.id) === parseInt(id);
   const showFriendButton = token && !isCurrentUser;
@@ -179,14 +241,7 @@ function PublicProfile() {
 
             {/* Avatar */}
             <div className="absolute -bottom-16 left-8 border-4 border-white rounded-full shadow-xl bg-white">
-              <div className="w-24 h-24 rounded-full overflow-hidden">
-                <img
-                  src={avatarUrl}
-                  alt={`Avatar de ${profile.username}`}
-                  className="w-full h-full object-cover"
-                  onError={handleDefaultAvatarError}
-                />
-              </div>
+              <Avatar user={profile} size="xl" />
             </div>
           </div>
 
@@ -200,15 +255,18 @@ function PublicProfile() {
                 </p>
               </div>
               
-              {/* Botón de añadir amigo - ahora está junto al nombre de usuario */}
+              {/* Botón de añadir/eliminar amigo */}
               {showFriendButton && (
                 <div>
-                  {friendRequestStatus === 'friends' ? (
-                    <button className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full font-medium flex items-center">
+                  {friendRequestStatus === 'friends' || friendRequestStatus === 'accepted' ? (
+                    <button 
+                      onClick={handleRemoveFriend}
+                      className="px-4 py-2 bg-red-100 text-red-700 rounded-full font-medium flex items-center hover:bg-red-200 transition-colors"
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                       </svg>
-                      Amigos
+                      Eliminar amigo
                     </button>
                   ) : friendRequestStatus === 'pending' ? (
                     <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full font-medium flex items-center">
@@ -268,22 +326,15 @@ function PublicProfile() {
               <div className="max-h-60 overflow-y-auto">
                 <ul className="divide-y divide-gray-100">
                   {friends.map(friend => (
-                    <li key={friend.id} className="py-2">
-                      <Link to={`/profile/${friend.id}`} className="flex items-center hover:bg-gray-50 rounded-lg p-2 transition-colors">
-                        {/* Avatar del amigo */}
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex-shrink-0">
-                          {friend.avatar ? (
-                            <img
-                              src={`${API_URL}/uploads/avatars/${friend.avatar}`}
-                              alt={`Avatar de ${friend.username}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white text-lg font-bold">
-                              {friend.username.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
+                    <li key={friend.id || friend.user_id} className="py-2">
+                      <Link to={`/profile/${friend.id || friend.user_id}`} className="flex items-center hover:bg-gray-50 rounded-lg p-2 transition-colors">
+                        <Avatar 
+                          user={{
+                            username: friend.username,
+                            avatar: friend.avatar
+                          }} 
+                          size="sm" 
+                        />
                         <span className="ml-3 text-gray-700">{friend.username}</span>
                       </Link>
                     </li>
@@ -324,11 +375,11 @@ function PublicProfile() {
                     {event.image ? (
                       <div 
                         className="h-48 bg-cover bg-center" 
-                        style={{ backgroundImage: `url(${API_URL}/uploads/backgrounds/${event.image})` }}
+                        style={{ backgroundImage: `url(${getImageUrl(`/uploads/backgrounds/${event.image}`)})` }}
                       ></div>
                     ) : (
-                      <div className="h-48 bg-gradient-to-br from-fuchsia-100 to-indigo-100 flex items-center justify-center">
-                        <span className="text-indigo-400 text-xl">📷</span>
+                      <div className={`h-48 ${getRandomGradient()} flex items-center justify-center`}>
+                        <span className="text-white text-xl">📷</span>
                       </div>
                     )}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">

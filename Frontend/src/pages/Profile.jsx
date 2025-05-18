@@ -1,25 +1,32 @@
 import React, { useState, useEffect } from 'react'
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { getAvatarUrl, handleAvatarError, Avatar, getUserInitials } from '../utils/Imagehelper';
 import { useAuth } from '../context/AuthContext'
+import { useNotifications } from '../hooks/Notifications'
+import ReceivedInvitations from '../components/EventRequest'
+import FriendRequests from '../components/FriendRequest'
+import EventUser from '../components/EventUser'
 const API_URL = import.meta.env.VITE_API_URL;
 
 function Profile() {
   const { user, token } = useAuth();
+  const { stats, refreshNotifications } = useNotifications();
   const navigate = useNavigate();
-  const isMainProfile = location.pathname === '/profile'; // Verificar si estamos en la ruta principal
-  const [stats, setStats] = useState({
-    eventsCreated: 0,
-    friendRequests: 0,
-    invitationsPending: 0,
-  });
+  const location = useLocation();
+  const isMainProfile = location.pathname === '/profile';
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Estado para búsqueda de amigos (modal)
   const [showFriendSearch, setShowFriendSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Estado para modales
+  const [showInvitations, setShowInvitations] = useState(false);
+  const [showFriendRequests, setShowFriendRequests] = useState(false);
+  const [showMyEvents, setShowMyEvents] = useState(false);
 
   // Función para buscar usuarios
   const searchUsers = async (term) => {
@@ -27,7 +34,7 @@ function Profile() {
       setSearchResults([]);
       return;
     }
-    
+
     setIsSearching(true);
     try {
       const response = await fetch(`${API_URL}/api/friends/search?term=${encodeURIComponent(term)}`, {
@@ -37,15 +44,14 @@ function Profile() {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('Error en la búsqueda');
       }
-      
+
       const data = await response.json();
       setSearchResults(data.users || []);
     } catch (error) {
-      console.error('Error en la búsqueda:', error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -62,57 +68,28 @@ function Profile() {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al enviar la solicitud');
       }
-      
+
       // Actualizar resultados de búsqueda para reflejar la solicitud enviada
-      setSearchResults(prev => 
-        prev.map(user => 
-          user.id === userId 
-            ? { ...user, friendship_status: 'requested', friendship_id: null } 
+      setSearchResults(prev =>
+        prev.map(user =>
+          user.id === userId
+            ? { ...user, friendship_status: 'requested', friendship_id: null }
             : user
         )
       );
-      
+
+      // Refrescar notificaciones después de enviar la solicitud
+      refreshNotifications();
+
       // Mostrar mensaje de éxito
       alert('Solicitud de amistad enviada');
     } catch (error) {
-      console.error('Error:', error);
       alert(error.message);
-    }
-  };
-
-  const fetchUserStats = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/user/stats`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al cargar las estadísticas');
-      }
-
-      const data = await response.json();
-
-      setStats({
-        eventsCreated: data.eventsCreated || 0,
-        friendRequests: data.friendRequests || 0,
-        invitationsPending: data.invitationsPending || 0
-      });
-    } catch (err) {
-      console.error('Error obteniendo estadísticas:', err);
-      setStats({
-        eventsCreated: user.eventsCreated || 0,
-        friendRequests: 0,
-        invitationsPending: 0
-      });
     }
   };
 
@@ -133,7 +110,6 @@ function Profile() {
       const data = await response.json();
       setFriends(data.friends || []);
     } catch (err) {
-      console.error('Error obteniendo amigos:', err);
       setFriends([]);
     }
   };
@@ -154,23 +130,58 @@ function Profile() {
 
       // Actualizar la lista de amigos y estadísticas
       fetchFriends();
-      fetchUserStats();
+      refreshNotifications();
     } catch (err) {
-      console.error('Error aceptando solicitud:', err);
       alert('No se pudo aceptar la solicitud de amistad');
     }
   };
 
+  // Función para abrir el modal de invitaciones y actualizar estadísticas
+  const handleOpenInvitations = () => {
+    setShowInvitations(true);
+    // Actualizamos las estadísticas al abrir el modal para tener datos frescos
+    refreshNotifications();
+  };
+
+  // Función para cerrar el modal de invitaciones y actualizar estadísticas
+  const handleCloseInvitations = () => {
+    setShowInvitations(false);
+    // Actualizamos las estadísticas al cerrar el modal para reflejar los cambios
+    refreshNotifications();
+  };
+
+  // Funciones para solicitudes de amistad
+  const handleOpenFriendRequests = () => {
+    setShowFriendRequests(true);
+    refreshNotifications();
+  };
+
+  const handleCloseFriendRequests = () => {
+    setShowFriendRequests(false);
+    refreshNotifications();
+  };
+
+  // Efecto para actualizar periódicamente cuando los modales están abiertos
   useEffect(() => {
-    !token ? navigate('/login') : null;
+    if (showFriendRequests || showInvitations) {
+      const interval = setInterval(refreshNotifications, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [showFriendRequests, showInvitations, refreshNotifications]);
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
     if (user && token) {
       setLoading(true);
       Promise.all([
-        fetchUserStats(),
         fetchFriends()
       ]).finally(() => setLoading(false));
     }
-  }, [user, token]);
+  }, [user, token, navigate]);
 
   const handleDefaultAvatarError = (e) => {
     e.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
@@ -191,11 +202,8 @@ function Profile() {
     );
   }
 
-  // Construir URL completa del avatar
-  const avatarUrl = user.avatar
-    ? `${API_URL}/uploads/avatars/${user.avatar}`
-    : `${API_URL}/uploads/avatars/default-avatar.png`;
-    
+  const avatarUrl = getAvatarUrl(user.avatar);
+
   if (!isMainProfile) {
     return (
       <div className="min-h-screen bg-gray-50 py-10">
@@ -206,7 +214,7 @@ function Profile() {
               ← Volver al perfil
             </Link>
           </div>
-          
+
           {/* Contenedor para el componente anidado */}
           <div>
             <Outlet />
@@ -218,7 +226,7 @@ function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 relative">
-      {/* Modal para búsqueda de amigos (único modal) */}
+      {/* Modal para búsqueda de amigos */}
       {showFriendSearch && (
         <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
           <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
@@ -237,7 +245,7 @@ function Profile() {
                 </svg>
               </button>
             </div>
-            
+
             {/* Barra de búsqueda */}
             <div className="mb-4">
               <div className="relative">
@@ -263,7 +271,7 @@ function Profile() {
                 <p className="text-xs text-gray-500 mt-1">Ingresa al menos 3 caracteres para buscar</p>
               )}
             </div>
-            
+
             {/* Resultados de búsqueda */}
             <div className="overflow-y-auto flex-1">
               {isSearching ? (
@@ -276,20 +284,10 @@ function Profile() {
                     {searchResults.map(user => (
                       <div key={user.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                         <div className="flex items-center">
-                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400">
-                            {user.avatar ? (
-                              <img
-                                src={`${API_URL}/uploads/avatars/${user.avatar}`}
-                                alt={`Avatar de ${user.username}`}
-                                className="w-full h-full object-cover"
-                                onError={handleDefaultAvatarError}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold">
-                                {user.username.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                          </div>
+                          <Avatar
+                            user={user}
+                            size="md"
+                          />
                           <div className="ml-3">
                             <p className="text-gray-800 font-medium">{user.username}</p>
                           </div>
@@ -350,7 +348,7 @@ function Profile() {
                 </div>
               )}
             </div>
-            
+
             <div className="mt-4 pt-3 border-t border-gray-100">
               <button
                 onClick={() => {
@@ -358,6 +356,102 @@ function Profile() {
                   setSearchTerm('');
                   setSearchResults([]);
                 }}
+                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para invitaciones a eventos */}
+      {showInvitations && (
+        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
+          <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Invitaciones a eventos</h3>
+              <button
+                onClick={() => handleCloseInvitations()}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1">
+              <ReceivedInvitations onInvitationProcessed={refreshNotifications} />
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <button
+                onClick={() => handleCloseInvitations()}
+                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para solicitudes de amistad */}
+      {showFriendRequests && (
+        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
+          <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Solicitudes de amistad</h3>
+              <button
+                onClick={() => handleCloseFriendRequests()}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1">
+              <FriendRequests onRequestProcessed={refreshNotifications} />
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <button
+                onClick={() => handleCloseFriendRequests()}
+                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Nuevo Modal para mis eventos */}
+      {showMyEvents && (
+        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
+          <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Mis Eventos</h3>
+              <button
+                onClick={() => setShowMyEvents(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1">
+              <EventUser />
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <button
+                onClick={() => setShowMyEvents(false)}
                 className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
               >
                 Cerrar
@@ -394,35 +488,55 @@ function Profile() {
           <div className="pl-8 pt-18 pb-6">
             <h1 className="text-3xl font-bold text-gray-800">{user.username}</h1>
             <p className="text-gray-500">{user.email}</p>
-            <p className="mt-2 text-gray-600">
-              Miembro desde {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'hace tiempo'}
-            </p>
           </div>
         </div>
 
         {/* Secciones adicionales */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Estadísticas */}
+          {/* Notificaciones (antes Estadísticas) */}
           <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
               </svg>
-              Estadísticas
+              Notificaciones
             </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-2xl font-bold text-fuchsia-600">{stats.eventsCreated || 0}</p>
-                <p className="text-gray-500 text-sm">Eventos creados</p>
-              </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-2xl font-bold text-fuchsia-600">{stats.friendRequests || 0}</p>
-                <p className="text-gray-500 text-sm">Solicitudes de amistad</p>
-              </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg col-span-2">
-                <p className="text-2xl font-bold text-fuchsia-600">{stats.invitationsPending || 0}</p>
-                <p className="text-gray-500 text-sm">Invitaciones pendientes</p>
-              </div>
+            <div className="grid grid-cols-1 gap-4">
+              <button
+                onClick={() => handleOpenFriendRequests()}
+                className="text-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center justify-center"
+              >
+                <div className="flex items-center">
+                  {stats.friendRequests > 0 && (
+                    <span className="text-2xl font-bold text-fuchsia-600 mr-2">{stats.friendRequests}</span>
+                  )}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                  </svg>
+                  {stats.friendRequests > 0 && (
+                    <span className="ml-2 inline-flex h-3 w-3 bg-fuchsia-500 rounded-full animate-pulse"></span>
+                  )}
+                </div>
+                <p className="text-gray-500 text-sm mt-1">Solicitudes de amistad</p>
+              </button>
+
+              <button
+                onClick={() => handleOpenInvitations()}
+                className="text-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center justify-center"
+              >
+                <div className="flex items-center">
+                  {stats.invitationsPending > 0 && (
+                    <span className="text-2xl font-bold text-fuchsia-600 mr-2">{stats.invitationsPending}</span>
+                  )}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                  </svg>
+                  {stats.invitationsPending > 0 && (
+                    <span className="ml-2 inline-flex h-3 w-3 bg-fuchsia-500 rounded-full animate-pulse"></span>
+                  )}
+                </div>
+                <p className="text-gray-500 text-sm mt-1">Invitaciones a eventos</p>
+              </button>
             </div>
           </div>
 
@@ -474,7 +588,7 @@ function Profile() {
             {/* Botón para buscar amigos */}
             <button
               onClick={() => setShowFriendSearch(true)}
-              className="mt-4 w-full py-2 px-4 bg-fuchsia-50 hover:bg-fuchsia-100 text-fuchsia-600 rounded-md font-medium transition flex items-center justify-center"
+              className="mt-18 w-full py-2 px-4 bg-fuchsia-50 hover:bg-fuchsia-100 text-fuchsia-600 rounded-md font-medium transition flex items-center justify-center"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
@@ -483,7 +597,7 @@ function Profile() {
             </button>
           </div>
 
-          {/* Acciones rápidas - Sin botones modales */}
+          {/* Acciones rápidas - Con elementos reducidos */}
           <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
@@ -501,51 +615,22 @@ function Profile() {
                 </svg>
                 Editar perfil
               </Link>
-              <Link
-                to="my-events"
+
+              {/* Botón para mostrar modal de mis eventos */}
+              <button
+                onClick={() => setShowMyEvents(true)}
                 className="flex w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition items-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
                 Mis eventos
-              </Link>
-              
-              {/* Links normales en lugar de botones modales */}
-              <Link
-                to="invitations"
-                className="flex w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition items-center"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
-                </svg>
-                Invitaciones a eventos
-                {stats.invitationsPending > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-fuchsia-500 rounded-full">
-                    {stats.invitationsPending}
-                  </span>
-                )}
-              </Link>
-
-              <Link
-                to="friend-requests"
-                className="flex w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition items-center"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                </svg>
-                Solicitudes de amistad
-                {stats.friendRequests > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-fuchsia-500 rounded-full">
-                    {stats.friendRequests}
-                  </span>
-                )}
-              </Link>
+              </button>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* El Outlet está fuera de las tarjetas */}
       <div className="mt-6 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <Outlet />

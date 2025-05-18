@@ -1,7 +1,7 @@
-// src/pages/FavoritePhotos.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { usePhotoUploads } from '../hooks/usePhotoUploads';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -11,7 +11,14 @@ function FavoritePhotos() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [expandedPhoto, setExpandedPhoto] = useState(null);
+  
+  // Utilizamos el hook usePhotoUploads con todas las funcionalidades
+  const {
+    expandedPhoto,
+    openExpandedView,
+    closeExpandedView,
+    handleDownloadPhoto // Ahora usamos handleDownloadPhoto en lugar de downloadPhoto
+  } = usePhotoUploads(null, false, null, navigate);
 
   useEffect(() => {
     // Redireccionar si no hay usuario autenticado
@@ -65,23 +72,12 @@ function FavoritePhotos() {
         
         // Si estamos viendo la foto ampliada, cerrarla
         if (expandedPhoto && expandedPhoto.id === photoId) {
-          setExpandedPhoto(null);
+          closeExpandedView();
         }
       }
     } catch (error) {
       console.error('Error al eliminar de favoritos:', error);
     }
-  };
-  
-  // Funciones para la vista ampliada
-  const openExpandedView = (photo) => {
-    setExpandedPhoto(photo);
-    document.body.style.overflow = 'hidden';
-  };
-  
-  const closeExpandedView = () => {
-    setExpandedPhoto(null);
-    document.body.style.overflow = 'auto';
   };
 
   if (loading) {
@@ -126,14 +122,29 @@ function FavoritePhotos() {
                     {photo.event.title}
                   </Link>
                   
-                  <button 
-                    onClick={(e) => removeFavorite(photo.id, e)}
-                    className="text-white hover:text-pink-400 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+                  <div className="flex space-x-2">
+                    {/* Botón para descargar la foto */}
+                    <button
+                      onClick={(e) => handleDownloadPhoto(photo, photo.event?.title, e)}
+                      className="text-white hover:text-blue-300 transition-colors"
+                      title="Descargar foto"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </button>
+                    
+                    {/* Botón para eliminar de favoritos */}
+                    <button 
+                      onClick={(e) => removeFavorite(photo.id, e)}
+                      className="text-white hover:text-pink-400 transition-colors"
+                      title="Quitar de favoritos"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 <p className="text-gray-200 text-xs">{new Date(photo.created_at).toLocaleDateString()}</p>
               </div>
@@ -153,7 +164,7 @@ function FavoritePhotos() {
         </div>
       )}
       
-      {/* Vista ampliada */}
+      {/* Vista ampliada - utilizando el estado del hook */}
       {expandedPhoto && (
         <div 
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
@@ -192,14 +203,29 @@ function FavoritePhotos() {
                     </p>
                   </div>
                   
-                  <button 
-                    onClick={(e) => removeFavorite(expandedPhoto.id, e)}
-                    className="text-white hover:text-pink-400 transition-colors p-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+                  <div className="flex items-center space-x-4">
+                    {/* Botón para descargar foto en vista ampliada */}
+                    <button
+                      onClick={(e) => handleDownloadPhoto(expandedPhoto, expandedPhoto.event?.title, e)}
+                      className="text-white hover:text-blue-300 transition-colors p-2"
+                      title="Descargar foto"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </button>
+                    
+                    {/* Botón para quitar de favoritos en vista ampliada */}
+                    <button 
+                      onClick={(e) => removeFavorite(expandedPhoto.id, e)}
+                      className="text-white hover:text-pink-400 transition-colors p-2"
+                      title="Quitar de favoritos"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

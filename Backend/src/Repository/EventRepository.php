@@ -24,6 +24,10 @@ class EventRepository extends ServiceEntityRepository
                 ->select('e')
                 ->from('App\Entity\Event', 'e');
 
+            // Filtrar solo eventos activos
+            $queryBuilder->andWhere('e.status = :status')
+                ->setParameter('status', 'activated');
+
             // Si solo queremos eventos futuros
             if ($futureOnly) {
                 $queryBuilder->andWhere('e.event_date >= :now')
@@ -52,8 +56,10 @@ class EventRepository extends ServiceEntityRepository
         $ownedEvents = $this->createQueryBuilder('e')
             ->where('e.user = :user')
             ->andWhere('e.banned = :banned')
+            ->andWhere('e.status = :status') // Solo eventos activos
             ->setParameter('user', $user)
             ->setParameter('banned', false)
+            ->setParameter('status', 'activated')
             ->getQuery()
             ->getResult();
 
@@ -61,11 +67,13 @@ class EventRepository extends ServiceEntityRepository
         $invitedEvents = $this->createQueryBuilder('e')
             ->join('App\Entity\Invitation', 'i', 'WITH', 'i.event = e.id')
             ->where('i.invitedUser = :user')
-            ->andWhere('i.status = :status')
+            ->andWhere('i.status = :invitationStatus')
             ->andWhere('e.banned = :banned')
+            ->andWhere('e.status = :eventStatus') // Solo eventos activos
             ->setParameter('user', $user)
-            ->setParameter('status', 'accepted')
+            ->setParameter('invitationStatus', 'accepted')
             ->setParameter('banned', false)
+            ->setParameter('eventStatus', 'activated')
             ->getQuery()
             ->getResult();
 
@@ -80,6 +88,50 @@ class EventRepository extends ServiceEntityRepository
 
         return array_values($uniqueEvents);
     }
+
+    /**
+     * Buscar eventos públicos para mostrar en la página principal
+     */
+    public function findPublicEvents(bool $futureOnly = true, ?int $limit = 10)
+    {
+        $queryBuilder = $this->createQueryBuilder('e')
+            ->where('e.banned = :banned')
+            ->andWhere('e.status = :status') // Solo eventos activos
+            ->setParameter('banned', false)
+            ->setParameter('status', 'activated');
+
+        if ($futureOnly) {
+            $queryBuilder->andWhere('e.event_date >= :now')
+                ->setParameter('now', new \DateTime());
+        }
+
+        $queryBuilder->orderBy('e.event_date', 'ASC');
+
+        if ($limit !== null) {
+            $queryBuilder->setMaxResults($limit);
+        }
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
+     * Buscar eventos por términos de búsqueda
+     */
+    public function searchEvents(string $searchTerm)
+    {
+        return $this->createQueryBuilder('e')
+            ->where('e.title LIKE :searchTerm')
+            ->orWhere('e.description LIKE :searchTerm')
+            ->andWhere('e.banned = :banned')
+            ->andWhere('e.status = :status') // Solo eventos activos
+            ->setParameter('searchTerm', '%' . $searchTerm . '%')
+            ->setParameter('banned', false)
+            ->setParameter('status', 'activated')
+            ->orderBy('e.event_date', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Event[] Returns an array of Event objects
     //     */

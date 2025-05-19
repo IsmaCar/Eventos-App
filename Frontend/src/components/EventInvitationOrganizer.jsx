@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import Spinner from './Spinner';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -126,11 +127,7 @@ function EventInvitations({ eventId, onInvitationProcessed }) {
   
   // Mostrar estado de carga
   if (loading) {
-    return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    );
+    return <Spinner size="md" color="indigo" containerClassName="py-8" text="Cargando invitaciones..." />;
   }
   
   // Mostrar error

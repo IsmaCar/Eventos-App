@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Spinner from "./Spinner";
 
 function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -172,9 +173,8 @@ function RegisterForm() {
 
   if (verifying) {
     return (
-      <div className="flex justify-center items-center py-10">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
-        <span className="ml-3 text-lg">Verificando invitación...</span>
+      <div className="py-10">
+        <Spinner size="md" color="purple" text="Verificando invitación..." />
       </div>
     );
   }
@@ -264,7 +264,7 @@ function RegisterForm() {
         >
           {loading ? (
             <div className="flex items-center justify-center gap-3 w-full">
-              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+              <Spinner size="xs" color="white" />
               <span>Registrando...</span>
             </div>
           ) : (

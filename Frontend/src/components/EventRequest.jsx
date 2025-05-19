@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import Spinner from './Spinner';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -41,64 +42,64 @@ function ReceivedInvitations({ onInvitationProcessed }) {
   };
 
   const handleAcceptInvitation = async (invitationId) => {
-  try {
-    const response = await fetch(`${API_URL}/api/invitations/${invitationId}/respond`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'  // Añadido Content-Type
-      },
-      body: JSON.stringify({
-        response: 'accept'  // Añadido parámetro response
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Error al aceptar la invitación');
+    try {
+      const response = await fetch(`${API_URL}/api/invitations/${invitationId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'  // Añadido Content-Type
+        },
+        body: JSON.stringify({
+          response: 'accept'  // Añadido parámetro response
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al aceptar la invitación');
+      }
+      
+      // Eliminar la invitación de la lista mostrada
+      setInvitations(invitations.filter(inv => inv.id !== invitationId));
+      
+      // Notificar al componente padre si existe el callback
+      if (typeof onInvitationProcessed === 'function') {
+        onInvitationProcessed();
+      }
+    } catch (err) {
+      console.error('Error aceptando invitación:', err);
+      alert('No se pudo aceptar la invitación');
     }
-    
-    // Eliminar la invitación de la lista mostrada
-    setInvitations(invitations.filter(inv => inv.id !== invitationId));
-    
-    // Notificar al componente padre si existe el callback
-    if (typeof onInvitationProcessed === 'function') {
-      onInvitationProcessed();
-    }
-  } catch (err) {
-    console.error('Error aceptando invitación:', err);
-    alert('No se pudo aceptar la invitación');
-  }
-};
+  };
 
-const handleRejectInvitation = async (invitationId) => {
-  try {
-    const response = await fetch(`${API_URL}/api/invitations/${invitationId}/respond`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'  // Añadido Content-Type
-      },
-      body: JSON.stringify({
-        response: 'reject'  // Añadido parámetro response
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Error al rechazar la invitación');
+  const handleRejectInvitation = async (invitationId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/invitations/${invitationId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'  // Añadido Content-Type
+        },
+        body: JSON.stringify({
+          response: 'reject'  // Añadido parámetro response
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al rechazar la invitación');
+      }
+      
+      // Eliminar la invitación de la lista mostrada
+      setInvitations(invitations.filter(inv => inv.id !== invitationId));
+      
+      // Notificar al componente padre si existe el callback
+      if (typeof onInvitationProcessed === 'function') {
+        onInvitationProcessed();
+      }
+    } catch (err) {
+      console.error('Error rechazando invitación:', err);
+      alert('No se pudo rechazar la invitación');
     }
-    
-    // Eliminar la invitación de la lista mostrada
-    setInvitations(invitations.filter(inv => inv.id !== invitationId));
-    
-    // Notificar al componente padre si existe el callback
-    if (typeof onInvitationProcessed === 'function') {
-      onInvitationProcessed();
-    }
-  } catch (err) {
-    console.error('Error rechazando invitación:', err);
-    alert('No se pudo rechazar la invitación');
-  }
-};
+  };
 
   useEffect(() => {
     fetchInvitations();
@@ -106,11 +107,7 @@ const handleRejectInvitation = async (invitationId) => {
 
   // Mostrar estado de carga
   if (loading) {
-    return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-fuchsia-500"></div>
-      </div>
-    );
+    return <Spinner size="md" color="fuchsia" containerClassName="py-8" text="Cargando invitaciones..." />;
   }
 
   // Mostrar error

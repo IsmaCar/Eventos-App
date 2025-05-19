@@ -4,8 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { LocationPicker } from '../components/Maps'
 import InviteUsers from '../components/InviteUsers'
 import EventInvitationOrganizer from '../components/EventInvitationOrganizer'
-
-// Importar los hooks personalizados
+import Spinner from '../components/Spinner'
 import { useEventDetails } from '../hooks/useEventDetails'
 import { useEventAttendees } from '../hooks/useEventAttends'
 import { usePhotoUploads } from '../hooks/usePhotoUploads'
@@ -19,18 +18,8 @@ function CardDetail() {
   const [activeTab, setActiveTab] = useState('invite')
 
   // Hook para los detalles del evento
-  const {
-    event,
-    loading,
-    error,
-    getImageUrl,
-    photos,
-    loadingPhotos,
-    photoFavorites,
-    toggleFavorite,
-    fetchEventPhotos,
-    formatDate
-  } = useEventDetails(id);
+  const { event, loading, error, getImageUrl, photos, loadingPhotos, photoFavorites,
+    toggleFavorite, fetchEventPhotos, formatDate } = useEventDetails(id);
 
   // Verificar si el usuario es el creador del evento
   const isEventCreator = useCallback(() => {
@@ -43,34 +32,14 @@ function CardDetail() {
   }, [user, event]);
 
   // Hook para gestionar asistentes
-  const {
-    attendees,
-    loadingAttendees,
-    processingAction,
-    isCurrentUserAttending,
-    isAttendeeOrganizer,
-    cancelAttendance,
-    removeAttendee
-  } = useEventAttendees(id, isEventCreator());
+  const { attendees, loadingAttendees, processingAction, isCurrentUserAttending,
+    isAttendeeOrganizer, cancelAttendance, removeAttendee } = useEventAttendees(id, isEventCreator());
 
   // Hook para gestionar fotos
-  const {
-    selectedFile,
-    uploadError,
-    uploading,
-    handleFileChange,
-    clearSelectedFile,
-    deletingPhotoId,
-    canDeletePhoto,
-    deletePhoto,
-    expandedPhoto,
-    openExpandedView,
-    closeExpandedView,
-    maxFileSize,
-    allowedTypesFormatted,
-    handleUploadPhoto,    
-    handleDownloadPhoto  
-  } = usePhotoUploads(id, isEventCreator(), fetchEventPhotos, navigate);
+  const { selectedFile, uploadError, uploading, handleFileChange, clearSelectedFile,
+    deletingPhotoId, canDeletePhoto, deletePhoto, expandedPhoto, openExpandedView,
+    closeExpandedView, maxFileSize, allowedTypesFormatted, handleUploadPhoto,    
+    handleDownloadPhoto } = usePhotoUploads(id, isEventCreator(), fetchEventPhotos, navigate);
 
   // Estado para eliminar evento
   const [deletingEvent, setDeletingEvent] = useState(false);
@@ -133,11 +102,7 @@ function CardDetail() {
 
   // Mostrar estado de carga
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    )
+    return <Spinner containerClassName="h-96" color="indigo" text="Cargando evento..." />
   }
 
   // Mostrar error si existe
@@ -185,7 +150,7 @@ function CardDetail() {
             >
               {deletingEvent ? (
                 <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  <Spinner size="xs" color="white" />
                   <span>Eliminando...</span>
                 </>
               ) : (
@@ -272,9 +237,7 @@ function CardDetail() {
             <h3 className="font-semibold text-indigo-600 mb-3">Asistentes</h3>
 
             {loadingAttendees ? (
-              <div className="flex justify-center py-6">
-                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-indigo-500"></div>
-              </div>
+              <Spinner size="sm" color="indigo" containerClassName="py-6" />
             ) : attendees.length > 0 ? (
               <div className="max-h-80 overflow-y-auto pr-2">
                 <ul className="divide-y divide-gray-200">
@@ -330,7 +293,7 @@ function CardDetail() {
                                 title="Cancelar asistencia"
                               >
                                 {processingAction ? (
-                                  <div className="animate-spin h-3 w-3 border-2 border-red-600 border-t-transparent rounded-full mr-1"></div>
+                                  <Spinner size="xs" color="red" />
                                 ) : (
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -349,7 +312,7 @@ function CardDetail() {
                                 title="Eliminar asistente"
                               >
                                 {processingAction ? (
-                                  <div className="animate-spin h-3 w-3 border-2 border-red-600 border-t-transparent rounded-full mr-1"></div>
+                                  <Spinner size="xs" color="red" />
                                 ) : (
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -466,9 +429,7 @@ function CardDetail() {
           {/* Mostrar fotos con botones de acción */}
           <div className="mt-6">
             {loadingPhotos ? (
-              <div className="flex justify-center py-10">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
-              </div>
+              <Spinner size="md" color="indigo" containerClassName="py-10" text="Cargando fotos..." />
             ) : photos.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {photos.map((photo) => (
@@ -527,7 +488,7 @@ function CardDetail() {
                               disabled={deletingPhotoId === photo.id}
                             >
                               {deletingPhotoId === photo.id ? (
-                                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                                <Spinner size="xs" color="white" />
                               ) : (
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -625,7 +586,7 @@ function CardDetail() {
                           disabled={deletingPhotoId === expandedPhoto.id}
                         >
                           {deletingPhotoId === expandedPhoto.id ? (
-                            <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
+                            <Spinner size="sm" color="white" />
                           ) : (
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

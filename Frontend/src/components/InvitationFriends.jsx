@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import Spinner from './Spinner';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -107,9 +108,7 @@ function Invitations() {
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Invitaciones a eventos</h2>
       
       {loading ? (
-        <div className="flex justify-center py-10">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-fuchsia-500"></div>
-        </div>
+        <Spinner size="md" color="fuchsia" containerClassName="py-10" text="Cargando invitaciones..." />
       ) : error ? (
         <div className="text-center py-8">
           <p className="text-red-500">{error}</p>

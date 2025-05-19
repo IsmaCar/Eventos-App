@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { getAvatarUrl, handleAvatarError, Avatar, getUserInitials } from '../utils/Imagehelper';
+import { getAvatarUrl, handleAvatarError, Avatar } from '../utils/Imagehelper';
 import { useAuth } from '../context/AuthContext'
 import { useNotifications } from '../hooks/Notifications'
 import ReceivedInvitations from '../components/EventRequest'
 import FriendRequests from '../components/FriendRequest'
 import EventUser from '../components/EventUser'
+import Spinner from '../components/Spinner'
+import useUserSearch from '../hooks/useUserSearch';
+import useFriends from '../hooks/useFriends';
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 function Profile() {
@@ -14,127 +18,56 @@ function Profile() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMainProfile = location.pathname === '/profile';
-  const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estado para búsqueda de amigos (modal)
-  const [showFriendSearch, setShowFriendSearch] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-
   // Estado para modales
+  const [showFriendSearch, setShowFriendSearch] = useState(false);
   const [showInvitations, setShowInvitations] = useState(false);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [showMyEvents, setShowMyEvents] = useState(false);
 
-  // Función para buscar usuarios
-  const searchUsers = async (term) => {
-    if (term.length < 3) {
-      setSearchResults([]);
-      return;
+  // Determinar la pestaña activa basada en el parámetro de URL
+  const queryParams = new URLSearchParams(location.search);
+  const activeTab = queryParams.get('tab');
+
+  // Hook para búsqueda de usuarios
+  const {
+    searchTerm,
+    searchResults,
+    isSearching,
+    handleSearchTermChange,
+    updateUserInResults,
+    resetSearch
+  } = useUserSearch({
+    endpoint: '/api/friends/search',
+    paramName: 'term',
+    minLength: 3,
+    onResultsLoaded: (results) => {
+      console.log(`Se encontraron ${results.length} usuarios`);
     }
+  });
 
-    setIsSearching(true);
-    try {
-      const response = await fetch(`${API_URL}/api/friends/search?term=${encodeURIComponent(term)}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+  // Hook para gestión de amigos
+  const { 
+    friends, 
+    fetchFriends, 
+    sendFriendRequest, 
+    acceptFriendRequest 
+  } = useFriends({
+    refreshCallback: refreshNotifications,
+    onRequestSent: (userId) => {
+      // Actualizar UI para mostrar "Solicitud enviada" en los resultados
+      updateUserInResults(userId, { 
+        friendship_status: 'requested', 
+        friendship_id: null 
       });
-
-      if (!response.ok) {
-        throw new Error('Error en la búsqueda');
-      }
-
-      const data = await response.json();
-      setSearchResults(data.users || []);
-    } catch (error) {
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Función para enviar solicitud de amistad
-  const sendFriendRequest = async (userId) => {
-    try {
-      const response = await fetch(`${API_URL}/api/friends/request/${userId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al enviar la solicitud');
-      }
-
-      // Actualizar resultados de búsqueda para reflejar la solicitud enviada
-      setSearchResults(prev =>
-        prev.map(user =>
-          user.id === userId
-            ? { ...user, friendship_status: 'requested', friendship_id: null }
-            : user
-        )
-      );
-
-      // Refrescar notificaciones después de enviar la solicitud
-      refreshNotifications();
-
-      // Mostrar mensaje de éxito
       alert('Solicitud de amistad enviada');
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-
-  const fetchFriends = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/friends`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al cargar los amigos');
-      }
-
-      const data = await response.json();
-      setFriends(data.friends || []);
-    } catch (err) {
-      setFriends([]);
-    }
-  };
-
-  const handleAcceptFriendRequest = async (requestId) => {
-    try {
-      const response = await fetch(`${API_URL}/api/friends/accept/${requestId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al aceptar la solicitud');
-      }
-
-      // Actualizar la lista de amigos y estadísticas
+    },
+    onRequestAccepted: () => {
+      // Actualizar la lista de amigos
       fetchFriends();
-      refreshNotifications();
-    } catch (err) {
-      alert('No se pudo aceptar la solicitud de amistad');
     }
-  };
+  });
 
   // Función para abrir el modal de invitaciones y actualizar estadísticas
   const handleOpenInvitations = () => {
@@ -161,6 +94,28 @@ function Profile() {
     refreshNotifications();
   };
 
+  // Manejador para cerrar modal de búsqueda
+  const handleCloseFriendSearch = () => {
+    setShowFriendSearch(false);
+    resetSearch();
+  };
+
+  // Función para manejar el envío de solicitudes de amistad
+  const handleSendFriendRequest = async (userId) => {
+    const result = await sendFriendRequest(userId);
+    if (!result.success) {
+      alert(result.error || 'Error al enviar solicitud');
+    }
+  };
+
+  // Función para manejar la aceptación de solicitudes de amistad
+  const handleAcceptFriendRequest = async (requestId) => {
+    const result = await acceptFriendRequest(requestId);
+    if (!result.success) {
+      alert('No se pudo aceptar la solicitud de amistad');
+    }
+  };
+
   // Efecto para actualizar periódicamente cuando los modales están abiertos
   useEffect(() => {
     if (showFriendRequests || showInvitations) {
@@ -168,6 +123,22 @@ function Profile() {
       return () => clearInterval(interval);
     }
   }, [showFriendRequests, showInvitations, refreshNotifications]);
+
+  // Efecto para detectar y abrir el modal correspondiente según la URL
+  useEffect(() => {
+    if (activeTab === 'requests') {
+      // Verificar si debemos abrir el modal de notificaciones
+      const shouldOpenNotificationsModal = localStorage.getItem('openNotificationsModal') === 'true';
+      
+      if (shouldOpenNotificationsModal) {
+        // Abrir el modal de invitaciones
+        setShowInvitations(true);
+        
+        // Limpiar la bandera para no volver a abrir automáticamente
+        localStorage.removeItem('openNotificationsModal');
+      }
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (!token) {
@@ -177,9 +148,7 @@ function Profile() {
 
     if (user && token) {
       setLoading(true);
-      Promise.all([
-        fetchFriends()
-      ]).finally(() => setLoading(false));
+      fetchFriends().finally(() => setLoading(false));
     }
   }, [user, token, navigate]);
 
@@ -233,11 +202,7 @@ function Profile() {
             <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Buscar amigos</h3>
               <button
-                onClick={() => {
-                  setShowFriendSearch(false);
-                  setSearchTerm('');
-                  setSearchResults([]);
-                }}
+                onClick={handleCloseFriendSearch}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -252,12 +217,7 @@ function Profile() {
                 <input
                   type="text"
                   value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    if (e.target.value.length >= 3) {
-                      searchUsers(e.target.value);
-                    }
-                  }}
+                  onChange={(e) => handleSearchTermChange(e.target.value)}
                   placeholder="Buscar por nombre o email..."
                   className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fuchsia-300 focus:border-fuchsia-500 transition-colors"
                 />
@@ -275,8 +235,8 @@ function Profile() {
             {/* Resultados de búsqueda */}
             <div className="overflow-y-auto flex-1">
               {isSearching ? (
-                <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-fuchsia-500"></div>
+                <div className="py-10">
+                  <Spinner size="md" color="fuchsia" />
                 </div>
               ) : searchTerm.length >= 3 ? (
                 searchResults.length > 0 ? (
@@ -295,7 +255,7 @@ function Profile() {
                         <div>
                           {user.friendship_status === 'none' && (
                             <button
-                              onClick={() => sendFriendRequest(user.id)}
+                              onClick={() => handleSendFriendRequest(user.id)}
                               className="py-1.5 px-3 bg-fuchsia-500 text-white rounded hover:bg-fuchsia-600 transition-colors text-sm"
                             >
                               Enviar solicitud
@@ -321,7 +281,7 @@ function Profile() {
                           )}
                           {user.friendship_status === 'rejected' && (
                             <button
-                              onClick={() => sendFriendRequest(user.id)}
+                              onClick={() => handleSendFriendRequest(user.id)}
                               className="py-1.5 px-3 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors text-sm"
                             >
                               Volver a enviar
@@ -351,11 +311,7 @@ function Profile() {
 
             <div className="mt-4 pt-3 border-t border-gray-100">
               <button
-                onClick={() => {
-                  setShowFriendSearch(false);
-                  setSearchTerm('');
-                  setSearchResults([]);
-                }}
+                onClick={handleCloseFriendSearch}
                 className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
               >
                 Cerrar
@@ -549,8 +505,8 @@ function Profile() {
               Mis amigos
             </h2>
             {loading ? (
-              <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-fuchsia-500"></div>
+              <div className="py-4">
+                <Spinner size="sm" color="fuchsia" />
               </div>
             ) : friends.length > 0 ? (
               <div className="max-h-60 overflow-y-auto">

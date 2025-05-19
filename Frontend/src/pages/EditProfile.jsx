@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getAvatarUrl, handleAvatarError, Avatar } from '../utils/Imagehelper';
+import Spinner from '../components/Spinner';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -203,7 +204,7 @@ function EditProfile() {
           </div>
           {updating && (
             <div className="flex items-center gap-2 text-fuchsia-600 mt-2">
-              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-fuchsia-600"></div>
+              <Spinner size="xs" color="fuchsia" />
               <span>Actualizando avatar...</span>
             </div>
           )}
@@ -322,7 +323,7 @@ function EditProfile() {
               >
                 {loading ? (
                   <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                    <Spinner size="xs" color="white" />
                     <span>Guardando...</span>
                   </div>
                 ) : (

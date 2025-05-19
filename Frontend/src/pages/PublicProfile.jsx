@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Avatar, getImageUrl, getRandomGradient } from '../utils/Imagehelper';
+import Spinner from '../components/Spinner';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -201,11 +202,7 @@ function PublicProfile() {
   }, [id, token, user]);
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    );
+    return <Spinner containerClassName="h-screen" color="indigo" text="Cargando perfil..." />;
   }
 
   if (error || !profile) {

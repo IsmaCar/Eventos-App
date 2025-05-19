@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import Spinner from './Spinner';
+import useFriends from '../hooks/useFriends';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -8,6 +10,22 @@ function FriendRequests({ onRequestProcessed }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Usar el hook personalizado para gestión de amigos
+  const { 
+    acceptFriendRequest: hookAcceptRequest,
+    loading: friendsLoading,
+    error: friendsError
+  } = useFriends({
+    acceptEndpoint: '/api/friends/accept',
+    refreshCallback: onRequestProcessed,
+    onRequestAccepted: (requestId) => {
+      // Actualizar localmente las solicitudes para eliminar la que se acaba de aceptar
+      setRequests(prevRequests => 
+        prevRequests.filter(request => request.id !== requestId)
+      );
+    }
+  });
 
   const fetchFriendRequests = async () => {
     try {
@@ -35,31 +53,11 @@ function FriendRequests({ onRequestProcessed }) {
     }
   };
 
+  // Función simplificada para aceptar solicitudes usando el hook
   const handleAcceptFriendRequest = async (requestId) => {
-    try {
-      const response = await fetch(`${API_URL}/api/friends/accept/${requestId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al aceptar la solicitud');
-      }
-
-      // Actualizar la lista de solicitudes localmente
-      setRequests(prevRequests => 
-        prevRequests.filter(request => request.id !== requestId)
-      );
-      
-      // Notificar al componente padre que se procesó una solicitud
-      if (typeof onRequestProcessed === 'function') {
-        onRequestProcessed();
-      }
-    } catch (err) {
-      alert('No se pudo aceptar la solicitud de amistad');
+    const result = await hookAcceptRequest(requestId);
+    if (!result.success) {
+      alert(result.error || 'No se pudo aceptar la solicitud de amistad');
     }
   };
 
@@ -134,15 +132,17 @@ function FriendRequests({ onRequestProcessed }) {
     return user.username.charAt(0).toUpperCase();
   };
 
+  // El estado de carga real combina el loading local y el del hook
+  const isLoading = loading || friendsLoading;
+  const displayError = error || friendsError;
+
   return (
     <div className="bg-white rounded-xl p-4">
-      {loading ? (
-        <div className="flex justify-center py-10">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-fuchsia-500"></div>
-        </div>
-      ) : error ? (
+      {isLoading ? (
+        <Spinner size="md" color="fuchsia" containerClassName="py-10" text="Cargando solicitudes..." />
+      ) : displayError ? (
         <div className="text-center py-8">
-          <p className="text-red-500">{error}</p>
+          <p className="text-red-500">{displayError}</p>
           <button 
             onClick={fetchFriendRequests}
             className="mt-4 px-4 py-2 bg-fuchsia-100 text-fuchsia-700 rounded-md hover:bg-fuchsia-200 transition-colors"

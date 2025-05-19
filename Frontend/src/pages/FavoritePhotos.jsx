@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePhotoUploads } from '../hooks/usePhotoUploads';
+import Spinner from '../components/Spinner';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -81,11 +82,7 @@ function FavoritePhotos() {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    );
+    return <Spinner containerClassName="h-64" color="fuchsia" text="Cargando fotos favoritas..." />;
   }
 
   return (

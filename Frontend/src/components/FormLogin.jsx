@@ -1,28 +1,29 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
+import Spinner from "./Spinner";
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const [error, setError] = useState('')
+  const [error, setError] = useState('');
   const { loginUser } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const nombre = e.target.name;
     setFormData(prev => ({ ...prev, [nombre]: e.target.value.trim() }));
   };
+  
   // voy a realizar un petición a la api con los datos del formulario para verificar
   // si el usuario existe en la base de datos
   const handleSubmit = async (e) => {
-    setError('')
+    setError('');
     e.preventDefault();
-    setLoading(true)
+    setLoading(true);
     try {
       // aquí hacemos un login.
       const response = await loginUser(formData);
@@ -30,13 +31,13 @@ const LoginForm = () => {
       if (response && !response.error) {
         navigate("/");
       } else {
-        setError(response.error || 'Error al iniciar sesión')
+        setError(response.error || 'Error al iniciar sesión');
       }
     } catch (error) {
       console.log("Error al iniciar sesión", error);
       setError(error.message || "Error al iniciar sesión, intenta de nuevo");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -94,7 +95,7 @@ const LoginForm = () => {
         >
           {loading ? (
             <div className="flex items-center justify-center gap-3 w-full">
-              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+              <Spinner size="xs" color="white" />
               <span>Iniciando sesión...</span>
             </div>
           ) : (

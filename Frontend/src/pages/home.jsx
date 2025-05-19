@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useEvent } from '../context/EventContext';
 import { eventCardClasses } from '../utils/Imagehelper'
 import { useAuth } from '../context/AuthContext';
+import Spinner from '../components/Spinner';
 
 function home() {
     const { token } = useAuth();
@@ -141,11 +142,7 @@ function home() {
 
     // Mostrar estado de carga
     if (loading) {
-        return (
-            <div className="flex justify-center items-center h-96">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
-            </div>
-        )
+        return <Spinner containerClassName="h-96" color="indigo" text="Cargando eventos..." />;
     }
 
     const hasEvents = filteredEvents && filteredEvents.length > 0;

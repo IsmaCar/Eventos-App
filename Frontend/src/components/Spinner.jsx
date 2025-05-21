@@ -35,7 +35,8 @@ function Spinner({
     blue: 'border-blue-500',
     green: 'border-green-500',
     red: 'border-red-500',
-    gray: 'border-gray-500'
+    gray: 'border-gray-500',
+    white: 'border-white'
   };
 
   // Contenedor base o pantalla completa

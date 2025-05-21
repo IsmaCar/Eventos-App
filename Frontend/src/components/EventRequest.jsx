@@ -149,13 +149,7 @@ function ReceivedInvitations({ onInvitationProcessed }) {
                     : "Fecha no disponible"}
                 </p>
               </div>
-              <div className="flex items-start">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  Pendiente
-                </span>
-              </div>
             </div>
-            
             <div className="mt-3 text-sm text-gray-600">
               <p>Invitado por: <span className="font-medium">{invitation.invitedBy?.username || "Usuario desconocido"}</span></p>
             </div>

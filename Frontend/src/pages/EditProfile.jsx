@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getAvatarUrl, handleAvatarError, Avatar } from '../utils/Imagehelper';
+import { getAvatarUrl, handleAvatarError } from '../utils/Imagehelper';
 import Spinner from '../components/Spinner';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -11,7 +11,7 @@ function EditProfile() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   
-  // Estados para el manejo del formulario y la experiencia del usuario
+  // Estados para formulario y UI
   const [formData, setFormData] = useState({
     username: user?.username || '',
     email: user?.email || '',
@@ -26,26 +26,22 @@ function EditProfile() {
   const [updating, setUpdating] = useState(false);
 
   /**
-   * Maneja el cambio de archivo para la imagen de perfil
-   * Crea una vista previa y sube el avatar automáticamente
+   * Procesa el cambio de avatar, crea vista previa y sube el archivo
    */
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Crear una URL de vista previa del archivo
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result);
       };
       reader.readAsDataURL(file);
-      // Subir la imagen inmediatamente
       uploadAvatar(file);
     }
   }
 
   /**
-   * Realiza la subida del avatar al servidor
-   * Actualiza el contexto de usuario cuando es exitoso
+   * Sube el avatar al servidor y actualiza el estado de la aplicación
    */
   const uploadAvatar = async (file) => {
     setUpdating(true);
@@ -54,6 +50,7 @@ function EditProfile() {
 
     const formData = new FormData();
     formData.append('avatar', file);
+    
     try {
       const response = await fetch(`${API_URL}/api/users/upload-avatar`, {
         method: 'POST',
@@ -64,32 +61,52 @@ function EditProfile() {
       });
 
       if(!response.ok) {
-        throw new Error('Error al subir el avatar');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Error al subir el avatar');
       }
 
-      setSuccess('Avatar actualizado con éxito');
-      // Actualizar el avatar del usuario en el contexto
       const data = await response.json();
-      updateUser({ ...user, avatar: data.avatar });
+      
+      // Obtener la ruta del avatar según la estructura de respuesta del servidor
+      const avatarPath = data.avatar || data.user?.avatar || data.filename || data.path || data;
+      
+      if (!avatarPath) {
+        throw new Error('No se pudo obtener la ruta del avatar');
+      }
+      
+      // Actualizar el contexto con la nueva ruta de avatar
+      updateUser({ 
+        ...user, 
+        avatar: typeof avatarPath === 'string' ? avatarPath : JSON.stringify(avatarPath)
+      });
+      
+      // Actualizar la vista previa con la nueva URL
+      const fullAvatarUrl = getAvatarUrl(avatarPath);
+      
+      // Forzar recarga evitando caché
+      const timestamp = new Date().getTime();
+      setPreview(`${fullAvatarUrl}?t=${timestamp}`);
+      
+      setSuccess('Avatar actualizado con éxito');
       
     } catch (error) {
       console.error('Error al subir el avatar', error);
-      setError('Error al subir el avatar, intenta de nuevo');
+      setError('Error al subir el avatar: ' + (error.message || 'Intenta de nuevo'));
+      setPreview(null);
     } finally {
       setUpdating(false);
     }
   }
 
   /**
-   * Maneja los cambios en los campos del formulario
+   * Actualiza el estado del formulario al cambiar los campos
    */
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
   /**
-   * Procesa el envío del formulario para actualizar el perfil
-   * Incluye validaciones para el cambio de contraseña
+   * Procesa la actualización del perfil con validaciones
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,7 +114,7 @@ function EditProfile() {
     setSuccess('');
     setLoading(true);
     try {
-      // Validar los campos de contraseña si alguno está presente
+      // Validar cambio de contraseña
       if (formData.newPassword || formData.confirmPassword || formData.currentPassword) {
         if (!formData.currentPassword) {
           setError('Debes introducir tu contraseña actual para cambiar la contraseña');
@@ -118,13 +135,13 @@ function EditProfile() {
         }
       }
 
-      // Preparar los datos a enviar (solo incluir la contraseña si se está cambiando)
+      // Preparar datos para enviar
       const dataToUpdate = {
         username: formData.username,
         email: formData.email
       };
       
-      // Agregar campos de contraseña solo si se está intentando cambiar
+      // Incluir contraseñas solo si se están cambiando
       if (formData.newPassword) {
         dataToUpdate.currentPassword = formData.currentPassword;
         dataToUpdate.newPassword = formData.newPassword;
@@ -140,8 +157,9 @@ function EditProfile() {
       });
 
       if(!response.ok) {
-        response.status === 409 ? setError('El nombre de usuario o el correo electrónico ya están en uso') 
-                                : setError('Error al actualizar el perfil');
+        response.status === 409 
+          ? setError('El nombre de usuario o el correo electrónico ya están en uso') 
+          : setError('Error al actualizar el perfil');
         setLoading(false);
         return;
       }
@@ -152,7 +170,7 @@ function EditProfile() {
         updateUser(data.user); 
       } 
       
-      // Limpiar los campos de contraseña después de la actualización  
+      // Reiniciar campos de contraseña
       setFormData({
         ...formData,
         currentPassword: '',
@@ -167,7 +185,7 @@ function EditProfile() {
     }
   }
 
-  // URL del avatar actual o vista previa
+  // Determinar la URL del avatar a mostrar
   const avatarUrl = preview || getAvatarUrl(user?.avatar);
 
   return (
@@ -175,7 +193,7 @@ function EditProfile() {
       <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Editar Perfil</h1>
       
       <div className="grid md:grid-cols-3 gap-8">
-        {/* Columna de Avatar */}
+        {/* Columna para el avatar */}
         <div className="md:col-span-1 flex flex-col items-center">
           <div className="mb-4 relative">
             <img
@@ -210,10 +228,10 @@ function EditProfile() {
           )}
         </div>
   
-        {/* Columna de Formulario */}
+        {/* Columna para el formulario */}
         <div className="md:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Mensajes de error y éxito */}
+            {/* Mensajes de estado */}
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
                 {error}
@@ -226,7 +244,7 @@ function EditProfile() {
             )}
   
             <div className="grid grid-cols-1 gap-6">
-              {/* Nombre de usuario */}
+              {/* Campos principales */}
               <div>
                 <label htmlFor="username" className="block text-lg font-medium text-gray-700 mb-1">
                   Nombre de usuario
@@ -241,7 +259,6 @@ function EditProfile() {
                 />
               </div>
   
-              {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-lg font-medium text-gray-700 mb-1">
                   Correo electrónico
@@ -256,11 +273,10 @@ function EditProfile() {
                 />
               </div>
   
-              {/* Sección de cambio de contraseña */}
+              {/* Sección para cambio de contraseña */}
               <div className="pt-4 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Cambiar contraseña</h3>
                 
-                {/* Contraseña actual */}
                 <div className="mb-4">
                   <label htmlFor="currentPassword" className="block text-lg font-medium text-gray-700 mb-1">
                     Contraseña actual
@@ -275,7 +291,6 @@ function EditProfile() {
                   />
                 </div>
                 
-                {/* Nueva contraseña */}
                 <div className="mb-4">
                   <label htmlFor="newPassword" className="block text-lg font-medium text-gray-700 mb-1">
                     Nueva contraseña
@@ -290,7 +305,6 @@ function EditProfile() {
                   />
                 </div>
                 
-                {/* Confirmar nueva contraseña */}
                 <div>
                   <label htmlFor="confirmPassword" className="block text-lg font-medium text-gray-700 mb-1">
                     Confirmar nueva contraseña

@@ -84,7 +84,7 @@ final class EventController extends AbstractController
 
         if ($imageFile) {
             // Asegurar que el directorio existe y es escribible
-            $uploadsDir = $this->getParameter('') . '/public/uploads/backgrounds/';
+            $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/backgrounds/';
             if (!file_exists($uploadsDir)) {
                 mkdir($uploadsDir, 0777, true);
             }

@@ -2,34 +2,24 @@ import React, { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Link } from 'react-router-dom'
 import { useEvent } from '../context/EventContext'
-import { eventCardClasses } from '../utils/Imagehelper'
+import { eventCardClasses, getRandomGradient } from '../utils/Imagehelper'
+import { formatLongDate, isDatePassed } from '../utils/DateHelper'
 import Spinner from './Spinner'
 
 const API_URL = import.meta.env.VITE_API_URL
 
-function EventUser() {
+function EventsUser() {
   const { getImageUrl } = useEvent()
   const { token } = useAuth()
   const [events, setEvents] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
   
   useEffect(() => {
     const fetchEvents = async () => {
       setError('')
       setLoading(true)
       try {
-        // Cambia esta URL para que coincida con tu endpoint de eventos de usuario
         const response = await fetch(`${API_URL}/api/user/event/`, {
           method: 'GET',
           headers: {
@@ -39,9 +29,10 @@ function EventUser() {
         if (!response.ok) throw new Error("Error al obtener los eventos")
 
         const data = await response.json()
-        
-        setEvents(data)
-
+        const filteredEvents = data.filter(event => 
+        event.status === 'activated' && 
+        event.banned !== true)
+        setEvents(filteredEvents)
       } catch (error) {
         setError(error.message)
       } finally {
@@ -50,7 +41,7 @@ function EventUser() {
     }
 
     fetchEvents()
-  }, [token]) // Añade token como dependencia
+  }, [token])
 
   if (loading) {
     return <Spinner size="lg" color="indigo" containerClassName="py-20" text="Cargando tus eventos..." />;
@@ -70,6 +61,7 @@ function EventUser() {
       </div>
     )
   }
+
   return (
     <div>
       {events && events.length > 0 ? (
@@ -81,12 +73,31 @@ function EventUser() {
               className="block group"
             >
               <div
-                className={`${eventCardClasses(event).replace('h-64', 'h-56')} 
-                         cursor-pointer transform transition-transform duration-300 hover:scale-[1.02]`}
-                style={event.image ? { backgroundImage: `url(${getImageUrl(event.image)})` } : {}}
+                className="relative rounded-xl overflow-hidden h-56 shadow-md cursor-pointer transform transition-transform duration-300 hover:scale-[1.02]"
               >
+                {/* Fondo con imagen o gradiente aleatorio */}
+                {event.image ? (
+                  <div 
+                    className="absolute inset-0 w-full h-full bg-cover bg-center"
+                    style={{ backgroundImage: `url(${getImageUrl(event.image)})` }}
+                  ></div>
+                ) : (
+                  <div className={`absolute inset-0 w-full h-full ${getRandomGradient()}`}>
+                    <div className="flex items-center justify-center h-full">
+                      <span className="text-white text-4xl opacity-80"></span>
+                    </div>
+                  </div>
+                )}
+                
                 {/* Capa de gradiente para mejorar legibilidad */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+
+                {/* Badge para eventos pasados */}
+                {isDatePassed(event.event_date) && (
+                  <div className="absolute top-4 right-4 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
+                    Finalizado
+                  </div>
+                )}
 
                 {/* Contenido de la tarjeta */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white z-10">
@@ -94,7 +105,7 @@ function EventUser() {
                     {event.title}
                   </h2>
                   <p className="text-gray-200 text-sm mt-1 drop-shadow-sm">
-                    {formatDate(event.event_date)}
+                    {formatLongDate(event.event_date)}
                   </p>
                 </div>
 
@@ -120,4 +131,4 @@ function EventUser() {
   )
 }
 
-export default EventUser
+export default EventsUser

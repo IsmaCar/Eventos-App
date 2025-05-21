@@ -105,27 +105,27 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         ];
     }
 
-    public function getEventByUserId(int $userId): array
-    {
-        try {
-            // Buscar eventos donde el usuario sea el creador
-            return $this->getEntityManager()
-                ->createQueryBuilder()
-                ->select('e') // Seleccionamos la entidad Event completa
-                ->from('App\Entity\Event', 'e')
-                ->where('e.user = :userId') // Usando la relación directa con la entidad User
-                ->setParameter('userId', $userId)
-                ->orderBy('e.event_date', 'DESC') // Ordenados por fecha de creación descendente
-                ->getQuery()
-                ->getResult();
-        } catch (\Exception $e) {
-            // Log del error para facilitar la depuración
-            error_log('Error en getEventByUserId: ' . $e->getMessage());
-
-            // En caso de error, devolver un array vacío en lugar de propagar la excepción
-            return [];
-        }
+public function getEventByUserId(int $userId): array
+{
+    try {
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('e') // Seleccionamos la entidad Event completa
+            ->from('App\Entity\Event', 'e')
+            ->where('e.user = :userId') // Usando la relación directa con la entidad User
+            ->andWhere('e.banned = :banned')
+            ->andWhere('e.status = :status') 
+            ->setParameter('userId', $userId)
+            ->setParameter('banned', false)
+            ->setParameter('status', 'activated') // Solo eventos activos
+            ->orderBy('e.event_date', 'DESC') 
+            ->getQuery()
+            ->getResult();
+    } catch (\Exception $e) {
+        error_log('Error en getEventByUserId: ' . $e->getMessage());
+        return [];
     }
+}
 
     public function searchUsers(string $query)
     {

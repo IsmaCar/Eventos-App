@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useEvent } from '../context/EventContext';
-import { eventCardClasses } from '../utils/Imagehelper'
+import { getRandomGradient } from '../utils/Imagehelper'
 import { useAuth } from '../context/AuthContext';
 import Spinner from '../components/Spinner';
 
@@ -202,10 +202,23 @@ function home() {
                                                 className="block group"
                                             >
                                                 <div
-                                                    className={`${eventCardClasses(event).replace('h-64', 'h-60')} 
-                                                                cursor-pointer transform transition-transform duration-300 hover:scale-[1.02]`}
-                                                    style={event.image ? { backgroundImage: `url(${getImageUrl(event.image)})` } : {}}
+                                                    className={`relative rounded-xl overflow-hidden h-60 shadow-md cursor-pointer transform 
+                                                    transition-transform duration-300 hover:scale-[1.02]`}
                                                 >
+                                                    {/* Fondo con imagen o gradiente aleatorio */}
+                                                    {event.image ? (
+                                                        <div
+                                                            className="absolute inset-0 w-full h-full bg-cover bg-center"
+                                                            style={{ backgroundImage: `url(${getImageUrl(event.image)})` }}
+                                                        ></div>
+                                                    ) : (
+                                                        <div className={`absolute inset-0 w-full h-full ${getRandomGradient()}`}>
+                                                            <div className="flex items-center justify-center h-full">
+                                                                <span className="text-white text-4xl opacity-80"></span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                     {/* Capa de gradiente para mejorar legibilidad */}
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
 

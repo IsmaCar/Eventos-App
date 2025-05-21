@@ -232,7 +232,7 @@ function CardDetail() {
             )}
           </div>
 
-          {/* Lista de asistentes - nueva sección */}
+          {/* Lista de asistentes */}
           <div className="bg-gradient-to-br from-indigo-50 to-fuchsia-50 p-6 rounded-lg border border-indigo-100 shadow-sm md:col-span-4">
             <h3 className="font-semibold text-indigo-600 mb-3">Asistentes</h3>
 
@@ -517,15 +517,7 @@ function CardDetail() {
             className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
             onClick={closeExpandedView}
           >
-            <div className="relative max-w-5xl max-h-[90vh] w-full">
-              {/* Botón de cierre */}
-              <button
-                className="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center z-10"
-                onClick={closeExpandedView}
-              >
-                &times;
-              </button>
-
+            <div className="relative max-w-5xl max-h-[90vh] w-full">              
               {/* Imagen ampliada */}
               <div
                 className="relative overflow-hidden rounded-lg"

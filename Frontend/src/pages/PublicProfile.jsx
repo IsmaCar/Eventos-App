@@ -1,14 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Avatar, getImageUrl, getRandomGradient } from '../utils/Imagehelper';
+import { useEvent } from '../context/EventContext';
+import { Avatar, getRandomGradient } from '../utils/Imagehelper';
+import { formatLongDate, isDatePassed } from '../utils/DateHelper';
 import Spinner from '../components/Spinner';
+import { useFriends } from '../hooks/useFriends';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+/**
+ * Componente para mostrar el perfil público de un usuario
+ * Permite ver información, eventos creados, lista de amigos 
+ * y gestionar la relación de amistad
+ */
 function PublicProfile() {
   const { id } = useParams();
   const { user, token } = useAuth();
+  const { getImageUrl } = useEvent();
   const [profile, setProfile] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,70 +26,24 @@ function PublicProfile() {
   const [friendRequestStatus, setFriendRequestStatus] = useState('none');
   const [friendshipId, setFriendshipId] = useState(null);
 
-  // Función para enviar solicitud de amistad
-  const handleFriendRequest = async () => {
-    if (!token) {
-      alert('Debes iniciar sesión para enviar solicitudes de amistad');
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${API_URL}/api/friends/request/${id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+  // Utilizar el hook de amigos con un callback de actualización
+  const { sendFriendRequest, removeFriend, checkFriendshipStatus, findFriendshipId
+  } = useFriends({
+    refreshCallback: async () => {
+      // Opcional: actualizar el estado de amistad tras operaciones
+      if (token && id) {
+        const statusData = await checkFriendshipStatus(id);
+        if (statusData.status) {
+          setFriendRequestStatus(statusData.status);
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error('No se pudo enviar la solicitud de amistad');
       }
-      
-      setFriendRequestStatus('pending');
-      alert('Solicitud de amistad enviada correctamente');
-    } catch (error) {
-      console.error('Error enviando solicitud de amistad:', error);
-      alert('Error al enviar solicitud de amistad');
     }
-  };
+  });
 
-  // Función para eliminar amistad
-  const handleRemoveFriend = async () => {
-    if (!token || !friendshipId) {
-      alert('No se puede eliminar la amistad en este momento');
-      return;
-    }
-
-    if (!confirm('¿Estás seguro de que quieres eliminar a esta persona de tus amigos?')) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${API_URL}/api/friends/${friendshipId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('No se pudo eliminar la amistad');
-      }
-      
-      setFriendRequestStatus('none');
-      setFriendshipId(null);
-      setFriends(friends.filter(friend => friend.id !== parseInt(id)));
-      
-      alert('Amistad eliminada correctamente');
-    } catch (error) {
-      console.error('Error eliminando amistad:', error);
-      alert('Error al eliminar la amistad');
-    }
-  };
-
-  // Cargar datos del perfil y estado de amistad
+  /**
+   * Efecto para cargar los datos del perfil al montar el componente
+   * o cuando cambia el ID del usuario, token o usuario actual
+   */
   useEffect(() => {
     async function loadProfileData() {
       if (!id) {
@@ -91,7 +54,7 @@ function PublicProfile() {
 
       try {
         setLoading(true);
-        
+
         // Obtener perfil público
         const profileResponse = await fetch(`${API_URL}/api/public/user/${id}`, {
           method: 'GET',
@@ -100,14 +63,14 @@ function PublicProfile() {
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           }
         });
-        
+
         if (!profileResponse.ok) {
           throw new Error(`Error al cargar perfil: ${profileResponse.status}`);
         }
-        
+
         const profileData = await profileResponse.json();
         setProfile(profileData.user);
-        
+
         // Obtener eventos públicos del usuario
         const eventsResponse = await fetch(`${API_URL}/api/public/user/${id}/events`, {
           method: 'GET',
@@ -115,96 +78,160 @@ function PublicProfile() {
             'Content-Type': 'application/json'
           }
         });
-        
+
         if (!eventsResponse.ok) {
           throw new Error(`Error al cargar eventos: ${eventsResponse.status}`);
         }
-        
-        const eventsData = await eventsResponse.json();
-        setEvents(eventsData.events || []);
-        
-        // Obtener amigos del usuario
-        try {
-          const friendsResponse = await fetch(`${API_URL}/api/friends/user/${id}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-            }
-          });
-          
-          if (friendsResponse.ok) {
-            const friendsData = await friendsResponse.json();
-            setFriends(friendsData.friends || []);
-            
-            if (user && friendsData.friends && friendsData.friends.length > 0) {
-              const isCurrentUserFriend = friendsData.friends.some(
-                friend => friend.id === parseInt(user.id) || friend.user_id === parseInt(user.id)
-              );
-              
-              if (isCurrentUserFriend) {
-                setFriendRequestStatus('friends');
-                
-                const friendship = friendsData.friends.find(
-                  friend => friend.id === parseInt(user.id) || friend.user_id === parseInt(user.id)
-                );
-                
-                if (friendship && friendship.friendship_id) {
-                  setFriendshipId(friendship.friendship_id);
-                }
-              }
-            }
-          } else {
-            setFriends([]);
-          }
-        } catch (err) {
-          console.warn("Error al obtener amigos:", err);
-          setFriends([]);
-        }
 
-        // Verificar el estado de la solicitud de amistad (si el usuario está autenticado)
-        if (token && user && user.id !== parseInt(id)) {
+        const eventsData = await eventsResponse.json();
+        setEvents(eventsData.events);
+
+        // Si el usuario está autenticado, obtener amigos y estado de amistad
+        if (token) {
           try {
-            const friendStatusResponse = await fetch(`${API_URL}/api/friends/check/${id}`, {
+            // Obtener lista de amigos del usuario
+            const friendsResponse = await fetch(`${API_URL}/api/friends/user/${id}`, {
+              method: 'GET',
               headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
               }
             });
-            
-            if (friendStatusResponse.ok) {
-              const statusData = await friendStatusResponse.json();
-              
-              if (statusData.status === 'friends' || statusData.status === 'accepted') {
-                setFriendRequestStatus('friends');
-                const fId = statusData.friendship_id || statusData.id || statusData.friendshipId;
-                if (fId) {
-                  setFriendshipId(fId);
-                }
-              } else {
-                setFriendRequestStatus(statusData.status || 'none');
-              }
+
+            if (friendsResponse.ok) {
+              const friendsData = await friendsResponse.json();
+              setFriends(friendsData.friends || []);
             }
-          } catch (err) {
-            console.warn("Error al verificar estado de amistad:", err);
+          } catch (friendsError) {
+            // Silenciar error - no impide ver el resto del perfil
+          }
+
+          // Verificar estado de amistad si no es el perfil propio
+          if (user && parseInt(user.id) !== parseInt(id)) {
+            const statusData = await checkFriendshipStatus(id);
+
+            if (statusData.status) {
+              setFriendRequestStatus(statusData.status);
+            }
+
+            if (statusData.friendship_id) {
+              setFriendshipId(statusData.friendship_id);
+            }
           }
         }
-        
+
         setLoading(false);
       } catch (err) {
-        console.error("Error cargando perfil:", err);
         setError(`No se pudo cargar el perfil: ${err.message}`);
         setLoading(false);
       }
     }
-    
+
     loadProfileData();
   }, [id, token, user]);
 
+  /**
+   * Efecto para buscar el ID de amistad en la lista de amigos
+   */
+  useEffect(() => {
+    if (friends.length > 0 && !friendshipId && friendRequestStatus === 'friends') {
+      const foundId = findFriendshipId(id);
+      if (foundId) {
+        setFriendshipId(foundId);
+      }
+    }
+  }, [friends, friendRequestStatus, id]);
+
+  /**
+   * Función para enviar una solicitud de amistad al usuario del perfil
+   */
+  const handleFriendRequest = async () => {
+    if (!token) {
+      alert('Debes iniciar sesión para enviar solicitudes de amistad');
+      return;
+    }
+
+    try {
+      const result = await sendFriendRequest(id);
+
+      if (result.success) {
+        // Actualizar estado localmente
+        setFriendRequestStatus('pending');
+
+        // Verificar estado actualizado
+        const statusData = await checkFriendshipStatus(id);
+        if (statusData.status) {
+          setFriendRequestStatus(statusData.status);
+        }
+        if (statusData.friendship_id) {
+          setFriendshipId(statusData.friendship_id);
+        }
+
+        alert('Solicitud de amistad enviada correctamente');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      alert(error.message || 'Error al enviar solicitud de amistad');
+    }
+  };
+
+  /**
+   * Función para eliminar una amistad existente usando el hook useFriends
+   */
+  const handleRemoveFriend = async () => {
+    // Obtener el ID de amistad (de estado o buscarlo en amigos)
+    let idToUse = friendshipId || findFriendshipId(id);
+
+    if (!idToUse) {
+      alert('No se puede eliminar la amistad en este momento');
+      return;
+    }
+
+    if (!confirm('¿Estás seguro de que quieres eliminar a esta persona de tus amigos?')) {
+      return;
+    }
+
+    try {
+      // Usar directamente el método del hook para eliminar la amistad
+      const result = await removeFriend(idToUse);
+
+      if (result.success) {
+        // Actualizar estado local
+        setFriendRequestStatus('none');
+        setFriendshipId(null);
+
+        // Actualizar lista de amigos (filtrar el amigo eliminado)
+        setFriends(prevFriends =>
+          prevFriends.filter(friend =>
+            (friend.id !== parseInt(id)) && (friend.user_id !== parseInt(id))
+          )
+        );
+
+        alert('Amistad eliminada correctamente');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      alert('Error al eliminar la amistad: ' + error.message);
+    }
+  };
+
+  /**
+   * Función para manejar errores de carga de imágenes
+   */
+  const handleEventImageError = (event) => {
+    const target = event.target;
+    target.parentElement.classList.add(getRandomGradient());
+    target.parentElement.innerHTML = '<span class="text-white text-4xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">🎉</span>';
+  };
+
+  // Mostrar spinner durante la carga
   if (loading) {
     return <Spinner containerClassName="h-screen" color="indigo" text="Cargando perfil..." />;
   }
 
+  // Mostrar mensaje de error si hay problemas
   if (error || !profile) {
     return (
       <div className="container mx-auto px-4 py-12">
@@ -247,16 +274,14 @@ function PublicProfile() {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">{profile.username}</h1>
-                <p className="mt-2 text-gray-600">
-                  Miembro desde {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'hace tiempo'}
-                </p>
+                {/* Se eliminó la línea de "Miembro desde" */}
               </div>
-              
+
               {/* Botón de añadir/eliminar amigo */}
               {showFriendButton && (
                 <div>
                   {friendRequestStatus === 'friends' || friendRequestStatus === 'accepted' ? (
-                    <button 
+                    <button
                       onClick={handleRemoveFriend}
                       className="px-4 py-2 bg-red-100 text-red-700 rounded-full font-medium flex items-center hover:bg-red-200 transition-colors"
                     >
@@ -273,7 +298,7 @@ function PublicProfile() {
                       Pendiente
                     </button>
                   ) : (
-                    <button 
+                    <button
                       onClick={handleFriendRequest}
                       className="px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white rounded-full font-medium flex items-center hover:from-fuchsia-600 hover:to-indigo-600 transition-colors"
                     >
@@ -289,7 +314,7 @@ function PublicProfile() {
           </div>
         </div>
 
-        {/* Secciones adicionales */}
+        {/* Secciones adicionales - Estadísticas y Amigos */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Estadísticas - Eventos y Amigos */}
           <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
@@ -320,24 +345,42 @@ function PublicProfile() {
               Amigos
             </h2>
             {friends.length > 0 ? (
-              <div className="max-h-60 overflow-y-auto">
-                <ul className="divide-y divide-gray-100">
-                  {friends.map(friend => (
-                    <li key={friend.id || friend.user_id} className="py-2">
-                      <Link to={`/profile/${friend.id || friend.user_id}`} className="flex items-center hover:bg-gray-50 rounded-lg p-2 transition-colors">
-                        <Avatar 
-                          user={{
-                            username: friend.username,
-                            avatar: friend.avatar
-                          }} 
-                          size="sm" 
-                        />
-                        <span className="ml-3 text-gray-700">{friend.username}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <>
+                {/* Contenedor con altura fija y desplazamiento personalizado */}
+                <div
+                  className={`overflow-y-auto scrollbar-thin scrollbar-thumb-fuchsia-300 scrollbar-track-gray-100 rounded
+                    ${friends.length > 2 ? 'max-h-[160px]' : ''}`}
+                >
+                  <ul className="divide-y divide-gray-100">
+                    {friends.map(friend => (
+                      <li key={friend.id || friend.user_id} className="py-2">
+                        <Link to={`/profile/${friend.id || friend.user_id}`} className="flex items-center hover:bg-gray-50 rounded-lg p-2 transition-colors">
+                          <Avatar
+                            user={{
+                              username: friend.username,
+                              avatar: friend.avatar
+                            }}
+                            size="sm"
+                          />
+                          <span className="ml-3 text-gray-700">{friend.username}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Indicador de desplazamiento (solo visible si hay más de 2 amigos) */}
+                {friends.length > 2 && (
+                  <div className="flex justify-center mt-2">
+                    <span className="text-xs text-gray-400 flex items-center">
+                      Desliza para ver más
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </span>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <p>No hay amigos para mostrar</p>
@@ -348,69 +391,81 @@ function PublicProfile() {
 
         {/* Sección de eventos del usuario */}
         <div className="mt-8 bg-white shadow-md rounded-xl p-6 border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800">Eventos creados</h2>
-            <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">
-              {events.length} evento{events.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          
-          {events.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-5xl mb-4">📅</div>
-              <p className="text-gray-500 text-lg">Este usuario aún no ha creado eventos.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map(event => (
-                <Link 
-                  to={`/event/${event.id}`} 
-                  key={event.id}
-                  className="block bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
-                >
-                  <div className="relative">
-                    {event.image ? (
-                      <div 
-                        className="h-48 bg-cover bg-center" 
-                        style={{ backgroundImage: `url(${getImageUrl(`/uploads/backgrounds/${event.image}`)})` }}
-                      ></div>
-                    ) : (
-                      <div className={`h-48 ${getRandomGradient()} flex items-center justify-center`}>
-                        <span className="text-white text-xl">📷</span>
-                      </div>
-                    )}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                      <p className="text-white text-sm font-medium">
-                        {new Date(event.event_date).toLocaleDateString('es-ES', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
+  <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+    </svg>
+    Eventos creados
+  </h2>
+
+  {events.length === 0 ? (
+    <div className="text-center py-12">
+      <div className="text-5xl mb-4">📅</div>
+      <p className="text-gray-500 text-lg">Este usuario aún no ha creado eventos.</p>
+    </div>
+  ) : (
+    <>
+      {/* Contenedor con desplazamiento horizontal */}
+      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-fuchsia-300 scrollbar-track-gray-100 pb-4">
+        <div className="flex gap-4" style={{ minWidth: 'min-content', width: '100%' }}>
+          {events.map(event => (
+            <Link
+              to={`/event/${event.id}`}
+              key={event.id}
+              className="relative group rounded-lg overflow-hidden h-48 shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0"
+              style={{ width: '280px' }} // Ancho fijo para cada tarjeta
+            >
+              <div className="absolute inset-0 w-full h-full">
+                {event.image ? (
+                  <div className="w-full h-full relative">
+                    <img
+                      src={getImageUrl(event.image)}
+                      alt={event.title}
+                      className="w-full h-full object-cover"
+                      onError={handleEventImageError}
+                    />
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 text-lg mb-2">{event.title}</h3>
-                    <p className="text-gray-600 text-sm line-clamp-2 mb-3">{event.description}</p>
-                    {event.location && (
-                      <div className="flex items-center text-gray-500 text-xs">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <span className="truncate">
-                          {typeof event.location === 'string' 
-                            ? event.location 
-                            : event.location?.address || 'Ubicación disponible'}
-                        </span>
-                      </div>
-                    )}
+                ) : (
+                  <div className={`w-full h-full ${getRandomGradient()} flex items-center justify-center`}>
+                    <span className="text-white text-4xl"></span>
                   </div>
-                </Link>
-              ))}
-            </div>
-          )}
+                )}
+              </div>
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent group-hover:via-black/40 transition-all duration-300"></div>
+
+              <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
+                <div>
+                  <h3 className="font-medium text-lg text-white line-clamp-1 drop-shadow-sm">{event.title}</h3>
+                  <p className="text-gray-200 text-sm drop-shadow-sm">
+                    {formatLongDate(event.event_date)}
+                  </p>
+                  {isDatePassed(event.event_date) && (
+                    <span className="absolute top-4 right-4 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
+                      Finalizado
+                    </span>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
+      </div>
+
+      {/* Indicador de desplazamiento (solo visible si hay más de 3 eventos) */}
+      {events.length > 3 && (
+        <div className="flex justify-center mt-2">
+          <span className="text-xs text-gray-400 flex items-center">
+            Desliza para ver más
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        </div>
+      )}
+    </>
+  )}
+</div>
       </div>
     </div>
   );

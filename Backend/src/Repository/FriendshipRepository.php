@@ -20,15 +20,28 @@ class FriendshipRepository extends ServiceEntityRepository
     /**
      * Comprueba si existe una solicitud de amistad entre dos usuarios
      */
-    public function findFriendshipBetween(User $user1, User $user2): ?Friendship
-    {
-        return $this->createQueryBuilder('f')
-            ->where('(f.requester = :user1 AND f.addressee = :user2) OR (f.requester = :user2 AND f.addressee = :user1)')
-            ->setParameter('user1', $user1)
-            ->setParameter('user2', $user2)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
+    public function findAnyFriendshipBetween(User $user1, User $user2)
+{
+    // Este método busca amistad existente en ambas direcciones
+    return $this->createQueryBuilder('f')
+        ->where('(f.requester = :user1 AND f.addressee = :user2) OR (f.requester = :user2 AND f.addressee = :user1)')
+        ->setParameter('user1', $user1)
+        ->setParameter('user2', $user2)
+        ->getQuery()
+        ->getOneOrNullResult();
+}
+
+// AÑADE un nuevo método que sólo busca en una dirección específica:
+public function findFriendshipBetween(User $user1, User $user2)
+{
+    // Este método busca SÓLO en la dirección exacta user1->user2
+    return $this->createQueryBuilder('f')
+        ->where('f.requester = :user1 AND f.addressee = :user2')
+        ->setParameter('user1', $user1)
+        ->setParameter('user2', $user2)
+        ->getQuery()
+        ->getOneOrNullResult();
+}
 
     /**
      * Encuentra todas las amistades aceptadas de un usuario

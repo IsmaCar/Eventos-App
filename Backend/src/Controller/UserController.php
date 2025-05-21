@@ -74,7 +74,8 @@ final class UserController extends AbstractController
             // Buscar eventos del usuario
             $events = $this->entityManager->getRepository(Event::class)->findBy([
                 'user' => $user,
-                // Puedes añadir filtros adicionales como 'published' => true si tienes un estado para eventos publicados
+                'banned' => false,
+                'status' => 'activated'
             ]);
 
             $eventData = [];

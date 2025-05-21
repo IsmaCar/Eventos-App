@@ -27,8 +27,8 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
   const [expandedPhoto, setExpandedPhoto] = useState(null);
   
   // Constantes de validación
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   
   /**
    * Valida un archivo antes de su carga
@@ -42,12 +42,12 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
     }
     
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setUploadError('El formato del archivo no es válido. Por favor, sube una imagen (JPG, PNG, GIF o WEBP)');
+      setUploadError('El formato del archivo no es válido. Por favor, sube una imagen (JPG, PNG o WEBP)');
       return false;
     }
     
     if (file.size > MAX_FILE_SIZE) {
-      setUploadError('El archivo es demasiado grande. El tamaño máximo es de 10MB');
+      setUploadError('El archivo es demasiado grande. El tamaño máximo es de 8MB');
       return false;
     }
     
@@ -307,6 +307,6 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
     // Constantes para interfaz de usuario
     maxFileSize: MAX_FILE_SIZE,
     allowedTypes: ALLOWED_TYPES,
-    allowedTypesFormatted: 'JPG, PNG, GIF, WEBP'
+    allowedTypesFormatted: 'JPG, PNG, WEBP'
   };
 }

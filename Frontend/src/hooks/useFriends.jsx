@@ -25,7 +25,7 @@ export const useFriends = (options = {}) => {
     refreshCallback = null
   } = options;
 
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,11 +35,11 @@ export const useFriends = (options = {}) => {
    */
   const fetchFriends = async () => {
     if (!token) return [];
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch(`${API_URL}${friendsEndpoint}`, {
         method: 'GET',
         headers: {
@@ -55,13 +55,13 @@ export const useFriends = (options = {}) => {
 
       const data = await response.json();
       const friendsList = data.friends || [];
-      
+
       setFriends(friendsList);
-      
+
       if (onFriendsLoaded) {
         onFriendsLoaded(friendsList);
       }
-      
+
       return friendsList;
     } catch (err) {
       const errorMessage = err.message || 'Error al cargar los amigos';
@@ -77,44 +77,53 @@ export const useFriends = (options = {}) => {
    * Envía una solicitud de amistad a un usuario
    * @param {string} userId - ID del usuario al que enviar la solicitud
    */
-  const sendFriendRequest = async (userId) => {
-    if (!token || !userId) {
-      return { success: false, error: 'Datos de solicitud incompletos' };
-    }
+ const sendFriendRequest = async (userId) => {
+  if (!token || !userId) {
+    return { success: false, error: 'Datos de solicitud incompletos' };
+  }
+
+  // Validar que no se esté enviando solicitud a uno mismo
+  if (user && user.id === parseInt(userId)) {
+    return { success: false, error: 'No puedes enviarte una solicitud a ti mismo' };
+  }
+
+  try {
+    const url = `${API_URL}/api/friends/request/${userId}`;
     
-    try {
-      const response = await fetch(`${API_URL}${requestEndpoint}/${userId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-      if (!response.ok) {
+    if (!response.ok) {
+      try {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al enviar la solicitud');
+        return { success: false, error: errorData.message || 'Error al enviar la solicitud' };
+      } catch (e) {
+        return { success: false, error: 'Error de formato en la respuesta' };
       }
-
-      // Ejecutar callback si existe
-      if (refreshCallback) {
-        refreshCallback();
-      }
-      
-      // Ejecutar callback específico si existe
-      if (onRequestSent) {
-        onRequestSent(userId);
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('Error al enviar solicitud de amistad:', error);
-      return { 
-        success: false, 
-        error: error.message || 'Error al enviar la solicitud'
-      };
     }
-  };
+
+    const data = await response.json();
+    
+    // Si todo va bien, llamamos al callback si existe
+    if (options.onRequestSent && typeof options.onRequestSent === 'function') {
+      options.onRequestSent(userId);
+    }
+
+    // También actualizamos la lista de amigos si es necesario
+    if (options.refreshCallback && typeof options.refreshCallback === 'function') {
+      options.refreshCallback();
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: 'Error de conexión' };
+  }
+};
 
   /**
    * Acepta una solicitud de amistad
@@ -124,7 +133,7 @@ export const useFriends = (options = {}) => {
     if (!token || !requestId) {
       return { success: false, error: 'ID de solicitud no válido' };
     }
-    
+
     try {
       const response = await fetch(`${API_URL}${acceptEndpoint}/${requestId}`, {
         method: 'POST',
@@ -141,12 +150,12 @@ export const useFriends = (options = {}) => {
 
       // Actualizar lista de amigos
       await fetchFriends();
-      
+
       // Ejecutar callback general si existe
       if (refreshCallback) {
         refreshCallback();
       }
-      
+
       // Ejecutar callback específico si existe
       if (onRequestAccepted) {
         onRequestAccepted(requestId);
@@ -154,12 +163,101 @@ export const useFriends = (options = {}) => {
 
       return { success: true };
     } catch (err) {
-      console.error('Error al aceptar solicitud de amistad:', err);
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: err.message || 'Error al aceptar la solicitud'
       };
     }
+  };
+
+  /**
+   * Elimina una amistad existente
+   * @param {string} friendshipId - ID de la amistad a eliminar
+   */
+  const removeFriend = async (friendshipId) => {
+    if (!token || !friendshipId) {
+      return { success: false, error: 'ID de amistad no válido' };
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/friends/${friendshipId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al eliminar la amistad');
+      }
+
+      // Actualizar lista de amigos
+      await fetchFriends();
+
+      // Ejecutar callback general si existe
+      if (refreshCallback) {
+        refreshCallback();
+      }
+
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.message || 'Error al eliminar la amistad'
+      };
+    }
+  };
+
+  /**
+   * Verifica el estado de amistad con un usuario
+   * @param {string} userId - ID del usuario para verificar el estado de amistad
+   */
+  const checkFriendshipStatus = async (userId) => {
+    if (!token || !userId) {
+      return { status: 'none' };
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/friends/check/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo obtener el estado de amistad');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return { status: 'none' };
+    }
+  };
+
+  /**
+   * Busca el ID de amistad en la lista de amigos
+   * @param {string} userId - ID del usuario amigo para encontrar el ID de amistad
+   */
+  const findFriendshipId = (userId) => {
+    if (!friends || !friends.length) return null;
+
+    const parsedUserId = parseInt(userId);
+
+    for (const friend of friends) {
+      if (
+        (friend.user_id === parsedUserId || friend.id === parsedUserId) &&
+        friend.friendship_id
+      ) {
+        return friend.friendship_id;
+      }
+    }
+
+    return null;
   };
 
   // Cargar amigos al montar el componente si hay token
@@ -175,8 +273,9 @@ export const useFriends = (options = {}) => {
     error,
     fetchFriends,
     sendFriendRequest,
-    acceptFriendRequest
+    acceptFriendRequest,
+    removeFriend,
+    checkFriendshipStatus,
+    findFriendshipId
   };
 };
-
-export default useFriends;

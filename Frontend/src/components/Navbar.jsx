@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useNotifications } from '../hooks/Notifications';
+import { useNotifications } from '../hooks/useNotifications';
 import { Avatar } from '../utils/Imagehelper';
 
 /**
@@ -10,7 +10,7 @@ import { Avatar } from '../utils/Imagehelper';
  */
 function Navbar() {
     const { token, user, isAdmin, logout } = useAuth();
-    const { hasNotifications } = useNotifications();
+    const { stats, hasNotifications } = useNotifications();
     const location = useLocation();
     const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -57,9 +57,9 @@ function Navbar() {
             return;
         }
 
-        // Guardar en localStorage que debe abrir el modal de notificaciones
-        localStorage.setItem('openNotificationsModal', 'true');
-
+        // Establecer bandera simple para activar la lógia en Profile.jsx
+            localStorage.setItem('openNotificationsModal', 'true');
+        
         // Navegar a la página de perfil con parámetro para la pestaña de solicitudes
         navigate('/profile?tab=requests');
     };

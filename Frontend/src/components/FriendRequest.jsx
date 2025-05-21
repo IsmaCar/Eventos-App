@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Spinner from './Spinner';
-import useFriends from '../hooks/useFriends';
+import {useFriends} from '../hooks/useFriends';
 
 const API_URL = import.meta.env.VITE_API_URL;
 

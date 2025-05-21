@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { getAvatarUrl, handleAvatarError, Avatar } from '../utils/Imagehelper';
 import { useAuth } from '../context/AuthContext'
-import { useNotifications } from '../hooks/Notifications'
+import { useNotifications } from '../hooks/useNotifications'
 import ReceivedInvitations from '../components/EventRequest'
 import FriendRequests from '../components/FriendRequest'
-import EventUser from '../components/EventUser'
+import EventUser from '../components/EventsUser'
 import Spinner from '../components/Spinner'
 import useUserSearch from '../hooks/useUserSearch';
-import useFriends from '../hooks/useFriends';
+import { useFriends } from '../hooks/useFriends';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -27,18 +27,13 @@ function Profile() {
   const [showMyEvents, setShowMyEvents] = useState(false);
 
   // Determinar la pestaña activa basada en el parámetro de URL
+  const [showNoNotifications, setShowNoNotifications] = useState(false);
   const queryParams = new URLSearchParams(location.search);
   const activeTab = queryParams.get('tab');
 
   // Hook para búsqueda de usuarios
-  const {
-    searchTerm,
-    searchResults,
-    isSearching,
-    handleSearchTermChange,
-    updateUserInResults,
-    resetSearch
-  } = useUserSearch({
+  const { searchTerm, searchResults, isSearching, handleSearchTermChange,
+    updateUserInResults, resetSearch } = useUserSearch({
     endpoint: '/api/friends/search',
     paramName: 'term',
     minLength: 3,
@@ -48,18 +43,13 @@ function Profile() {
   });
 
   // Hook para gestión de amigos
-  const { 
-    friends, 
-    fetchFriends, 
-    sendFriendRequest, 
-    acceptFriendRequest 
-  } = useFriends({
+  const { friends, fetchFriends, sendFriendRequest, acceptFriendRequest } = useFriends({
     refreshCallback: refreshNotifications,
     onRequestSent: (userId) => {
       // Actualizar UI para mostrar "Solicitud enviada" en los resultados
-      updateUserInResults(userId, { 
-        friendship_status: 'requested', 
-        friendship_id: null 
+      updateUserInResults(userId, {
+        friendship_status: 'requested',
+        friendship_id: null
       });
       alert('Solicitud de amistad enviada');
     },
@@ -69,9 +59,31 @@ function Profile() {
     }
   });
 
+  // Función para abrir automáticamente la ventana adecuada según las notificaciones disponibles
+  const handleOpenNotifications = async () => {
+    // Obtener las notificaciones actualizadas directamente de la función
+    const freshNotifications = await refreshNotifications();
+
+    // Usar los datos devueltos para decidir qué modal abrir
+    if (freshNotifications.friendRequests > 0) {
+      setShowFriendRequests(true);
+    } else if (freshNotifications.invitationsPending > 0) {
+      setShowInvitations(true);
+    } else {
+      setShowNoNotifications(true); 
+    }
+  };
+
   // Función para abrir el modal de invitaciones y actualizar estadísticas
   const handleOpenInvitations = () => {
-    setShowInvitations(true);
+    if (stats.invitationsPending > 0) {
+      setShowInvitations(true);
+    } else if (stats.friendRequests > 0) {
+      setShowNoNotifications(true);
+    } else {
+      setShowNoNotifications(true);
+    }
+
     // Actualizamos las estadísticas al abrir el modal para tener datos frescos
     refreshNotifications();
   };
@@ -85,7 +97,14 @@ function Profile() {
 
   // Funciones para solicitudes de amistad
   const handleOpenFriendRequests = () => {
-    setShowFriendRequests(true);
+    if (stats.friendRequests > 0) {
+      setShowFriendRequests(true);
+    } else if (stats.invitationsPending > 0) {
+      setShowNoNotifications(true);
+    } else {
+      setShowNoNotifications(true); 
+    }
+
     refreshNotifications();
   };
 
@@ -129,11 +148,11 @@ function Profile() {
     if (activeTab === 'requests') {
       // Verificar si debemos abrir el modal de notificaciones
       const shouldOpenNotificationsModal = localStorage.getItem('openNotificationsModal') === 'true';
-      
+
       if (shouldOpenNotificationsModal) {
-        // Abrir el modal de invitaciones
-        setShowInvitations(true);
-        
+        // Llamamos a nuestra nueva función que decide qué ventana abrir
+        handleOpenNotifications();
+
         // Limpiar la bandera para no volver a abrir automáticamente
         localStorage.removeItem('openNotificationsModal');
       }
@@ -416,6 +435,41 @@ function Profile() {
           </div>
         </div>
       )}
+      {/* Modal para "No hay notificaciones" */}
+      {showNoNotifications && (
+        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
+          <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Notificaciones</h3>
+              <button
+                onClick={() => setShowNoNotifications(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="py-8 flex flex-col items-center justify-center">
+              <div className="text-6xl mb-4">🔔</div>
+              <p className="text-gray-800 text-xl font-medium mb-2">Sin notificaciones</p>
+              <p className="text-gray-500 text-center">
+                No tienes notificaciones pendientes en este momento.
+              </p>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <button
+                onClick={() => setShowNoNotifications(false)}
+                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Card principal */}
@@ -496,7 +550,7 @@ function Profile() {
             </div>
           </div>
 
-          {/* Lista de amigos - CON botón de buscar amigos */}
+          {/* Lista de amigos */}
           <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
@@ -509,42 +563,61 @@ function Profile() {
                 <Spinner size="sm" color="fuchsia" />
               </div>
             ) : friends.length > 0 ? (
-              <div className="max-h-60 overflow-y-auto">
-                <ul className="divide-y divide-gray-100">
-                  {friends.map(friend => (
-                    <li key={friend.friendship_id} className="py-2">
-                      <Link to={`/profile/${friend.user_id}`} className="flex items-center hover:bg-gray-50 rounded-lg p-2 transition-colors">
-                        {/* Avatar del amigo */}
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex-shrink-0">
-                          {friend.avatar ? (
-                            <img
-                              src={`${API_URL}/uploads/avatars/${friend.avatar}`}
-                              alt={`Avatar de ${friend.username}`}
-                              className="w-full h-full object-cover"
-                              onError={handleDefaultAvatarError}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white text-lg font-bold">
-                              {friend.username.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                        <span className="ml-3 text-gray-700">{friend.username}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <>
+                {/* Contenedor con altura fija y desplazamiento personalizado */}
+                <div
+                  className={`overflow-y-auto scrollbar-thin scrollbar-thumb-fuchsia-300 scrollbar-track-gray-100 rounded
+                   ${friends.length > 2 ? 'max-h-[160px]' : ''}`}
+                >
+                  <ul className="divide-y divide-gray-100">
+                    {friends.map(friend => (
+                      <li key={friend.friendship_id} className="py-2">
+                        <Link to={`/profile/${friend.user_id}`} className="flex items-center hover:bg-gray-50 rounded-lg p-2 transition-colors">
+                          {/* Avatar del amigo */}
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex-shrink-0">
+                            {friend.avatar ? (
+                              <img
+                                src={`${API_URL}/uploads/avatars/${friend.avatar}`}
+                                alt={`Avatar de ${friend.username}`}
+                                className="w-full h-full object-cover"
+                                onError={handleDefaultAvatarError}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-white text-lg font-bold">
+                                {friend.username.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <span className="ml-3 text-gray-700">{friend.username}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Indicador de desplazamiento (solo visible si hay más de 2 amigos) */}
+                {friends.length > 2 && (
+                  <div className="flex justify-center mt-2 mb-3">
+                    <span className="text-xs text-gray-400 flex items-center">
+                      Desliza para ver más
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </span>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <p>Aún no tienes amigos</p>
                 <p className="text-sm mt-2">Agrega amigos para verlos aquí</p>
               </div>
             )}
+
             {/* Botón para buscar amigos */}
             <button
               onClick={() => setShowFriendSearch(true)}
-              className="mt-18 w-full py-2 px-4 bg-fuchsia-50 hover:bg-fuchsia-100 text-fuchsia-600 rounded-md font-medium transition flex items-center justify-center"
+              className="mt-3 w-full py-2 px-4 bg-fuchsia-50 hover:bg-fuchsia-100 text-fuchsia-600 rounded-md font-medium transition flex items-center justify-center"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />

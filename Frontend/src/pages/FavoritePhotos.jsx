@@ -18,7 +18,7 @@ function FavoritePhotos() {
     expandedPhoto,
     openExpandedView,
     closeExpandedView,
-    handleDownloadPhoto // Ahora usamos handleDownloadPhoto en lugar de downloadPhoto
+    handleDownloadPhoto
   } = usePhotoUploads(null, false, null, navigate);
 
   useEffect(() => {
@@ -110,7 +110,7 @@ function FavoritePhotos() {
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-                <div className="flex justify-between items-center mb-1">
+                <div className="flex justify-between items-center">
                   <Link 
                     to={`/events/${photo.event.id}`}
                     onClick={(e) => e.stopPropagation()}
@@ -143,7 +143,7 @@ function FavoritePhotos() {
                     </button>
                   </div>
                 </div>
-                <p className="text-gray-200 text-xs">{new Date(photo.created_at).toLocaleDateString()}</p>
+                {/* Se ha eliminado la línea con la fecha */}
               </div>
             </div>
           ))}
@@ -196,7 +196,8 @@ function FavoritePhotos() {
                       {expandedPhoto.event.title}
                     </Link>
                     <p className="text-sm text-gray-200">
-                      {expandedPhoto.user?.username || "Usuario"} - {new Date(expandedPhoto.created_at).toLocaleDateString()}
+                      {expandedPhoto.user?.username || "Usuario"}
+                      {/* Se ha eliminado la fecha */}
                     </p>
                   </div>
                   

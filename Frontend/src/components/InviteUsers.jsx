@@ -1,84 +1,107 @@
+/**
+ * Componente para invitar usuarios a un evento
+ * 
+ * Este componente permite:
+ * - Buscar usuarios registrados en la plataforma
+ * - Invitar usuarios por email (sean registrados o no)
+ * - Proporcionar feedback visual del estado de la invitación
+ * - Validar datos antes de enviar la invitación
+ */
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Spinner from './Spinner';
 import useUserSearch from '../hooks/useUserSearch';
+import { useToast } from '../hooks/useToast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function InviteUsers({ eventId, onInvitationSent }) {
   const { token } = useAuth();
+  const toast = useToast();
   const [selectedUser, setSelectedUser] = useState(null);
+  
   const [status, setStatus] = useState({ 
-    loading: false, 
-    error: null, 
-    success: false,
-    message: '' 
+    loading: false  
   });
 
-  // Utilizar el hook useUserSearch con configuración específica para este componente
+  /**
+   * Configuración e integración del hook de búsqueda de usuarios
+   * Permite buscar usuarios registrados en tiempo real a medida que se escribe
+   */
   const {
-    searchTerm,
-    searchResults,
-    isSearching,
-    handleSearchTermChange,
-    resetSearch,
-    setSearchTerm
+    searchTerm,            
+    searchResults,         
+    isSearching,           
+    handleSearchTermChange, 
+    resetSearch,           
+    setSearchTerm          
   } = useUserSearch({
-    endpoint: '/tools/users/search',
-    paramName: 'query',
-    minLength: 2,
-    debounceTime: 100
+    endpoint: '/tools/users/search',  
+    paramName: 'query',               
+    minLength: 2,                     
+    debounceTime: 100                 
   });
 
-  // Validador de formato de email
+   //Valida si una cadena tiene formato de email válido 
   const isValidEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  // Función para seleccionar un usuario del resultado de búsqueda
+  /**
+   * Establece un usuario de los resultados de búsqueda como seleccionado
+   * y muestra su email en el campo de entrada
+   */
   const selectUser = (user) => {
     setSelectedUser(user);
-    setSearchTerm(user.email); // Mostramos el email del usuario seleccionado en el campo
+    setSearchTerm(user.email); 
   };
 
-  // Función para quitar la selección del usuario
+  /**
+   * Limpia la selección actual de usuario y el campo de búsqueda/email
+   * permitiendo al usuario iniciar una nueva búsqueda o escribir otro email
+   */
   const removeSelectedUser = () => {
     setSelectedUser(null);
-    setSearchTerm(''); // Limpiamos el campo para buscar otro usuario
+    setSearchTerm('');
   };
 
-  // Función para manejar cambios en el campo de búsqueda/email
+  /**
+   * Maneja los cambios en el campo de búsqueda/email
+   * Actualiza el término de búsqueda y gestiona el estado del usuario seleccionado
+   */
   const handleInputChange = (e) => {
     const value = e.target.value;
     handleSearchTermChange(value);
     
-    // Si hay un usuario seleccionado y se cambia el texto, desvinculamos al usuario
+    // Si el usuario modifica el texto cuando ya había seleccionado un usuario,
+    // se considera que ya no está utilizando ese usuario
     if (selectedUser && value !== selectedUser.email) {
       setSelectedUser(null);
     }
   };
+  /**
+   * Procesa el envío del formulario para invitar a un usuario al evento
+   * Flujo de la invitación:
+   * 1. Valida que el email sea válido
+   * 2. Envía la petición a la API
+   * 3. Procesa la respuesta y muestra feedback adecuado
+   * 4. Notifica al componente padre en caso de éxito
 
-  const handleSubmit = async (e) => {
+   */  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!searchTerm.trim()) return;
     
-    // Si es un email válido, podemos continuar
     const isEmail = isValidEmail(searchTerm.trim());
     if (!isEmail) {
-      setStatus({ 
-        loading: false, 
-        error: 'Por favor, introduce un email válido', 
-        success: false,
-        message: ''
-      });
+      toast.error('Por favor, introduce un email válido');
       return;
     }
 
-    setStatus({ loading: true, error: null, success: false, message: '' });
+    setStatus({ loading: true });
 
     try {
-      // Incluir el ID del usuario si está seleccionado
+
       const payload = { 
         email: searchTerm.trim(),
         user_id: selectedUser?.id || null
@@ -93,7 +116,6 @@ function InviteUsers({ eventId, onInvitationSent }) {
         body: JSON.stringify(payload)
       });
 
-      // Si hay un error del servidor, manejarlo aquí
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error en el servidor');
@@ -101,41 +123,29 @@ function InviteUsers({ eventId, onInvitationSent }) {
 
       const data = await response.json();
       
-      // Determinar si el usuario existe de forma más robusta
       const isRegisteredUser = Boolean(data.userExists);
-      
-      // Mensaje basado en si el usuario está registrado o no
       let successMessage = isRegisteredUser
         ? '¡Invitación enviada al usuario registrado!'
         : '¡Se ha enviado un email de invitación al usuario no registrado!';
         
-      setStatus({ 
-        loading: false, 
-        error: null, 
-        success: true,
-        message: successMessage
-      });
+      toast.success(successMessage);
       
-      // Limpiar campos y notificar
       setSearchTerm('');
       setSelectedUser(null);
       if (onInvitationSent) onInvitationSent();
       
     } catch (error) {
       console.error('Error al enviar invitación:', error);
-      setStatus({ 
-        loading: false, 
-        error: error.message || 'Error de conexión', 
-        success: false,
-        message: ''
-      });
+      toast.error(error.message || 'Error de conexión');
+    } finally {
+      setStatus({ loading: false });
     }
   };
 
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Campo unificado de búsqueda/email */}
+        {/* Campo unificado de búsqueda/email - Permite tanto buscar usuarios como introducir emails directamente */}
         <div className="relative">
           <label htmlFor="search-email" className="block text-sm font-medium text-gray-700 mb-1">
             Buscar usuario o introducir email
@@ -154,14 +164,14 @@ function InviteUsers({ eventId, onInvitationSent }) {
               disabled={status.loading}
             />
             
-            {/* Indicador de búsqueda */}
+            {/* Indicador visual de búsqueda en curso */}
             {isSearching && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <Spinner size="xs" color="indigo" />
               </div>
             )}
             
-            {/* Icono indicador de email válido */}
+            {/* Indicador visual de email válido - Proporciona feedback inmediato al usuario */}
             {!isSearching && searchTerm && isValidEmail(searchTerm) && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -171,7 +181,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
             )}
           </div>
 
-          {/* Texto de ayuda contextual */}
+          {/* Texto de ayuda contextual - Guía al usuario según el estado actual del campo */}
           {searchTerm && !isSearching && (
             <p className="mt-1 text-xs text-gray-500">
               {isValidEmail(searchTerm) 
@@ -182,7 +192,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
             </p>
           )}
           
-          {/* Visualización del usuario seleccionado */}
+          {/* Visualización del usuario seleccionado - Permite confirmar la selección y editarla */}
           {selectedUser && (
             <div className="mt-2 bg-indigo-50 p-2 rounded-md flex items-center">
               {selectedUser.avatar ? (
@@ -248,8 +258,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
               </div>
             ))}
           </div>
-        )}
-
+        )}        {/* Botón de envío de invitación */}
         <div>
           <button
             type="submit"
@@ -270,38 +279,6 @@ function InviteUsers({ eventId, onInvitationSent }) {
             )}
           </button>
         </div>
-
-        {status.error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{status.error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {status.success && (
-          <div className="bg-green-50 border-l-4 border-green-400 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-700">
-                  {status.message || '¡Invitación enviada con éxito!'}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </form>
     </div>
   );

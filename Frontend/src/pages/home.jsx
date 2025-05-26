@@ -1,7 +1,15 @@
+/**
+ * Página principal de la aplicación
+ *
+ * Muestra:
+ * - Landing page para usuarios no autenticados
+ * - Dashboard de eventos para usuarios autenticados con opciones de filtrado
+ */
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useEvent } from '../context/EventContext';
 import { getRandomGradient } from '../utils/Imagehelper'
+import { isDatePassed } from '../utils/DateHelper';
 import { useAuth } from '../context/AuthContext';
 import Spinner from '../components/Spinner';
 
@@ -9,10 +17,15 @@ function home() {
     const { token } = useAuth();
     const { events, fetchEvents, getImageUrl } = useEvent();
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('todos');
+    const [filter, setFilter] = useState('todos'); // Filtro actual: todos, proximos, pasados
     const [filteredEvents, setFilteredEvents] = useState([]);
 
-    // Separamos la carga inicial de eventos
+    /**
+     * Efecto para cargar eventos desde la API cuando el usuario está autenticado
+     * - Solo se ejecuta cuando hay un token válido
+     * - Maneja el estado de carga y posibles errores
+     * - Usa bandera isMounted para evitar actualizar estado en componentes desmontados
+     */
     useEffect(() => {
         let isMounted = true;
 
@@ -72,12 +85,14 @@ function home() {
                     if (isNaN(eventDate.getTime())) {
                         console.warn("Fecha inválida para evento:", event);
                         return false;
-                    }
-
+                    }                    // Comparar solo la fecha (día, mes, año) sin la hora
+                    const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    
                     if (filter === 'proximos') {
-                        return eventDate >= now;
+                        return eventDay >= today;
                     } else {
-                        return eventDate < now;
+                        return eventDay < today;
                     }
                 });
             }
@@ -217,13 +232,11 @@ function home() {
                                                                 <span className="text-white text-4xl opacity-80"></span>
                                                             </div>
                                                         </div>
-                                                    )}
-
-                                                    {/* Capa de gradiente para mejorar legibilidad */}
+                                                    )}                                                    {/* Capa de gradiente para mejorar legibilidad */}
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-
-                                                    {/* Badge para eventos pasados - ahora usando la fecha real */}
-                                                    {new Date(event.event_date) < new Date() && (
+                                                    
+                                                    {/* Badge para eventos pasados */}
+                                                    {isDatePassed(event.event_date) && (
                                                         <div className="absolute top-4 right-4 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
                                                             Finalizado
                                                         </div>

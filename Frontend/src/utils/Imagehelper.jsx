@@ -1,5 +1,3 @@
-import React from 'react';
-
 /**
  * Utilidades para el manejo de imágenes en la aplicación
  */
@@ -102,8 +100,24 @@ export const getAvatarUrl = (avatarFilename) => {
  * @param {Event} event - Evento onError de la imagen
  */
 export const handleAvatarError = (event) => {
-    event.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
-    event.target.onerror = null; // Evita bucles infinitos si la imagen por defecto también falla
+    // Prevenir bucles infinitos desactivando el evento onerror
+    event.target.onerror = null;
+    
+    // Verificar si la imagen que falló ya es la de default-avatar.png
+    const src = event.target.src || '';
+    const isDefaultAvatar = src.includes('default-avatar.png');
+    
+    if (!isDefaultAvatar) {
+        // Solo intentar cargar el avatar por defecto si no es el que ya estaba fallando
+        event.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
+    } else {
+        // Si el avatar por defecto también falla, ocultamos la imagen
+        event.target.style.display = 'none';
+        // Y añadimos una clase al contenedor para mostrar un fondo de color
+        if (event.target.parentNode) {
+            event.target.parentNode.classList.add('avatar-fallback');
+        }
+    }
 };
 
 /**

@@ -1,4 +1,5 @@
 <?php
+// filepath: c:\Users\ismac\OneDrive\Escritorio\TFG\Eventos-App\Backend\src\Controller\FriendshipController.php
 
 namespace App\Controller;
 
@@ -162,7 +163,7 @@ class FriendshipController extends AbstractController
 
             if ($status === Friendship::STATUS_PENDING) {
                 // Verificar quién envió la solicitud
-                if ($existingFriendship->getRequester()->getId() == $requester->getId()) {
+                if ($existingFriendship->getRequester() === $requester) {
                     return $this->json(['message' => 'Ya has enviado una solicitud de amistad a este usuario'], Response::HTTP_CONFLICT);
                 } else {
                     // Si el otro usuario nos envió una solicitud, la aceptamos en lugar de crear una nueva
@@ -364,22 +365,54 @@ class FriendshipController extends AbstractController
             return $this->json(['status' => 'self']);
         }
 
-        // Buscar si existe alguna relación de amistad
-        $friendship = $friendshipRepository->findFriendshipBetween($currentUser, $otherUser);
-
-        if (!$friendship) {
-            return $this->json(['status' => 'none']);
+        // PASO 1: Verificar primero si hay una amistad ACEPTADA en cualquier dirección
+        $acceptedFriendship = $friendshipRepository->findAnyFriendshipBetween($currentUser, $otherUser);
+        if ($acceptedFriendship) {
+            return $this->json([
+                'status' => 'friends',
+                'friendship_id' => $acceptedFriendship->getId()
+            ]);
         }
 
-        $status = $friendship->getStatus();
-        $response = ['status' => $status, 'friendship_id' => $friendship->getId()];
+        // PASO 2: Si no hay amistad aceptada, verificar solicitudes pendientes
 
-        // Añadir información adicional según el estado
-        if ($status === Friendship::STATUS_PENDING) {
-            $response['is_requester'] = $friendship->getRequester() === $currentUser;
+        // Verificar solicitud enviada por el usuario actual
+        $outgoingRequest = $friendshipRepository->findFriendshipBetween($currentUser, $otherUser);
+        if ($outgoingRequest && $outgoingRequest->getStatus() === Friendship::STATUS_PENDING) {
+            return $this->json([
+                'status' => 'pending',
+                'is_requester' => true,
+                'friendship_id' => $outgoingRequest->getId()
+            ]);
         }
 
-        return $this->json($response);
+        // Verificar solicitud recibida por el usuario actual
+        $incomingRequest = $friendshipRepository->findFriendshipBetween($otherUser, $currentUser);
+        if ($incomingRequest && $incomingRequest->getStatus() === Friendship::STATUS_PENDING) {
+            return $this->json([
+                'status' => 'pending',
+                'is_requester' => false,
+                'friendship_id' => $incomingRequest->getId()
+            ]);
+        }
+
+        // PASO 3: Verificar otros estados (rechazado, bloqueado, etc.)
+        if ($outgoingRequest) {
+            return $this->json([
+                'status' => $outgoingRequest->getStatus(),
+                'friendship_id' => $outgoingRequest->getId()
+            ]);
+        }
+
+        if ($incomingRequest) {
+            return $this->json([
+                'status' => $incomingRequest->getStatus(),
+                'friendship_id' => $incomingRequest->getId()
+            ]);
+        }
+
+        // Si no hay ninguna relación
+        return $this->json(['status' => 'none']);
     }
 
     #[Route('/friends/search', name: 'app_search_friends', methods: ['GET'])]
@@ -409,23 +442,37 @@ class FriendshipController extends AbstractController
             // Determinar el estado de amistad
             $friendshipStatus = 'none';
             $friendshipId = null;
+            $isRequester = false;
 
-            // Verificar si hay una relación de amistad
-            $friendship = $friendshipRepository->findFriendshipBetween($user, $matchingUser);
-            if ($friendship) {
-                $friendshipId = $friendship->getId();
-                $status = $friendship->getStatus();
+            // PRIMERO: Verificar si hay una amistad ACEPTADA en AMBAS DIRECCIONES
+            $acceptedFriendship = $friendshipRepository->findAnyFriendshipBetween($user, $matchingUser);
+            if ($acceptedFriendship) {
+                $friendshipStatus = 'friends';
+                $friendshipId = $acceptedFriendship->getId();
+            } else {
+                // Si no hay amistad aceptada, verificar otras relaciones
+                // Solicitud enviada por el usuario actual
+                $outgoingRequest = $friendshipRepository->findFriendshipBetween($user, $matchingUser);
+                if ($outgoingRequest) {
+                    $friendshipId = $outgoingRequest->getId();
+                    $status = $outgoingRequest->getStatus();
 
-                if ($status === Friendship::STATUS_ACCEPTED) {
-                    $friendshipStatus = 'friends';
-                } elseif ($status === Friendship::STATUS_PENDING) {
-                    $friendshipStatus = $friendship->getRequester() === $user
-                        ? 'requested'  // El usuario actual envió la solicitud
-                        : 'pending';   // El usuario actual recibió la solicitud
-                } elseif ($status === Friendship::STATUS_REJECTED) {
-                    $friendshipStatus = 'rejected';
-                } elseif ($status === Friendship::STATUS_BLOCKED) {
-                    $friendshipStatus = 'blocked';
+                    if ($status === Friendship::STATUS_PENDING) {
+                        $friendshipStatus = 'pending';
+                        $isRequester = true;
+                    } elseif ($status === Friendship::STATUS_REJECTED) {
+                        $friendshipStatus = 'rejected';
+                    } elseif ($status === Friendship::STATUS_BLOCKED) {
+                        $friendshipStatus = 'blocked';
+                    }
+                } else {
+                    // Solicitud recibida por el usuario actual
+                    $incomingRequest = $friendshipRepository->findFriendshipBetween($matchingUser, $user);
+                    if ($incomingRequest && $incomingRequest->getStatus() === Friendship::STATUS_PENDING) {
+                        $friendshipStatus = 'pending';
+                        $friendshipId = $incomingRequest->getId();
+                        $isRequester = false;
+                    }
                 }
             }
 
@@ -434,7 +481,8 @@ class FriendshipController extends AbstractController
                 'username' => $matchingUser->getUsername(),
                 'avatar' => $matchingUser->getAvatar(),
                 'friendship_status' => $friendshipStatus,
-                'friendship_id' => $friendshipId
+                'friendship_id' => $friendshipId,
+                'is_requester' => $isRequester
             ];
         }
 

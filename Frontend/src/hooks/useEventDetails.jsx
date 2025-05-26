@@ -1,9 +1,3 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useEvent } from '../context/EventContext';
-
-const API_URL = import.meta.env.VITE_API_URL;
-
 /**
  * Hook para cargar y gestionar la información básica de un evento
  * Se encarga de: 
@@ -11,6 +5,12 @@ const API_URL = import.meta.env.VITE_API_URL;
  * - Cargar fotos del evento
  * - Gestionar favoritos de fotos
  */
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useEvent } from '../context/EventContext';
+
+const API_URL = import.meta.env.VITE_API_URL;
+
 export function useEventDetails(eventId) {
   const { getEventById, getImageUrl } = useEvent();
   const { token } = useAuth();

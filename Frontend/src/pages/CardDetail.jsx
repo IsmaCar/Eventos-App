@@ -1,3 +1,13 @@
+/**
+ * Página de detalle de un evento
+ * 
+ * Muestra la información completa de un evento incluyendo:
+ * - Detalles básicos (título, fecha, ubicación)
+ * - Lista de asistentes
+ * - Gestión de invitaciones (para creadores)
+ * - Galería de fotos con funcionalidad de favoritos
+ * - Acciones específicas según el rol del usuario
+ */
 import React, { useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -8,6 +18,7 @@ import Spinner from '../components/Spinner'
 import { useEventDetails } from '../hooks/useEventDetails'
 import { useEventAttendees } from '../hooks/useEventAttends'
 import { usePhotoUploads } from '../hooks/usePhotoUploads'
+import { useToast } from '../hooks/useToast'
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -16,12 +27,12 @@ function CardDetail() {
   const navigate = useNavigate()
   const { user, token } = useAuth()
   const [activeTab, setActiveTab] = useState('invite')
+  const toast = useToast()
 
   // Hook para los detalles del evento
   const { event, loading, error, getImageUrl, photos, loadingPhotos, photoFavorites,
     toggleFavorite, fetchEventPhotos, formatDate } = useEventDetails(id);
 
-  // Verificar si el usuario es el creador del evento
   const isEventCreator = useCallback(() => {
     if (!user || !event) return false;
 
@@ -31,31 +42,38 @@ function CardDetail() {
     return !isNaN(eventUserId) && currentUserId === eventUserId;
   }, [user, event]);
 
-  // Hook para gestionar asistentes
+  // Hook personalizado para gestionar los asistentes al evento
   const { attendees, loadingAttendees, processingAction, isCurrentUserAttending,
     isAttendeeOrganizer, cancelAttendance, removeAttendee } = useEventAttendees(id, isEventCreator());
 
-  // Hook para gestionar fotos
+  
+   // Hook personalizado para gestionar la galería de fotos del evento
+  
   const { selectedFile, uploadError, uploading, handleFileChange, clearSelectedFile,
     deletingPhotoId, canDeletePhoto, deletePhoto, expandedPhoto, openExpandedView,
     closeExpandedView, maxFileSize, allowedTypesFormatted, handleUploadPhoto,    
     handleDownloadPhoto } = usePhotoUploads(id, isEventCreator(), fetchEventPhotos, navigate);
 
-  // Estado para eliminar evento
-  const [deletingEvent, setDeletingEvent] = useState(false);
 
-  // Función para eliminar el evento
+  const [deletingEvent, setDeletingEvent] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);  
+  /**
+   * Inicia el proceso de confirmación para eliminar evento
+   */
+  const handleRequestDeleteEvent = () => {
+    setShowDeleteConfirmation(true);
+  };
+
+  /**
+   * Maneja la eliminación completa de un evento
+   * Solo disponible para el creador del evento
+   */
   const handleDeleteEvent = async () => {
     if (!token || !isEventCreator()) return;
 
     try {
-      if (!confirm('¿Estás seguro de que deseas eliminar este evento? Esta acción no se puede deshacer.')) {
-        return;
-      }
-
-      setDeletingEvent(true);
-
-      const response = await fetch(`${API_URL}/api/events/${id}`, {
+      setDeletingEvent(true);      
+      const response = await fetch(`${API_URL}/api/event/delete/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -68,39 +86,39 @@ function CardDetail() {
         throw new Error(errorData.error || 'No se pudo eliminar el evento');
       }
 
-      // Éxito: redirigir a la página de inicio
-      alert('El evento ha sido eliminado correctamente');
+      // Éxito: mostrar mensaje y redirigir a la página de inicio
+      toast.success('Evento eliminado correctamente');
       navigate('/');
     } catch (error) {
       console.error("Error eliminando el evento:", error);
-      alert('Error: ' + error.message);
+      toast.error('Error: ' + error.message);
     } finally {
       setDeletingEvent(false);
+      setShowDeleteConfirmation(false);
     }
   };
-
-  // Función para eliminar foto con confirmación
+   /**
+   * Maneja la eliminación de una foto con confirmación mediante Toast
+   */
   const handleDeletePhoto = async (photoId, e) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar esta foto? Esta acción no se puede deshacer.')) {
-      return;
-    }
-
-    const result = await deletePhoto(photoId, photos, e);
-
-    if (result.success) {
-      alert('La foto ha sido eliminada correctamente');
-    } else {
-      alert(`Error: ${result.error}`);
-    }
+    // Mostramos una notificación informativa y luego eliminamos directamente
+    // Para UX mejorada, podrías implementar un modal de confirmación más elegante
+    toast.warning('Eliminando foto...', { duration: 1000 });
+    
+    // Pequeño delay para que el usuario vea el mensaje
+    setTimeout(async () => {
+      await deletePhoto(photoId, photos, e);
+    }, 500);
   };
 
-  // Función para manejar cuando se envía una invitación exitosamente
+  /**
+   * Callback que se ejecuta cuando se envía una invitación exitosamente
+   * Cambia automáticamente a la pestaña de gestión para ver la invitación enviada
+   */
   const handleInvitationSent = () => {
-    // Cambiar a la pestaña de gestión después de enviar una invitación
     setActiveTab('manage');
   };
 
-  // Mostrar estado de carga
   if (loading) {
     return <Spinner containerClassName="h-96" color="indigo" text="Cargando evento..." />
   }
@@ -142,9 +160,8 @@ function CardDetail() {
       <div className="p-6">
         {/* Botón para eliminar evento - solo visible para el creador */}
         {isEventCreator() && (
-          <div className="flex justify-end mb-6">
-            <button
-              onClick={handleDeleteEvent}
+          <div className="flex justify-end mb-6">            <button
+              onClick={handleRequestDeleteEvent}
               disabled={deletingEvent}
               className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 transition-colors"
             >
@@ -383,7 +400,7 @@ function CardDetail() {
           </div>
         )}
 
-        {/* SECCIÓN: FOTOS DEL EVENTO (con favoritos) */}
+        {/* SECCIÓN: FOTOS DEL EVENTO */}
         <div className="mt-12 border-t pt-8">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Fotos del evento</h2>
@@ -591,9 +608,61 @@ function CardDetail() {
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          </div>        )}
       </div>
+
+      {/* Modal de confirmación para eliminar evento */}
+      {showDeleteConfirmation && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Eliminar evento</h3>
+                <p className="text-sm text-gray-500">Esta acción no se puede deshacer</p>
+              </div>
+            </div>
+            
+            <p className="text-gray-700 mb-6">
+              ¿Estás seguro de que deseas eliminar el evento "<strong>{event.title}</strong>"? 
+              Perderás todas las fotos que no esten guardadas, invitaciones y datos asociados.
+            </p>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteConfirmation(false)}
+                disabled={deletingEvent}
+                className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteEvent}
+                disabled={deletingEvent}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center space-x-2 transition-colors"
+              >
+                {deletingEvent ? (
+                  <>
+                    <Spinner size="xs" color="white" />
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>Eliminar evento</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

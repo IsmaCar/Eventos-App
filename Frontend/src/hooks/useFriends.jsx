@@ -1,19 +1,11 @@
+// Hook personalizado para gestión de amigos
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-/**
- * Hook personalizado para gestión de amigos
- * @param {Object} options - Opciones de configuración
- * @param {string} options.friendsEndpoint - Endpoint para obtener amigos
- * @param {string} options.requestEndpoint - Endpoint para enviar solicitudes
- * @param {string} options.acceptEndpoint - Endpoint para aceptar solicitudes
- * @param {Function} options.onFriendsLoaded - Callback cuando se cargan amigos
- * @param {Function} options.onRequestSent - Callback cuando se envía solicitud
- * @param {Function} options.onRequestAccepted - Callback cuando se acepta solicitud
- * @param {Function} options.refreshCallback - Función para refrescar datos externos
- */
+
+
 export const useFriends = (options = {}) => {
   const {
     friendsEndpoint = '/api/friends',
@@ -73,62 +65,59 @@ export const useFriends = (options = {}) => {
     }
   };
 
-  /**
-   * Envía una solicitud de amistad a un usuario
-   * @param {string} userId - ID del usuario al que enviar la solicitud
-   */
- const sendFriendRequest = async (userId) => {
-  if (!token || !userId) {
-    return { success: false, error: 'Datos de solicitud incompletos' };
-  }
 
-  // Validar que no se esté enviando solicitud a uno mismo
-  if (user && user.id === parseInt(userId)) {
-    return { success: false, error: 'No puedes enviarte una solicitud a ti mismo' };
-  }
+  // Envía una solicitud de amistad a un usuario
 
-  try {
-    const url = `${API_URL}/api/friends/request/${userId}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+  const sendFriendRequest = async (userId) => {
+    if (!token || !userId) {
+      return { success: false, error: 'Datos de solicitud incompletos' };
+    }
+
+    // Validar que no se esté enviando solicitud a uno mismo
+    if (user && user.id === parseInt(userId)) {
+      return { success: false, error: 'No puedes enviarte una solicitud a ti mismo' };
+    }
+
+    try {
+      const url = `${API_URL}/api/friends/request/${userId}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        try {
+          const errorData = await response.json();
+          return { success: false, error: errorData.message || 'Error al enviar la solicitud' };
+        } catch (e) {
+          return { success: false, error: 'Error de formato en la respuesta' };
+        }
       }
-    });
 
-    if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        return { success: false, error: errorData.message || 'Error al enviar la solicitud' };
-      } catch (e) {
-        return { success: false, error: 'Error de formato en la respuesta' };
+      const data = await response.json();
+
+      // Si todo va bien, llamamos al callback si existe
+      if (options.onRequestSent && typeof options.onRequestSent === 'function') {
+        options.onRequestSent(userId);
       }
+
+      // También actualizamos la lista de amigos si es necesario
+      if (options.refreshCallback && typeof options.refreshCallback === 'function') {
+        options.refreshCallback();
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: 'Error de conexión' };
     }
+  };
 
-    const data = await response.json();
-    
-    // Si todo va bien, llamamos al callback si existe
-    if (options.onRequestSent && typeof options.onRequestSent === 'function') {
-      options.onRequestSent(userId);
-    }
+  // Acepta una solicitud de amistad
 
-    // También actualizamos la lista de amigos si es necesario
-    if (options.refreshCallback && typeof options.refreshCallback === 'function') {
-      options.refreshCallback();
-    }
-
-    return { success: true, data };
-  } catch (error) {
-    return { success: false, error: 'Error de conexión' };
-  }
-};
-
-  /**
-   * Acepta una solicitud de amistad
-   * @param {string} requestId - ID de la solicitud a aceptar
-   */
   const acceptFriendRequest = async (requestId) => {
     if (!token || !requestId) {
       return { success: false, error: 'ID de solicitud no válido' };
@@ -170,10 +159,9 @@ export const useFriends = (options = {}) => {
     }
   };
 
-  /**
-   * Elimina una amistad existente
-   * @param {string} friendshipId - ID de la amistad a eliminar
-   */
+
+  // Elimina una amistad existente
+
   const removeFriend = async (friendshipId) => {
     if (!token || !friendshipId) {
       return { success: false, error: 'ID de amistad no válido' };
@@ -210,10 +198,9 @@ export const useFriends = (options = {}) => {
     }
   };
 
-  /**
-   * Verifica el estado de amistad con un usuario
-   * @param {string} userId - ID del usuario para verificar el estado de amistad
-   */
+  
+   // Verifica el estado de amistad con un usuario
+  
   const checkFriendshipStatus = async (userId) => {
     if (!token || !userId) {
       return { status: 'none' };
@@ -239,10 +226,9 @@ export const useFriends = (options = {}) => {
     }
   };
 
-  /**
-   * Busca el ID de amistad en la lista de amigos
-   * @param {string} userId - ID del usuario amigo para encontrar el ID de amistad
-   */
+  
+   // Busca el ID de amistad en la lista de amigos
+   
   const findFriendshipId = (userId) => {
     if (!friends || !friends.length) return null;
 

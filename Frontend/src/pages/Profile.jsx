@@ -1,9 +1,15 @@
+/**
+ * Página Profile - Panel de control del usuario autenticado
+ * Gestiona perfil personal, amigos, notificaciones y eventos
+ * Incluye pestañas dinámicas y modales para diferentes funcionalidades
+ */
 import React, { useState, useEffect } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { getAvatarUrl, handleAvatarError, Avatar } from '../utils/Imagehelper';
 import { useAuth } from '../context/AuthContext'
 import { useNotifications } from '../hooks/useNotifications'
-import ReceivedInvitations from '../components/EventRequest'
+import { useToast } from '../hooks/useToast'
+import EventRequest from '../components/EventRequest'
 import FriendRequests from '../components/FriendRequest'
 import EventUser from '../components/EventsUser'
 import Spinner from '../components/Spinner'
@@ -12,14 +18,15 @@ import { useFriends } from '../hooks/useFriends';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+
 function Profile() {
   const { user, token } = useAuth();
   const { stats, refreshNotifications } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
+  const toast = useToast();
   const isMainProfile = location.pathname === '/profile';
   const [loading, setLoading] = useState(true);
-
   // Estado para modales
   const [showFriendSearch, setShowFriendSearch] = useState(false);
   const [showInvitations, setShowInvitations] = useState(false);
@@ -27,7 +34,6 @@ function Profile() {
   const [showMyEvents, setShowMyEvents] = useState(false);
 
   // Determinar la pestaña activa basada en el parámetro de URL
-  const [showNoNotifications, setShowNoNotifications] = useState(false);
   const queryParams = new URLSearchParams(location.search);
   const activeTab = queryParams.get('tab');
 
@@ -37,11 +43,8 @@ function Profile() {
     endpoint: '/api/friends/search',
     paramName: 'term',
     minLength: 3,
-    onResultsLoaded: (results) => {
-      console.log(`Se encontraron ${results.length} usuarios`);
-    }
+    filterCurrentUser: true,
   });
-
   // Hook para gestión de amigos
   const { friends, fetchFriends, sendFriendRequest, acceptFriendRequest } = useFriends({
     refreshCallback: refreshNotifications,
@@ -51,14 +54,13 @@ function Profile() {
         friendship_status: 'requested',
         friendship_id: null
       });
-      alert('Solicitud de amistad enviada');
+      toast.success('Solicitud de amistad enviada');
     },
     onRequestAccepted: () => {
       // Actualizar la lista de amigos
       fetchFriends();
     }
   });
-
   // Función para abrir automáticamente la ventana adecuada según las notificaciones disponibles
   const handleOpenNotifications = async () => {
     // Obtener las notificaciones actualizadas directamente de la función
@@ -69,22 +71,13 @@ function Profile() {
       setShowFriendRequests(true);
     } else if (freshNotifications.invitationsPending > 0) {
       setShowInvitations(true);
-    } else {
-      setShowNoNotifications(true); 
     }
   };
-
   // Función para abrir el modal de invitaciones y actualizar estadísticas
   const handleOpenInvitations = () => {
-    if (stats.invitationsPending > 0) {
-      setShowInvitations(true);
-    } else if (stats.friendRequests > 0) {
-      setShowNoNotifications(true);
-    } else {
-      setShowNoNotifications(true);
-    }
-
-    // Actualizamos las estadísticas al abrir el modal para tener datos frescos
+    setShowInvitations(true);
+    
+    // Actualizamos las estadísticas al abrir el modal para tener datos actualizados
     refreshNotifications();
   };
 
@@ -94,17 +87,9 @@ function Profile() {
     // Actualizamos las estadísticas al cerrar el modal para reflejar los cambios
     refreshNotifications();
   };
-
   // Funciones para solicitudes de amistad
   const handleOpenFriendRequests = () => {
-    if (stats.friendRequests > 0) {
-      setShowFriendRequests(true);
-    } else if (stats.invitationsPending > 0) {
-      setShowNoNotifications(true);
-    } else {
-      setShowNoNotifications(true); 
-    }
-
+    setShowFriendRequests(true);
     refreshNotifications();
   };
 
@@ -118,20 +103,23 @@ function Profile() {
     setShowFriendSearch(false);
     resetSearch();
   };
-
-  // Función para manejar el envío de solicitudes de amistad
+  /**
+   * Maneja el envío de solicitudes de amistad con retroalimentación al usuario
+   */
   const handleSendFriendRequest = async (userId) => {
     const result = await sendFriendRequest(userId);
     if (!result.success) {
-      alert(result.error || 'Error al enviar solicitud');
+      toast.error(result.error || 'Error al enviar solicitud');
     }
   };
 
-  // Función para manejar la aceptación de solicitudes de amistad
+  /**
+   * Maneja la aceptación de solicitudes de amistad
+   */
   const handleAcceptFriendRequest = async (requestId) => {
     const result = await acceptFriendRequest(requestId);
     if (!result.success) {
-      alert('No se pudo aceptar la solicitud de amistad');
+      toast.error('No se pudo aceptar la solicitud de amistad');
     }
   };
 
@@ -295,7 +283,7 @@ function Profile() {
                           )}
                           {user.friendship_status === 'friends' && (
                             <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded text-sm">
-                              Ya son amigos
+                              Ya sois amigos
                             </span>
                           )}
                           {user.friendship_status === 'rejected' && (
@@ -357,7 +345,7 @@ function Profile() {
             </div>
 
             <div className="overflow-y-auto flex-1">
-              <ReceivedInvitations onInvitationProcessed={refreshNotifications} />
+              <EventRequest onInvitationProcessed={refreshNotifications} />
             </div>
 
             <div className="mt-4 pt-3 border-t border-gray-100">
@@ -436,40 +424,6 @@ function Profile() {
         </div>
       )}
       {/* Modal para "No hay notificaciones" */}
-      {showNoNotifications && (
-        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
-          <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
-            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">Notificaciones</h3>
-              <button
-                onClick={() => setShowNoNotifications(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="py-8 flex flex-col items-center justify-center">
-              <div className="text-6xl mb-4">🔔</div>
-              <p className="text-gray-800 text-xl font-medium mb-2">Sin notificaciones</p>
-              <p className="text-gray-500 text-center">
-                No tienes notificaciones pendientes en este momento.
-              </p>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-gray-100">
-              <button
-                onClick={() => setShowNoNotifications(false)}
-                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Card principal */}

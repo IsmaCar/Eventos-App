@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-
+#[Route('/api')]
 final class UserController extends AbstractController
 {
     private UserRepository $userRepository;
@@ -35,7 +35,7 @@ final class UserController extends AbstractController
         ]);
     }
 
-    #[Route('/api/public/user/{id}', name: 'public_user_profile', methods: ['GET'])]
+    #[Route('/public/user/{id}', name: 'public_user_profile', methods: ['GET'])]
     public function getPublicUserProfile(int $id): JsonResponse
     {
         try {
@@ -61,7 +61,7 @@ final class UserController extends AbstractController
         }
     }
 
-    #[Route('/api/public/user/{id}/events', name: 'public_user_events', methods: ['GET'])]
+    #[Route('/public/user/{id}/events', name: 'public_user_events', methods: ['GET'])]
     public function getPublicUserEvents(int $id): JsonResponse
     {
         try {
@@ -103,7 +103,7 @@ final class UserController extends AbstractController
         }
     }
 
-    #[Route('/api/users/upload-avatar', name: 'upload_avatar', methods: ['POST'])]
+    #[Route('/users/upload-avatar', name: 'upload_avatar', methods: ['POST'])]
     public function uploadAvatar(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var UserInterface $user */
@@ -191,7 +191,7 @@ final class UserController extends AbstractController
         }
     }
 
-    #[Route('/api/users/update', name: 'update_user', methods: ['PUT'])]
+    #[Route('/users/update', name: 'update_user', methods: ['PUT'])]
     public function updateUser(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var UserInterface $authUser */
@@ -258,7 +258,7 @@ final class UserController extends AbstractController
         }
     }
 
-    #[Route('/api/user/stats', name: 'user_stats', methods: ['GET'])]
+    #[Route('/user/stats', name: 'user_stats', methods: ['GET'])]
     public function getUserStats(): JsonResponse
     {
         /** @var UserInterface $user */
@@ -292,7 +292,7 @@ final class UserController extends AbstractController
         }
     }
 
-    #[Route('/api/user/event/', name: 'user_event', methods: ['GET'])]
+    #[Route('/user/event/', name: 'user_event', methods: ['GET'])]
     public function getUserEvent(): JsonResponse
     {
         /** @var UserInterface $user */

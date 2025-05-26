@@ -33,11 +33,9 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
-    /**
-     * Obtiene las estadísticas de un usuario específico
-     * @param User $user El usuario del que queremos las estadísticas
-     * @return array Array con las estadísticas del usuario
-     */
+
+    // Obtiene las estadísticas de un usuario específico
+
     public function getUserStats(User $user): array
     {
         // Eventos creados por el usuario
@@ -68,34 +66,32 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         ];
     }
 
-    /**
-     * Obtiene las estadísticas de un usuario por ID
-     * @param int $userId ID del usuario
-     * @return array Array con las estadísticas del usuario
-     */
+
+    // Obtiene las estadísticas de un usuario por ID
+
     public function getUserStatsById(int $userId): array
     {
         // Solicitudes de amistad pendientes
-    $friendRequests = $this->getEntityManager()
-        ->createQueryBuilder()
-        ->select('COUNT(f.id)')
-        ->from('App\Entity\Friendship', 'f')
-        ->where('f.addressee = :userId AND f.status = :status')  // ¡CORREGIDO! Era "friend", ahora es "addressee"
-        ->setParameter('userId', $userId)                          // ¡CORREGIDO! Pasamos el objeto User completo
-        ->setParameter('status', 'pending')
-        ->getQuery()
-        ->getSingleScalarResult();
-    
-    // Invitaciones a eventos pendientes
-    $invitationsPending = $this->getEntityManager()
-        ->createQueryBuilder()
-        ->select('COUNT(i.id)')
-        ->from('App\Entity\Invitation', 'i')
-        ->where('i.invitedUser = :userId AND i.status = :status') // ¡CORREGIDO! Era "receiver", ahora es "invitedUser"
-        ->setParameter('userId', $userId)                           // ¡CORREGIDO! Pasamos el objeto User completo
-        ->setParameter('status', 'pending')
-        ->getQuery()
-        ->getSingleScalarResult();
+        $friendRequests = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('COUNT(f.id)')
+            ->from('App\Entity\Friendship', 'f')
+            ->where('f.addressee = :userId AND f.status = :status')
+            ->setParameter('userId', $userId)
+            ->setParameter('status', 'pending')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Invitaciones a eventos pendientes
+        $invitationsPending = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('COUNT(i.id)')
+            ->from('App\Entity\Invitation', 'i')
+            ->where('i.invitedUser = :userId AND i.status = :status')
+            ->setParameter('userId', $userId)
+            ->setParameter('status', 'pending')
+            ->getQuery()
+            ->getSingleScalarResult();
 
 
 
@@ -105,27 +101,27 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         ];
     }
 
-public function getEventByUserId(int $userId): array
-{
-    try {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select('e') // Seleccionamos la entidad Event completa
-            ->from('App\Entity\Event', 'e')
-            ->where('e.user = :userId') // Usando la relación directa con la entidad User
-            ->andWhere('e.banned = :banned')
-            ->andWhere('e.status = :status') 
-            ->setParameter('userId', $userId)
-            ->setParameter('banned', false)
-            ->setParameter('status', 'activated') // Solo eventos activos
-            ->orderBy('e.event_date', 'DESC') 
-            ->getQuery()
-            ->getResult();
-    } catch (\Exception $e) {
-        error_log('Error en getEventByUserId: ' . $e->getMessage());
-        return [];
+    public function getEventByUserId(int $userId): array
+    {
+        try {
+            return $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select('e')
+                ->from('App\Entity\Event', 'e')
+                ->where('e.user = :userId')
+                ->andWhere('e.banned = :banned')
+                ->andWhere('e.status = :status')
+                ->setParameter('userId', $userId)
+                ->setParameter('banned', false)
+                ->setParameter('status', 'activated')
+                ->orderBy('e.event_date', 'DESC')
+                ->getQuery()
+                ->getResult();
+        } catch (\Exception $e) {
+            error_log('Error en getEventByUserId: ' . $e->getMessage());
+            return [];
+        }
     }
-}
 
     public function searchUsers(string $query)
     {

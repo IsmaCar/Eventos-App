@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }) => {
       )
     }
   }, []);
-
   const registerUser = async ({ username, email, password }) => {
     try {
       const response = await fetch(`${API_URL}/api/register`, {
@@ -36,14 +35,20 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ username, email, password })
       })
 
-      if (!response.ok)
-        throw new Error("Error al registrarse");
+      const data = await response.json();
 
-      return await response.json();
+      if (!response.ok) {
+        // Devolver el error específico del backend para que el frontend pueda manejarlo
+        return {
+          error: data.error || 'Error al registrarse',
+          status: response.status
+        };
+      }
 
+      return data;
 
     } catch (error) {
-      console.log('Error al registrarse');
+      throw error;
     }
   }
 
@@ -76,7 +81,6 @@ export const AuthProvider = ({ children }) => {
 
       return data;
     } catch (error) {
-      console.log("Error al iniciar sesión", error);
       throw error;
     }
   };

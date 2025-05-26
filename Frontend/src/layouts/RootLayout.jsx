@@ -1,29 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { Link, Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import React from "react";
+import { Outlet } from "react-router-dom";
 import Navbar from "../components/Navbar";
-const API_URL = import.meta.env.VITE_API_URL;
 
 const RootLayout = () => {
-  //token inicio de sesion
-  const { user, token, logout, isAdmin } = useAuth();
-  const [avatarKey, setAvatarKey] = useState(Date.now());
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  }
-
-  const avatarUrl = user?.avatar
-    ? `${API_URL}/uploads/avatars/${user?.avatar}?v=${avatarKey}`
-    : `${API_URL}/uploads/avatars/default-avatar.png`;
-
-  // Forzar la actualización del avatar
-  useEffect(() => {
-    setAvatarKey(Date.now());
-  }, [user]);
-
    return (
     <div className="flex flex-col min-h-screen">
       {/* barra de navegación  */}

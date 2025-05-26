@@ -1,12 +1,24 @@
+/**
+ * Componente de formulario para la creación de eventos
+ * Proporciona interfaz para:
+ * - Ingresar información básica del evento (título, descripción, fecha)
+ * - Seleccionar ubicación usando mapas
+ * - Subir imagen de portada (con drag & drop)
+ * - Validar datos antes de enviarlos al backend
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LocationPicker from './Maps';
 import { useEvent } from '../context/EventContext';
 import Spinner from './Spinner';
+import { useToast } from '../hooks/useToast';
 
 function FormCreateEvent() {
     const { createEvent } = useEvent();
     const navigate = useNavigate();
+    const toast = useToast();
+
+    // Estado principal del formulario
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -16,46 +28,51 @@ function FormCreateEvent() {
         longitude: '',
         image: null,
     });
+
+    // Estados para UI y experiencia de usuario
     const [imagePreview, setImagePreview] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
     const [isDragging, setIsDragging] = useState(false);
-    
-    // Nuevos estados para controlar validaciones
+
+    // Estados para validación de campos
     const [descriptionLength, setDescriptionLength] = useState(0);
     const [descriptionError, setDescriptionError] = useState("");
     const [dateError, setDateError] = useState("");
-    
-    // Constante para el límite de caracteres de la descripción
+
     const MAX_DESCRIPTION_LENGTH = 500;
-    
-    // Función para validar la fecha - debe ser hoy o después
+
+    /**
+   * Valida si una fecha es igual o posterior al día de hoy
+   */
     const isValidDate = (dateString) => {
         if (!dateString) return false;
-        
+
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Resetear la hora para comparar solo fechas
-        
+
         const selectedDate = new Date(dateString);
         return selectedDate >= today;
     };
 
+    /**
+     * Maneja los cambios en los campos del formulario
+     * Aplica validaciones específicas según el campo modificado
+     */
     const handleChange = (e) => {
         const { name, value } = e.target;
-        
-        // Validación específica para la descripción
+
+        // Validación para el campo de descripción
         if (name === 'description') {
-            // No permitir más de MAX_DESCRIPTION_LENGTH caracteres
             if (value.length > MAX_DESCRIPTION_LENGTH) {
                 setDescriptionError(`La descripción no puede exceder los ${MAX_DESCRIPTION_LENGTH} caracteres`);
                 return;
             }
-            
+
             setDescriptionLength(value.length);
             setDescriptionError("");
         }
-        
-        // Validación específica para la fecha
+
+        // Validación para el campo de fecha
         if (name === 'event_date') {
             if (!isValidDate(value)) {
                 setDateError("La fecha del evento no puede ser anterior a hoy");
@@ -63,11 +80,13 @@ function FormCreateEvent() {
                 setDateError("");
             }
         }
-        
+
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Restablecer el error cuando se desmonte el componente
+    /**
+     * Limpia los errores al desmontar el componente
+     */
     useEffect(() => {
         return () => {
             setDescriptionError("");
@@ -75,42 +94,52 @@ function FormCreateEvent() {
         };
     }, []);
 
+    /**
+     * Procesa los cambios en la ubicación seleccionada en el mapa
+     */
     const handleLocationChange = (location) => {
-        if(!location || !location.address || !location.lat || !location.lng) {
-            setFormData(prev => ({ ...prev, location: null, 
-                                            latitude: null,
-                                            longitude: null 
-                                        }));
+        if (!location || !location.address || !location.lat || !location.lng) {
+            // Resetear los datos de ubicación si no son válidos
+            setFormData(prev => ({
+                ...prev, location: null,
+                latitude: null,
+                longitude: null
+            }));
             return;
         };
 
-        setFormData(prev => ({ ...prev, location: location.address, 
-                                        latitude: location.lat.toString(), 
-                                        longitude: location.lng.toString() 
+        // Almacenar los datos de ubicación en el estado
+        setFormData(prev => ({
+            ...prev, location: location.address,
+            latitude: location.lat.toString(),
+            longitude: location.lng.toString()
         }));
     }
 
-
+    /**
+     * Procesa la selección de imagen desde input tipo file
+     * Valida tipo y tamaño de archivo, genera vista previa
+     */    
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Comprobación de tipo
+            // Validación del tipo de archivo
             const allowedTypes = ['image/jpeg', 'image/png'];
             if (!allowedTypes.includes(file.type)) {
-                alert("El archivo no es válido. Solo se permiten imágenes JPG o PNG.");
+                toast.error("El archivo no es válido. Solo se permiten imágenes JPG o PNG.");
                 return;
             }
-    
-            // Comprobación de tamaño
+
+            // Validación del tamaño máximo
             const maxSize = 5 * 1024 * 1024; // 5MB
             if (file.size > maxSize) {
-                alert(`La imagen es demasiado grande. El tamaño máximo es 5MB.`);
+                toast.error(`La imagen es demasiado grande. El tamaño máximo es 5MB.`);
                 return;
             }
-    
+
             setFormData(prev => ({ ...prev, image: file }));
-    
-            // Crear preview de la imagen
+
+            // Generar vista previa de la imagen seleccionada
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImagePreview(reader.result);
@@ -119,21 +148,30 @@ function FormCreateEvent() {
         }
     };
 
+    /**
+     * Maneja el evento cuando el usuario arrastra un archivo sobre el área de carga
+     */
     const handleDragOver = (e) => {
         e.preventDefault();
         setIsDragging(true);
     }
 
+
+    //Maneja el evento cuando el usuario sale del área de carga con un archivo
     const handleDragLeave = () => {
         setIsDragging(false);
     };
 
+    /**
+     * Procesa archivos soltados en el área de carga mediante drag & drop
+     */
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDragging(false);
         const file = e.dataTransfer.files[0];
         if (file) {
             setFormData(prev => ({ ...prev, image: file }));
+            // Generar vista previa de la imagen
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImagePreview(reader.result);
@@ -141,61 +179,67 @@ function FormCreateEvent() {
             reader.readAsDataURL(file);
         }
     }
+
+
+    //Elimina la imagen seleccionada y su vista previa
     const handleRemoveImage = () => {
         setImagePreview(null);
         setFormData(prev => ({ ...prev, image: null }));
     }
 
+    /**
+     * Previene envío automático del formulario al pulsar Enter en inputs
+     */
     const handlePreventSubmit = (e) => {
-        if(e.key === 'Enter') {
+        if (e.key === 'Enter') {
             e.preventDefault();
         }
     }
 
+    /**
+     * Procesa el envío del formulario
+     * Realiza validaciones finales y envía los datos al servidor
+     */    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError("");
-        
-        // Validaciones antes de enviar
+
+        // Validaciones finales antes de enviar al servidor
         if (descriptionLength > MAX_DESCRIPTION_LENGTH) {
-            setError(`La descripción no puede exceder los ${MAX_DESCRIPTION_LENGTH} caracteres`);
+            toast.error(`La descripción no puede exceder los ${MAX_DESCRIPTION_LENGTH} caracteres`);
             setLoading(false);
             return;
         }
-        
+
         if (!isValidDate(formData.event_date)) {
-            setError("La fecha del evento no puede ser anterior a hoy");
+            toast.error("La fecha del evento no puede ser anterior a hoy");
             setLoading(false);
             return;
         }
-    
+
         try {
+            // Enviar datos al servidor mediante el contexto
             const response = await createEvent(formData);
             if (response && !response.error) {
+                toast.success("¡Evento creado exitosamente!");
                 navigate("/");
                 setLoading(false);
             } else {
-                setError(response.error || 'Error al crear el evento');
+                toast.error(response.error || 'Error al crear el evento');
                 setLoading(false);
                 return;
             }
         } catch (error) {
-            setError("Error al crear el evento. Inténtalo de nuevo.");
+            toast.error("Error al crear el evento. Inténtalo de nuevo.");
             setLoading(false);
             console.error(error);
         }
-    };
-
+    };   
+    
     return (
         <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">Crear Nuevo Evento</h2>
-
-            {error && (
-                <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
-                    {error}
-                </div>
-            )}
 
             <form onSubmit={handleSubmit} onKeyDown={handlePreventSubmit} className="space-y-6">
                 {/* Título del evento */}
@@ -219,10 +263,10 @@ function FormCreateEvent() {
                 <div>
                     <label htmlFor="description" className="block text-lg font-medium text-gray-700 mb-2">
                         Descripción
-                        <span className={`ml-2 text-sm ${descriptionLength > MAX_DESCRIPTION_LENGTH - 50 
-                            ? descriptionLength > MAX_DESCRIPTION_LENGTH 
-                                ? 'text-red-600' 
-                                : 'text-amber-600' 
+                        <span className={`ml-2 text-sm ${descriptionLength > MAX_DESCRIPTION_LENGTH - 50
+                            ? descriptionLength > MAX_DESCRIPTION_LENGTH
+                                ? 'text-red-600'
+                                : 'text-amber-600'
                             : 'text-gray-500'}`}>
                             ({descriptionLength}/{MAX_DESCRIPTION_LENGTH})
                         </span>
@@ -242,12 +286,12 @@ function FormCreateEvent() {
                     {descriptionError && (
                         <p className="mt-1 text-red-600 text-sm">{descriptionError}</p>
                     )}
-                    <p className={`text-xs mt-1 ${descriptionLength > MAX_DESCRIPTION_LENGTH - 50 
-                        ? descriptionLength > MAX_DESCRIPTION_LENGTH - 20 
-                            ? 'text-red-600' 
-                            : 'text-amber-600' 
+                    <p className={`text-xs mt-1 ${descriptionLength > MAX_DESCRIPTION_LENGTH - 50
+                        ? descriptionLength > MAX_DESCRIPTION_LENGTH - 20
+                            ? 'text-red-600'
+                            : 'text-amber-600'
                         : 'text-gray-500'}`}>
-                        {descriptionLength > MAX_DESCRIPTION_LENGTH - 50 
+                        {descriptionLength > MAX_DESCRIPTION_LENGTH - 50
                             ? descriptionLength > MAX_DESCRIPTION_LENGTH - 20
                                 ? `¡Límite alcanzado! No puedes escribir más de ${MAX_DESCRIPTION_LENGTH} caracteres.`
                                 : `Te estás acercando al límite de ${MAX_DESCRIPTION_LENGTH} caracteres.`
@@ -283,7 +327,7 @@ function FormCreateEvent() {
                             Ubicación
                         </label>
 
-                        <LocationPicker onLocationChange={handleLocationChange}/>
+                        <LocationPicker onLocationChange={handleLocationChange} />
 
                         {formData.location && (
                             <p className="text-sm text-gray-600 mt-2">
@@ -293,83 +337,84 @@ function FormCreateEvent() {
                     </div>
                 </div>
 
-                    {/* Imagen del evento */}
-                    <div>
-                        <label htmlFor="image" className="block text-lg font-medium text-gray-700 mb-2">
-                            Imagen de la tarjeta
-                        </label>
-                        <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 rounded-lg transition-colors ${isDragging
-                            ? 'border-indigo-500 bg-indigo-50 border-dashed'
-                            : 'border-gray-300 border-dashed'
-                            }`}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}>
-                            <div className="space-y-1 text-center">
-                                {imagePreview ? (
-                                    <div className="mb-4">
-                                        <img
-                                            src={imagePreview}
-                                            alt="Vista previa"
-                                            className="h-40 w-auto mx-auto rounded-lg object-cover"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleRemoveImage}
-                                            className="mt-2 text-sm text-red-600 hover:text-red-800"
-                                        >
-                                            Eliminar imagen
-                                        </button>
+                {/* Imagen del evento */}
+                <div>
+                    <label htmlFor="image" className="block text-lg font-medium text-gray-700 mb-2">
+                        Imagen de la tarjeta
+                    </label>
+                    <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 rounded-lg transition-colors ${isDragging
+                        ? 'border-indigo-500 bg-indigo-50 border-dashed'
+                        : 'border-gray-300 border-dashed'
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}>
+                        <div className="space-y-1 text-center">
+                            {imagePreview ? (
+                                <div className="mb-4">
+                                    <img
+                                        src={imagePreview}
+                                        alt="Vista previa"
+                                        className="h-40 w-auto mx-auto rounded-lg object-cover"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveImage}
+                                        className="mt-2 text-sm text-red-600 hover:text-red-800"
+                                    >
+                                        Eliminar imagen
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    <div className="flex text-sm text-gray-600">
+                                        <label htmlFor="image" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500">
+                                            <span>Sube una imagen</span>
+                                            <input
+                                                id="image"
+                                                name="image"
+                                                type="file"
+                                                className="sr-only"
+                                                accept="image/jpeg, image/png, image/webp"
+                                                onChange={handleImageChange}
+                                            />
+                                        </label>
+                                        <p className="pl-1">o arrastra y suelta</p>
                                     </div>
-                                ) : (
-                                    <>
-                                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                        <div className="flex text-sm text-gray-600">
-                                            <label htmlFor="image" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500">
-                                                <span>Sube una imagen</span>
-                                                <input
-                                                    id="image"
-                                                    name="image"
-                                                    type="file"
-                                                    className="sr-only"
-                                                    accept="image/jpeg, image/png, image/webp"
-                                                    onChange={handleImageChange}
-                                                />
-                                            </label>
-                                            <p className="pl-1">o arrastra y suelta</p>
-                                        </div>
-                                        <p className="text-xs text-gray-500">PNG y JPG</p>
-                                    </>
-                                )}
-                            </div>
+                                    <p className="text-xs text-gray-500">PNG y JPG</p>
+                                </>
+                            )}
                         </div>
                     </div>
+                </div>                    
+                <div className="flex justify-end space-x-4 pt-4">
+                    {/* Botón para cancelar y volver a la página principal */}
+                    <button
+                        type="button"
+                        onClick={() => navigate("/")}
+                        className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
+                    >
+                        Cancelar
+                    </button>
 
-                    {/* Botones de acción */}
-                    <div className="flex justify-end space-x-4 pt-4">
-                        <button
-                            type="button"
-                            onClick={() => navigate("/")}
-                            className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            className={`px-8 py-3 bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white rounded-lg transition duration-200 flex items-center 
+                    {/* Botón para enviar el formulario, deshabilitado durante carga o con errores */}
+                    <button
+                        type="submit"
+                        className={`px-8 py-3 bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white rounded-lg transition duration-200 flex items-center 
                                 ${(dateError || descriptionError) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
-                            disabled={loading || !!dateError || !!descriptionError}
-                        >
-                            {loading ? (
-                                <div className="flex items-center">
-                                    <Spinner size="xs" color="white" containerClassName="mr-2" />
-                                    <span>Creando...</span>
-                                </div>
-                            ) : "Crear Evento"}
-                        </button>
-                    </div>
+                        disabled={loading || !!dateError || !!descriptionError}
+                    >
+                        {loading ? (
+                            <div className="flex items-center">
+                                <Spinner size="xs" color="white" containerClassName="mr-2" />
+                                <span>Creando...</span>
+                            </div>
+                        ) : "Crear Evento"}
+                    </button>
+                </div>
             </form>
         </div>
     );

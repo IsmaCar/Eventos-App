@@ -1,13 +1,13 @@
+/**
+ * Barra de navegación principal de la aplicación
+ * Contiene enlaces principales, notificaciones y acceso a perfil
+ */
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { Avatar } from '../utils/Imagehelper';
 
-/**
- * Barra de navegación principal de la aplicación
- * Contiene enlaces principales, notificaciones y acceso a perfil
- */
 function Navbar() {
     const { token, user, isAdmin, logout } = useAuth();
     const { stats, hasNotifications } = useNotifications();
@@ -128,7 +128,7 @@ function Navbar() {
                                         <span>Fotos favoritas</span>
                                     </Link>
 
-                                    {/* Centro de notificaciones - modificado */}
+                                    {/* Centro de notificaciones */}
                                     <button
                                         onClick={handleNotificationsClick}
                                         className={`flex items-center text-white px-3 py-1.5 
@@ -227,7 +227,7 @@ function Navbar() {
                                 Fotos favoritas
                             </Link>
 
-                            {/* Notificaciones en versión móvil - modificado */}
+                            {/* Notificaciones en versión móvil */}
                             <button
                                 onClick={handleNotificationsClick}
                                 className={`flex items-center text-white px-3 py-2 w-full text-left

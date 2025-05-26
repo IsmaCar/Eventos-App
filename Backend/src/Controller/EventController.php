@@ -20,18 +20,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+#[Route('/api')]
 final class EventController extends AbstractController
 {
-    #[Route('/event', name: 'app_event')]
-    public function index(): Response
-    {
-        return $this->render('event/index.html.twig', [
-            'controller_name' => 'EventController',
-        ]);
-    }
 
-
-    #[Route('/api/event/create', name: 'event_create', methods: ['POST'])]
+    #[Route('/event/create', name: 'event_create', methods: ['POST'])]
     public function create(
         Request $request,
         EntityManagerInterface $entityManager,
@@ -177,8 +170,14 @@ final class EventController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    #[Route('/api/event/', name: 'event_get', methods: ['GET'])]
+    #[Route('/event', name: 'event_get', methods: ['GET'])]
     public function getEvents(
+        /**
+         * Componente de notificación - Notificación individual
+         *
+         * Muestra una sola notificación con diferentes tipos (éxito, error, advertencia, información)
+         * Incluye animaciones y función de cierre automático.
+         */
         EntityManagerInterface $entityManager,
     ): JsonResponse {
         $user = $this->getUser();
@@ -220,7 +219,7 @@ final class EventController extends AbstractController
         ], Response::HTTP_OK);
     }
 
-    #[Route('/api/event/{id}', name: 'event_get_by_id', methods: ['GET'])]
+    #[Route('/event/{id}', name: 'event_get_by_id', methods: ['GET'])]
     public function getEventById(
         EntityManagerInterface $entityManager,
         InvitationRepository $invitationRepository,
@@ -281,7 +280,7 @@ final class EventController extends AbstractController
         ], Response::HTTP_OK);
     }
 
-    #[Route('/api/events/{id}/photos', name: 'app_event_photos', methods: ['GET'])]
+    #[Route('/events/{id}/photos', name: 'app_event_photos', methods: ['GET'])]
     public function getEventPhotos(
         int $id,
         EventRepository $eventRepository,
@@ -317,7 +316,7 @@ final class EventController extends AbstractController
         ]);
     }
 
-    #[Route('/api/events/{id}/photos', name: 'app_event_upload_photo', methods: ['POST'])]
+    #[Route('/events/{id}/photos', name: 'app_event_upload_photo', methods: ['POST'])]
     public function uploadEventPhoto(
         Request $request,
         int $id,
@@ -384,7 +383,7 @@ final class EventController extends AbstractController
         }
     }
 
-    #[Route('/api/events/{id}/attendees', name: 'event_attendees', methods: ['GET'])]
+    #[Route('/events/{id}/attendees', name: 'event_attendees', methods: ['GET'])]
     public function getEventAttendees(
         int $id,
         EventRepository $eventRepository,
@@ -443,7 +442,7 @@ final class EventController extends AbstractController
         ]);
     }
 
-    #[Route('/api/events/{id}/cancel-attendance', name: 'event_cancel_attendance', methods: ['POST'])]
+    #[Route('/events/{id}/cancel-attendance', name: 'event_cancel_attendance', methods: ['POST'])]
     public function cancelAttendance(
         int $id,
         EventRepository $eventRepository,
@@ -485,7 +484,7 @@ final class EventController extends AbstractController
         return $this->json(['success' => true, 'message' => 'Asistencia cancelada correctamente']);
     }
 
-    #[Route('/api/events/{id}/remove-attendee/{attendeeId}', name: 'event_remove_attendee', methods: ['POST'])]
+    #[Route('/events/{id}/remove-attendee/{attendeeId}', name: 'event_remove_attendee', methods: ['POST'])]
     public function removeAttendee(
         int $id,
         int $attendeeId,
@@ -537,42 +536,49 @@ final class EventController extends AbstractController
         return $this->json(['error' => 'El usuario no era un asistente de este evento'], Response::HTTP_NOT_FOUND);
     }
 
-    #[Route('/api/event/delete/{id}', name: 'event_delete', methods: ['DELETE'])]
-public function deleteEvent(
-    int $id,
-    EventRepository $eventRepository,
-    EntityManagerInterface $entityManager,
-    Security $security
-): JsonResponse {
-    $user = $security->getUser();
-    if (!$user) {
-        return $this->json(['error' => 'Usuario no autenticado'], Response::HTTP_UNAUTHORIZED);
-    }
-
-    $event = $eventRepository->find($id);
-    if (!$event) {
-        return $this->json(['error' => 'Evento no encontrado'], Response::HTTP_NOT_FOUND);
-    }
-
-    // Verificar que el usuario actual es el creador del evento
-    if ($event->getUser()->getUserIdentifier() !== $user->getUserIdentifier()) {
-        return $this->json(['error' => 'No tienes permiso para eliminar este evento'], Response::HTTP_FORBIDDEN);
-    }
-
-    try {
-        // Borrado lógico: cambiar estado a 'desactivated'
-        $event->setStatus('desactivated');
-        
-        // También podemos actualizar un campo específico de fecha de desactivación si existe
-        if (method_exists($event, 'setDeactivatedAt')) {
-            $event->setDeactivatedAt(new \DateTime());
+    #[Route('/event/delete/{id}', name: 'event_delete', methods: ['DELETE'])]
+    public function deleteEvent(
+        int $id,
+        EventRepository $eventRepository,
+        EntityManagerInterface $entityManager,
+        Security $security
+    ): JsonResponse {
+        $user = $security->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'Usuario no autenticado'], Response::HTTP_UNAUTHORIZED);
         }
-        
-        $entityManager->flush();
 
-        return $this->json(['message' => 'Evento desactivado correctamente']);
-    } catch (\Exception $e) {
-        return $this->json(['error' => 'Error al desactivar el evento: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        $event = $eventRepository->find($id);
+        if (!$event) {
+            return $this->json(['error' => 'Evento no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Verificar que el usuario actual es el creador del evento
+        if ($event->getUser()->getUserIdentifier() !== $user->getUserIdentifier()) {
+            return $this->json(['error' => 'No tienes permiso para eliminar este evento'], Response::HTTP_FORBIDDEN);
+        }
+
+        // Verificar que el evento esté actualmente activado
+        if ($event->getStatus() !== 'activated') {
+            return $this->json(['error' => 'El evento ya ha sido desactivado'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            // Borrado lógico: cambiar estado de 'activated' a 'deactivated'
+            $event->setStatus('deactivated');
+
+            $entityManager->flush();
+
+            return $this->json([
+                'message' => 'Evento desactivado correctamente',
+                'event' => [
+                    'id' => $event->getId(),
+                    'title' => $event->getTitle(),
+                    'status' => $event->getStatus()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al desactivar el evento: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
-}
 }

@@ -1,17 +1,28 @@
+/**
+ * Dashboard de administración de la aplicación
+ * 
+ * Funcionalidades principales:
+ * - Gestión de usuarios (activar/desactivar, bannear/desbanear)
+ * - Gestión de eventos (activar/desactivar, bannear/desbanear)
+ * - Gestión de fotos favoritas del sistema
+ * - Paneles administrativos con acciones masivas
+ * - Solo accesible para usuarios con rol de administrador
+ */
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, Navigate } from 'react-router-dom';
 import Pagination from '../components/Pagination';
 import Spinner from '../components/Spinner';
+import { useToast } from '../hooks/useToast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function Dashboard() {
     const { user, token } = useAuth();
+    const toast = useToast();
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(null);
     const [checked, setChecked] = useState(false);
-    const [error, setError] = useState('');
     const [stats, setStats] = useState({
         users: 0,
         events: 0,
@@ -58,13 +69,11 @@ function Dashboard() {
                     setIsAdmin(hasAdminRole);
                 } else {
                     setIsAdmin(false);
-                }
-
-                setChecked(true);
+                } setChecked(true);
                 setLoading(false);
             } catch (err) {
                 console.error("Error verificando rol:", err);
-                setError("Error verificando permisos");
+                toast.error("Error verificando permisos");
                 setIsAdmin(false);
                 setChecked(true);
                 setLoading(false);
@@ -116,7 +125,7 @@ function Dashboard() {
             });
         } catch (error) {
             console.error("Error obteniendo estadísticas:", error);
-            setError('Error al cargar estadísticas');
+            toast.error('Error al cargar estadísticas');
         }
     };
 
@@ -161,7 +170,7 @@ function Dashboard() {
             });
         } catch (error) {
             console.error("Error obteniendo usuarios:", error);
-            setError('Error al cargar la lista de usuarios');
+            toast.error('Error al cargar la lista de usuarios');
         }
     };
 
@@ -190,7 +199,7 @@ function Dashboard() {
             });
         } catch (error) {
             console.error("Error obteniendo eventos:", error);
-            setError('Error al cargar la lista de eventos');
+            toast.error('Error al cargar la lista de eventos');
         }
     };
 
@@ -214,14 +223,12 @@ function Dashboard() {
                 user.id === userId
                     ? { ...user, banned: !currentlyActive }
                     : user
-            ));
-
-            // Actualizar estadísticas después de cambiar el estado
+            ));            // Actualizar estadísticas después de cambiar el estado
             fetchStats();
 
         } catch (error) {
             console.error("Error al cambiar estado del usuario:", error);
-            setError(`Error al cambiar estado del usuario: ${error.message}`);
+            toast.error(`Error al cambiar estado del usuario: ${error.message}`);
         }
     };
 
@@ -249,14 +256,12 @@ function Dashboard() {
                 event.id === eventId
                     ? { ...event, banned: newBannedStatus }
                     : event
-            ));
-
-            // Actualizar estadísticas después de cambiar el estado
+            ));            // Actualizar estadísticas después de cambiar el estado
             fetchStats();
 
         } catch (error) {
             console.error("Error al cambiar estado del evento:", error);
-            setError(`Error al cambiar estado del evento: ${error.message}`);
+            toast.error(`Error al cambiar estado del evento: ${error.message}`);
         }
     };
 
@@ -284,20 +289,7 @@ function Dashboard() {
                         </div>
                         <p className="text-gray-600 max-w-3xl">
                             Bienvenido al panel de administración. Aquí puedes gestionar los usuarios y eventos de la plataforma.
-                        </p>
-                    </header>
-
-                    {/* Mensaje de error si existe */}
-                    {error && (
-                        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-8 rounded-r-md shadow-sm">
-                            <div className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <p>{error}</p>
-                            </div>
-                        </div>
-                    )}
+                        </p>                    </header>
 
                     {/* Resumen estadístico modificado - sin indicadores activos/bloqueados */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
@@ -365,8 +357,8 @@ function Dashboard() {
                             <button
                                 onClick={() => togglePanel('users')}
                                 className={`flex items-center p-4 rounded-lg transition-all ${activePanel === 'users'
-                                        ? 'bg-indigo-500 text-white shadow-md'
-                                        : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                                    ? 'bg-indigo-500 text-white shadow-md'
+                                    : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
                                     }`}
                             >
                                 <div className={`p-3 rounded-full ${activePanel === 'users' ? 'bg-indigo-600' : 'bg-white'} mr-4`}>
@@ -388,8 +380,8 @@ function Dashboard() {
                             <button
                                 onClick={() => togglePanel('events')}
                                 className={`flex items-center p-4 rounded-lg transition-all ${activePanel === 'events'
-                                        ? 'bg-fuchsia-500 text-white shadow-md'
-                                        : 'bg-fuchsia-50 text-fuchsia-700 hover:bg-fuchsia-100'
+                                    ? 'bg-fuchsia-500 text-white shadow-md'
+                                    : 'bg-fuchsia-50 text-fuchsia-700 hover:bg-fuchsia-100'
                                     }`}
                             >
                                 <div className={`p-3 rounded-full ${activePanel === 'events' ? 'bg-fuchsia-600' : 'bg-white'} mr-4`}>
@@ -461,8 +453,8 @@ function Dashboard() {
                                                             <td className="py-3 px-4 text-gray-500">{user.email}</td>
                                                             <td className="py-3 px-4">
                                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.roles.includes('ROLE_ADMIN')
-                                                                        ? 'bg-indigo-100 text-indigo-800'
-                                                                        : 'bg-gray-100 text-gray-800'
+                                                                    ? 'bg-indigo-100 text-indigo-800'
+                                                                    : 'bg-gray-100 text-gray-800'
                                                                     }`}>
                                                                     {user.roles.includes('ROLE_ADMIN') ? 'Admin' : 'Usuario'}
                                                                 </span>

@@ -1,178 +1,228 @@
+/**
+ * Componente para gestionar las invitaciones a eventos recibidas por un usuario
+ * 
+ * Este componente permite al usuario:
+ * - Visualizar todas las invitaciones a eventos pendientes
+ * - Aceptar o rechazar invitaciones individualmente
+ * - Ver información básica de cada evento al que ha sido invitado
+ * - Conocer quién le ha invitado a cada evento
+ */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
 import Spinner from './Spinner';
+import { formatShortDate } from '../utils/DateHelper';
+import { useToast } from '../hooks/useToast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function ReceivedInvitations({ onInvitationProcessed }) {
+function EventRequest({ onInvitationProcessed }) {
+
   const { token } = useAuth();
+  const toast = useToast();
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  const fetchInvitations = async () => {
-    if (!token) return;
-    
+  /**
+   * Obtiene todas las invitaciones a eventos recibidas por el usuario
+   * desde la API y actualiza el estado local
+   */  const fetchInvitations = async () => {
     try {
       setLoading(true);
+      
       const response = await fetch(`${API_URL}/api/invitations/user/received`, {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('Error al cargar invitaciones');
       }
       
       const data = await response.json();
       
-      // Importante: Filtrar para mostrar SOLO las invitaciones pendientes
-      const pendingInvitations = data.invitations.filter(inv => inv.status === 'pending');
-      
+      // Filtramos para mostrar solo invitaciones que requieren respuesta (pending)
+      const pendingInvitations = (data.invitations || []).filter(inv => inv.status === 'pending');
       setInvitations(pendingInvitations);
-      setError(null);
     } catch (err) {
       console.error('Error obteniendo invitaciones:', err);
-      setError('No se pudieron cargar las invitaciones');
+      toast.error('Error al cargar invitaciones');
+      setInvitations([]);
     } finally {
       setLoading(false);
     }
   };
-
-  const handleAcceptInvitation = async (invitationId) => {
+  /**
+   * Gestiona la respuesta del usuario a una invitación (aceptar o rechazar)
+   * 
+   * Flujo del proceso:
+   * 1. Actualiza la UI para mostrar estado de procesamiento
+   * 2. Envía la respuesta a la API (accept/reject)
+   * 3. Elimina la invitación de la lista en caso de éxito
+   * 4. Revierte el estado visual y muestra error en caso de fallo)
+   */
+  const handleEventInvitation = async (invitationId, status) => {
     try {
+      setInvitations(prevInvitations => 
+        prevInvitations.map(inv => 
+          inv.id === invitationId 
+            ? {...inv, processing: true} 
+            : inv
+        )
+      );   
+
+      const responseValue = status === 'accepted' ? 'accept' : 'reject';
+      
       const response = await fetch(`${API_URL}/api/invitations/${invitationId}/respond`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'  // Añadido Content-Type
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          response: 'accept'  // Añadido parámetro response
+        body: JSON.stringify({ 
+          response: responseValue 
         })
       });
-      
+
       if (!response.ok) {
-        throw new Error('Error al aceptar la invitación');
-      }
+        throw new Error(`Error al ${status === 'accepted' ? 'aceptar' : 'rechazar'} la invitación`);
+      }      
+      // Elimina la invitación respondida de la lista local
+      setInvitations(prevInvitations => 
+        prevInvitations.filter(inv => inv.id !== invitationId)
+      );
+        // Mostrar mensaje de éxito
+      const actionText = status === 'accepted' ? 'aceptada' : 'rechazada';
+      toast.success(`Invitación ${actionText} correctamente`);
       
-      // Eliminar la invitación de la lista mostrada
-      setInvitations(invitations.filter(inv => inv.id !== invitationId));
-      
-      // Notificar al componente padre si existe el callback
+      // Notificar al componente padre del cambio si se proporciona callback
       if (typeof onInvitationProcessed === 'function') {
         onInvitationProcessed();
       }
+      
     } catch (err) {
-      console.error('Error aceptando invitación:', err);
-      alert('No se pudo aceptar la invitación');
+      console.error('Error respondiendo a invitación:', err);
+      
+      // Revierte el estado visual de procesamiento en caso de error
+      setInvitations(prevInvitations => 
+        prevInvitations.map(inv => 
+          inv.id === invitationId 
+            ? {...inv, processing: false} 
+            : inv
+        )
+      );
+
+      const actionText = status === 'accepted' ? 'aceptar' : 'rechazar';
+      toast.error(`No se pudo ${actionText} la invitación`);
     }
   };
 
-  const handleRejectInvitation = async (invitationId) => {
-    try {
-      const response = await fetch(`${API_URL}/api/invitations/${invitationId}/respond`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'  // Añadido Content-Type
-        },
-        body: JSON.stringify({
-          response: 'reject'  // Añadido parámetro response
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Error al rechazar la invitación');
-      }
-      
-      // Eliminar la invitación de la lista mostrada
-      setInvitations(invitations.filter(inv => inv.id !== invitationId));
-      
-      // Notificar al componente padre si existe el callback
-      if (typeof onInvitationProcessed === 'function') {
-        onInvitationProcessed();
-      }
-    } catch (err) {
-      console.error('Error rechazando invitación:', err);
-      alert('No se pudo rechazar la invitación');
-    }
-  };
 
   useEffect(() => {
     fetchInvitations();
   }, [token]);
 
-  // Mostrar estado de carga
-  if (loading) {
-    return <Spinner size="md" color="fuchsia" containerClassName="py-8" text="Cargando invitaciones..." />;
-  }
-
-  // Mostrar error
-  if (error) {
-    return (
-      <div className="bg-red-50 border-l-4 border-red-400 p-4 my-2">
-        <div className="flex">
-          <div className="ml-3">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Si no hay invitaciones
-  if (invitations.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-        <p>No tienes invitaciones pendientes</p>
-      </div>
-    );
-  }
-
+  
+   // Maneja errores de carga de imágenes de eventos e intenta rutas alternativas
+  const handleEventImageError = (e) => {
+    e.target.onerror = null;
+    // Intenta con ruta alternativa (backgrounds)
+    e.target.src = `${API_URL}/uploads/backgrounds/${e.target.getAttribute('data-image')}`;
+    // Si vuelve a fallar, muestra imagen por defecto
+    e.target.onerror = () => {
+      e.target.src = `${API_URL}/uploads/events/default-event.png`;
+      e.target.onerror = null;
+    };
+  };
+  
   return (
-    <div className="space-y-4">
-      {invitations.map(invitation => (
-        <div key={invitation.id} className="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden">
-          <div className="p-4">
-            <div className="flex justify-between">
-              <div>
-                <h3 className="font-semibold text-gray-800 text-lg">{invitation.event?.title || "Evento sin título"}</h3>
-                <p className="text-gray-600 text-sm">
-                  {invitation.event?.eventDate 
-                    ? new Date(invitation.event.eventDate).toLocaleDateString() 
-                    : "Fecha no disponible"}
-                </p>
+    <div className="bg-white rounded-xl shadow p-6">
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Invitaciones a eventos</h2>
+        {loading ? (
+        <Spinner size="md" color="fuchsia" containerClassName="py-10" text="Cargando invitaciones..." />
+      ) : 
+    
+      invitations.length > 0 ? (<div className="space-y-4">
+          {invitations.map(invitation => (
+            <div key={invitation.id} className="bg-gray-50 p-4 rounded-lg">
+              {/* Información básica del evento */}
+              <div className="flex items-center">
+                {/* Imagen o inicial del evento */}
+                <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex-shrink-0">
+                  {invitation.event?.image ? (
+                    <img
+                      src={`${API_URL}/uploads/events/${invitation.event.image}`}
+                      data-image={invitation.event.image}
+                      alt={invitation.event.title || 'Evento'}
+                      className="w-full h-full object-cover"
+                      onError={handleEventImageError}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-lg font-bold">
+                      {invitation.event?.title ? invitation.event.title.charAt(0).toUpperCase() : 'E'}
+                    </div>
+                  )}
+                </div>
+                {/* Detalles del evento */}
+                <div className="ml-4">
+                  <p className="text-gray-800 font-medium">{invitation.event?.title || 'Sin título'}</p>                  <p className="text-gray-500 text-sm">
+                    {invitation.event?.eventDate 
+                      ? formatShortDate(invitation.event.eventDate) 
+                      : invitation.event?.event_date
+                        ? formatShortDate(invitation.event.event_date)
+                        : 'Fecha no disponible'}
+                  </p>
+                  {/* Información de quién envió la invitación */}
+                  {invitation.invitedBy && (
+                    <p className="text-gray-500 text-xs mt-1">
+                      Invitado por: {invitation.invitedBy.username}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {/* Botones de acción para aceptar o rechazar */}
+              <div className="flex justify-end space-x-2 mt-4">
+                {/* Botón para aceptar invitación */}
+                <button
+                  onClick={() => handleEventInvitation(invitation.id, 'accepted')}
+                  disabled={invitation.processing}
+                  className={`px-4 py-2 ${
+                    invitation.processing 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-green-500 hover:bg-green-600'
+                  } text-white rounded transition-colors`}
+                >
+                  {invitation.processing ? 'Procesando...' : 'Aceptar'}
+                </button>
+                {/* Botón para rechazar invitación */}
+                <button
+                  onClick={() => handleEventInvitation(invitation.id, 'declined')}
+                  disabled={invitation.processing}
+                  className={`px-4 py-2 ${
+                    invitation.processing 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-red-500 hover:bg-red-600'
+                  } text-white rounded transition-colors`}
+                >
+                  {invitation.processing ? 'Procesando...' : 'Rechazar'}
+                </button>
               </div>
             </div>
-            <div className="mt-3 text-sm text-gray-600">
-              <p>Invitado por: <span className="font-medium">{invitation.invitedBy?.username || "Usuario desconocido"}</span></p>
-            </div>
-            
-            <div className="mt-4 flex space-x-2 justify-end">
-              <button
-                onClick={() => handleAcceptInvitation(invitation.id)}
-                className="px-4 py-2 bg-fuchsia-600 text-white text-sm rounded-md hover:bg-fuchsia-700 transition-colors"
-              >
-                Aceptar
-              </button>
-              <button
-                onClick={() => handleRejectInvitation(invitation.id)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors"
-              >
-                Rechazar
-              </button>
-            </div>
-          </div>
+          ))}        
         </div>
-      ))}
+      ) : (
+        // Estado vacío - No hay invitaciones pendientes
+        <div className="text-center py-10">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l-4-4m4 4l4-4" />
+          </svg>
+          <p className="text-gray-500">No tienes invitaciones pendientes</p>
+        </div>
+      )}
     </div>
   );
 }
 
-export default ReceivedInvitations;
+export default EventRequest;

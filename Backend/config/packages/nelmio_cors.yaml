@@ -1,15 +1,21 @@
 nelmio_cors:
     defaults:
         origin_regex: true
-        allow_origin: ['http://localhost:5173', 'http://127.0.0.1:5173']
+        allow_origin: ['https://localhost', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8020']
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
-        allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With']
-        expose_headers: ['Link']
+        allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin', 'Accept']
+        expose_headers: ['Link', 'Content-Length', 'Content-Range']
         max_age: 3600
         allow_credentials: true
     paths:
         '^/api/':
-            allow_origin: ['http://localhost:5173', 'http://127.0.0.1:5173']
-            allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With']
+            allow_origin: ['https://localhost', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8020']
+            allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin', 'Accept']
             allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
             allow_credentials: true
+        '^/uploads/':
+            allow_origin: ['https://localhost', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8020']
+            allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin', 'Accept']
+            allow_methods: ['GET', 'OPTIONS']
+            allow_credentials: true
+            max_age: 3600

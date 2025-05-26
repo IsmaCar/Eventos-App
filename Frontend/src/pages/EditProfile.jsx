@@ -10,7 +10,7 @@ function EditProfile() {
   const { user, token, updateUser } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  
+
   // Estados para formulario y UI
   const [formData, setFormData] = useState({
     username: user?.username || '',
@@ -25,9 +25,9 @@ function EditProfile() {
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
 
-  /**
-   * Procesa el cambio de avatar, crea vista previa y sube el archivo
-   */
+
+  // Procesa el cambio de avatar, crea vista previa y sube el archivo
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -40,9 +40,9 @@ function EditProfile() {
     }
   }
 
-  /**
-   * Sube el avatar al servidor y actualiza el estado de la aplicación
-   */
+
+  // Sube el avatar al servidor y actualiza el estado de la aplicación
+
   const uploadAvatar = async (file) => {
     setUpdating(true);
     setSuccess('');
@@ -50,7 +50,7 @@ function EditProfile() {
 
     const formData = new FormData();
     formData.append('avatar', file);
-    
+
     try {
       const response = await fetch(`${API_URL}/api/users/upload-avatar`, {
         method: 'POST',
@@ -60,35 +60,35 @@ function EditProfile() {
         body: formData
       });
 
-      if(!response.ok) {
+      if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Error al subir el avatar');
       }
 
       const data = await response.json();
-      
+
       // Obtener la ruta del avatar según la estructura de respuesta del servidor
       const avatarPath = data.avatar || data.user?.avatar || data.filename || data.path || data;
-      
+
       if (!avatarPath) {
         throw new Error('No se pudo obtener la ruta del avatar');
       }
-      
+
       // Actualizar el contexto con la nueva ruta de avatar
-      updateUser({ 
-        ...user, 
+      updateUser({
+        ...user,
         avatar: typeof avatarPath === 'string' ? avatarPath : JSON.stringify(avatarPath)
       });
-      
+
       // Actualizar la vista previa con la nueva URL
       const fullAvatarUrl = getAvatarUrl(avatarPath);
-      
+
       // Forzar recarga evitando caché
       const timestamp = new Date().getTime();
       setPreview(`${fullAvatarUrl}?t=${timestamp}`);
-      
+
       setSuccess('Avatar actualizado con éxito');
-      
+
     } catch (error) {
       console.error('Error al subir el avatar', error);
       setError('Error al subir el avatar: ' + (error.message || 'Intenta de nuevo'));
@@ -98,16 +98,15 @@ function EditProfile() {
     }
   }
 
-  /**
-   * Actualiza el estado del formulario al cambiar los campos
-   */
+
+  // Actualiza el estado del formulario al cambiar los campos
+
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  /**
-   * Procesa la actualización del perfil con validaciones
-   */
+  // Procesa la actualización del perfil con validaciones
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -121,13 +120,13 @@ function EditProfile() {
           setLoading(false);
           return;
         }
-        
+
         if (!formData.newPassword) {
           setError('Debes introducir una nueva contraseña');
           setLoading(false);
           return;
         }
-        
+
         if (formData.newPassword !== formData.confirmPassword) {
           setError('Las contraseñas nuevas no coinciden');
           setLoading(false);
@@ -140,7 +139,7 @@ function EditProfile() {
         username: formData.username,
         email: formData.email
       };
-      
+
       // Incluir contraseñas solo si se están cambiando
       if (formData.newPassword) {
         dataToUpdate.currentPassword = formData.currentPassword;
@@ -153,23 +152,23 @@ function EditProfile() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(dataToUpdate)  
+        body: JSON.stringify(dataToUpdate)
       });
 
-      if(!response.ok) {
-        response.status === 409 
-          ? setError('El nombre de usuario o el correo electrónico ya están en uso') 
+      if (!response.ok) {
+        response.status === 409
+          ? setError('El nombre de usuario o el correo electrónico ya están en uso')
           : setError('Error al actualizar el perfil');
         setLoading(false);
         return;
       }
-    
+
       setSuccess('Perfil actualizado con éxito');
       const data = await response.json();
-      if(data.user) {
-        updateUser(data.user); 
-      } 
-      
+      if (data.user) {
+        updateUser(data.user);
+      }
+
       // Reiniciar campos de contraseña
       setFormData({
         ...formData,
@@ -191,7 +190,7 @@ function EditProfile() {
   return (
     <div className="max-w-4xl mx-auto my-10 p-6 bg-white rounded-xl shadow-lg">
       <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Editar Perfil</h1>
-      
+
       <div className="grid md:grid-cols-3 gap-8">
         {/* Columna para el avatar */}
         <div className="md:col-span-1 flex flex-col items-center">
@@ -202,7 +201,7 @@ function EditProfile() {
               className="rounded-full w-48 h-48 object-cover border-4 border-fuchsia-300"
               onError={handleAvatarError}
             />
-            <button 
+            <button
               onClick={() => fileInputRef.current.click()}
               className="absolute bottom-2 right-2 bg-fuchsia-500 hover:bg-fuchsia-600 text-white rounded-full p-2 transition-colors duration-200 shadow-md"
               aria-label="Cambiar avatar"
@@ -227,7 +226,7 @@ function EditProfile() {
             </div>
           )}
         </div>
-  
+
         {/* Columna para el formulario */}
         <div className="md:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -242,7 +241,7 @@ function EditProfile() {
                 {success}
               </div>
             )}
-  
+
             <div className="grid grid-cols-1 gap-6">
               {/* Campos principales */}
               <div>
@@ -258,7 +257,7 @@ function EditProfile() {
                   className="w-full px-4 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent"
                 />
               </div>
-  
+
               <div>
                 <label htmlFor="email" className="block text-lg font-medium text-gray-700 mb-1">
                   Correo electrónico
@@ -272,11 +271,11 @@ function EditProfile() {
                   className="w-full px-4 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent"
                 />
               </div>
-  
+
               {/* Sección para cambio de contraseña */}
               <div className="pt-4 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Cambiar contraseña</h3>
-                
+
                 <div className="mb-4">
                   <label htmlFor="currentPassword" className="block text-lg font-medium text-gray-700 mb-1">
                     Contraseña actual
@@ -290,7 +289,7 @@ function EditProfile() {
                     className="w-full px-4 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent"
                   />
                 </div>
-                
+
                 <div className="mb-4">
                   <label htmlFor="newPassword" className="block text-lg font-medium text-gray-700 mb-1">
                     Nueva contraseña
@@ -304,7 +303,7 @@ function EditProfile() {
                     className="w-full px-4 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent"
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="confirmPassword" className="block text-lg font-medium text-gray-700 mb-1">
                     Confirmar nueva contraseña
@@ -320,7 +319,7 @@ function EditProfile() {
                 </div>
               </div>
             </div>
-  
+
             {/* Botones de acción */}
             <div className="flex justify-end mt-8 space-x-3">
               <button

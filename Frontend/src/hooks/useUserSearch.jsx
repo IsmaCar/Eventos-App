@@ -1,18 +1,10 @@
+//Hook personalizado para búsqueda de usuarios con parametrización
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-/**
- * Hook personalizado para búsqueda de usuarios con parametrización
- * @param {Object} options - Opciones de configuración
- * @param {string} options.endpoint - Endpoint de la API para la búsqueda
- * @param {string} options.paramName - Nombre del parámetro de búsqueda
- * @param {number} options.minLength - Longitud mínima del término para iniciar búsqueda
- * @param {boolean} options.filterCurrentUser - Si se debe filtrar al usuario actual
- * @param {number} options.debounceTime - Tiempo de debounce en milisegundos
- * @param {Function} options.onResultsLoaded - Callback cuando se cargan resultados
- */
 export const useUserSearch = (options = {}) => {
   const {
     endpoint = '/api/friends/search',
@@ -30,10 +22,9 @@ export const useUserSearch = (options = {}) => {
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [error, setError] = useState(null);
 
-  /**
-   * Maneja el cambio en el término de búsqueda con debounce
-   * @param {string} query - Término de búsqueda
-   */
+
+  // Maneja el cambio en el término de búsqueda con debounce
+
   const handleSearchTermChange = (query) => {
     setSearchTerm(query);
     setError(null);
@@ -56,10 +47,9 @@ export const useUserSearch = (options = {}) => {
     setSearchTimeout(timeout);
   };
 
-  /**
-   * Realiza la búsqueda de usuarios
-   * @param {string} query - Término de búsqueda
-   */
+
+  // Realiza la búsqueda de usuarios
+
   const searchUsers = async (query) => {
     if (!token || !query || query.length < minLength) {
       setIsSearching(false);
@@ -69,7 +59,7 @@ export const useUserSearch = (options = {}) => {
     setIsSearching(true);
     try {
       const url = `${API_URL}${endpoint}?${paramName}=${encodeURIComponent(query)}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -84,18 +74,18 @@ export const useUserSearch = (options = {}) => {
       }
 
       const data = await response.json();
-      
+
       // Obtener la lista de usuarios del resultado (adaptable a diferentes formatos)
       let users = data.users || data.results || data;
-      
+
       // Filtrar usuario actual si es necesario
       if (filterCurrentUser && user?.id) {
         users = users.filter(item => item.id !== user.id);
       }
-      
+
       setSearchResults(users);
       setError(null);
-      
+
       // Llamar al callback si existe
       if (onResultsLoaded) {
         onResultsLoaded(users);
@@ -109,11 +99,8 @@ export const useUserSearch = (options = {}) => {
     }
   };
 
-  /**
-   * Actualiza un usuario específico en los resultados de búsqueda
-   * @param {string} userId - ID del usuario a actualizar
-   * @param {Object} updates - Propiedades a actualizar
-   */
+  // Actualiza un usuario específico en los resultados de búsqueda
+
   const updateUserInResults = (userId, updates) => {
     setSearchResults(prev =>
       prev.map(user =>
@@ -124,9 +111,9 @@ export const useUserSearch = (options = {}) => {
     );
   };
 
-  /**
-   * Limpia los resultados y el término de búsqueda
-   */
+
+  // Limpia los resultados y el término de búsqueda
+
   const resetSearch = () => {
     setSearchTerm('');
     setSearchResults([]);

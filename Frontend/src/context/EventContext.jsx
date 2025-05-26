@@ -82,9 +82,7 @@ export const EventProvider = ({ children }) => {
                 throw new Error(errorMessage);
             }
     
-            const data = await response.json();
-            console.log("Evento creado correctamente:", data);
-    
+            const data = await response.json();    
             // Actualizar la lista de eventos con el nuevo evento
             setEvents(prev => prev ? [...prev, data.event] : [data.event]);
             return data;

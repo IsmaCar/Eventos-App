@@ -1,60 +1,62 @@
+/**
+ * Componente de formulario de inicio de sesión (LoginForm)
+ * 
+ * Este componente gestiona la interfaz y lógica del proceso de autenticación:
+ * - Valida y envía credenciales de usuario (email/contraseña)
+ * - Gestiona estados de carga y errores durante la autenticación
+ * - Provee feedback visual del estado de la autenticación mediante Toast notifications
+ * - Redirecciona al usuario a la página principal tras autenticación exitosa
+ * - Ofrece enlace a registro para usuarios nuevos
+ */
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../hooks/useToast";
 import Spinner from "./Spinner";
 
-const LoginForm = () => {
+const LoginForm = () => {  
   const [formData, setFormData] = useState({
-    email: "",
+    email: "",    
     password: "",
   });
-  const [error, setError] = useState('');
-  const { loginUser } = useAuth();
+  const [loading, setLoading] = useState(false); 
+  const { loginUser } = useAuth(); 
+  const { success, error } = useToast();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+
 
   const handleChange = (e) => {
     const nombre = e.target.name;
     setFormData(prev => ({ ...prev, [nombre]: e.target.value.trim() }));
   };
-  
-  // voy a realizar un petición a la api con los datos del formulario para verificar
-  // si el usuario existe en la base de datos
+
   const handleSubmit = async (e) => {
-    setError('');
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault(); 
+    setLoading(true);   
+    
     try {
-      // aquí hacemos un login.
       const response = await loginUser(formData);
-      // redirigir a la página de productos si hay éxito
+      
       if (response && !response.error) {
-        navigate("/");
+        success("¡Inicio de sesión exitoso! Bienvenido de vuelta.");
+        navigate("/"); 
       } else {
-        setError(response.error || 'Error al iniciar sesión');
+        error(response.error || 'Error al iniciar sesión');
       }
-    } catch (error) {
-      console.log("Error al iniciar sesión", error);
-      setError(error.message || "Error al iniciar sesión, intenta de nuevo");
+    } catch (err) {
+      error(err.message || "Error al iniciar sesión, intenta de nuevo");
     } finally {
-      setLoading(false);
+      setLoading(false); 
     }
   };
-
+  
   return (
     <div className="max-w-md mx-auto my-10 p-5 bg-white rounded-lg shadow-lg">
       <h2 className="text-2xl font-semibold text-center text-gray-800">
         INICIAR SESIÓN
-      </h2>
+      </h2>   
 
-      {/* Mostrar mensaje de error */}
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4 mb-4">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 mt-6">
         <div>
           <label
             htmlFor="email"
@@ -88,7 +90,7 @@ const LoginForm = () => {
             required
             className="w-full px-4 py-2 mt-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"
           />
-        </div>
+        </div>       
         <button
           type="submit"
           className="w-full px-4 py-2 text-lg font-semibold text-white bg-gradient-to-r from-fuchsia-400 to-indigo-400 rounded-lg hover:scale-105 transition duration-300"
@@ -102,7 +104,7 @@ const LoginForm = () => {
             'Iniciar Sesión'
           )}
         </button>
-      </form>
+      </form>      
       <div className="mt-4 text-center">
         <p className="text-gray-600">
           ¿No tienes una cuenta?{" "}

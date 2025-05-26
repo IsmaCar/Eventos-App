@@ -1,0 +1,48 @@
+# Usar la imagen oficial de PHP con Apache
+FROM php:8.3.11-apache
+# Instalar extensiones necesarias
+RUN apt-get update && apt-get install -y \
+ git \
+ unzip \
+ libicu-dev \
+ default-mysql-client \
+ curl \
+ && docker-php-ext-install pdo pdo_mysql
+# Instalar Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+WORKDIR /app
+# Copiar archivos del backend al contenedor
+COPY . .
+# Instalar dependencias con Composer
+# RUN composer install
+# RUN composer require symfony/orm-pack doctrine/doctrine-bundle
+# RUN composer require doctrine/dbal
+
+# Crear y establecer permisos para los directorios de uploads
+RUN mkdir -p /app/public/uploads/avatars \
+             /app/public/uploads/backgrounds \
+             /app/public/uploads/event_photos \
+             /app/migrations
+RUN chmod -R 777 /app/public/uploads
+
+# Crear imagen de avatar por defecto si no existe
+RUN if [ ! -f /app/public/uploads/avatars/default-avatar.png ]; then \
+    # Descargar una imagen genérica de avatar por defecto \
+    curl -o /app/public/uploads/avatars/default-avatar.png https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y || \
+    # Alternativa: crear una imagen de avatar por defecto usando base64 \
+    echo "iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEbUlEQVR4nO2dW4hVVRjHf3PGzEZNMSslukFSSaaBRD2olNiVHkQrKK2HCrpCYIH1UEQXqIcuYtJDpBSkROJDN7QCKzKhXoJKiwLNJLXUJi11xm5qtfiydfZcM+ecvc/+vm//P/iwz+w9a6/9n73W+tb3rW9DEARBEARBEARBEARBEARBEESFOuB6YAWwBtgEbAf2AseA4wn/9N+OJtesTa5dAUwGRpmuXGC2NsA8YDOwHzhbZpuuV8nfmJdcO9iwVgdwK7AV6PSgwfO1TmBLUkaHIY0xwErgpKcNPZh1AlsTDRFwObDNcBcdSo3ekNhjVRHdwP4AG77Q9rt3oqcwRgH7Am6MQm1fYldRDAGaImiIQq0p2G5M3+DT6UWHHrxOAL/FoC3xGnvzFnJXBI2Qtr0Vu7K8tHlGBoYPZe3KyvJ0iUJTf3a0ywi5yPMXqsOOA/JOQb3D5Uazd1eOE2lX8VtOUo5EYJxL6wEm5tmw4wM3rCuj3NV5NvCuCAx0Zd2ZV+M+G4GBruxQwlwu48oIDHTlLVZu5I2CgypDYctpHO89EYFxrq0n7w59QwTGubYNefeseyMwzrXtzatj/zoCw1zb66qN3B6BYa6tB5iY14BwLLAxAgMHa8eSMVAucz4jIzDSle3PczAIcHEEhrqwxXk3dGsEhrqwVr1O1BJg8rADC2qhkR9FYLA6DujQQDvRFYHRquyrsqFrIjBalbXm3dFfogfsFyzf3zVUJjtPRmC8CntadbKpLZFvJAYtjVSvuCKrVo7Gg6qEkFkRGF+pbVNOalqeEYS1KRVCVkdgfCX2TdLLg+aqxN28rR+4E3ih6EbX4e4z8o76W2qdwJeRNMahxFulbIzC7S6PpDEOpzVWqSMPkMsS77NrvTF6Ep33mjwKLk2cYr5ZbJRz+mX+CswFRpqurB4mAjcBrwLfD3D/0cSFpd5IxiW9Sb3pShvgUuA+YBvQO8A9R4AVppOltUKtMp+ht8p9BtjUJYnDIx1QHUAK+Z9V5u/SNXVQ8Tvwo+nKWmA6cEfiidWTPNt0BfQDpRJvJvbqN7lYkbDKR/YAc4E6h5XWbulFydRRN3CfxwKVy/RsS59ZX1toWZ3AXOCQJwKVew8B9wNN5quZCnOBvz0QqNypGVZrXVRuKHDEsEDlTvUS1y6nzpA5nSqtOKZkjMtbXSuV2tYlAasSizRX44BvDNVbqTQWmALcCrzo4IGvA9P6+4cG0y3W67JyCnFwzbdU7p5jNdBmOVWZdN/6xEtW8UzI2paNMZw4aslN0Zj39c0GUr5VyoKUPvIvMEp6Vn5ePJWyR+8lp7d08xSlZPZrUsmS1oZKtb4+6XprlDLV1FOJR+8VdA8x5qFVwmxTqTR5p+f6m8jRSxGUt5JT6jCrJW+ZS2mNWt+uPbxwu+dC63VzWC1zB09a9jRVZ26r5cyAWUkjfeOxwHqj7r58Dq5G05V2wKxkzrDLcLIFvc5NLquekI7c7GgM8mOyqeZm4AngU+BnYFHRhQmCIAiCIAiCIAiCIAiCIAiC4Df/AXCrOFnTGdS1AAAAAElFTkSuQmCC" | base64 -d > /app/public/uploads/avatars/default-avatar.png; \
+fi
+
+# Establecer permisos para el directorio var
+RUN mkdir -p /app/var
+RUN chmod -R 777 /app/var /app/migrations
+
+# Copiar el script de entrada
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Exponer el puerto
+EXPOSE 8000
+
+# Usar nuestro script como punto de entrada
+ENTRYPOINT ["docker-entrypoint.sh"]

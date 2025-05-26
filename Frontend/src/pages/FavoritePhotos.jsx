@@ -1,14 +1,22 @@
+/**
+ * Página FavoritePhotos - Gestiona la visualización de fotos favoritas del usuario
+ * Permite ver, descargar y eliminar fotos de la colección de favoritos
+ * Incluye vista ampliada y navegación entre eventos
+ */
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePhotoUploads } from '../hooks/usePhotoUploads';
+import { useToast } from '../hooks/useToast';
 import Spinner from '../components/Spinner';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+
 function FavoritePhotos() {
   const { token } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,7 +28,6 @@ function FavoritePhotos() {
     closeExpandedView,
     handleDownloadPhoto
   } = usePhotoUploads(null, false, null, navigate);
-
   useEffect(() => {
     // Redireccionar si no hay usuario autenticado
     if (!token) {
@@ -31,6 +38,10 @@ function FavoritePhotos() {
     fetchFavoritePhotos();
   }, [token, navigate]);
 
+  /**
+   * Obtiene las fotos favoritas del usuario desde la API
+   * Maneja errores y estados de carga apropiadamente
+   */
   const fetchFavoritePhotos = async () => {
     try {
       setLoading(true);
@@ -48,13 +59,15 @@ function FavoritePhotos() {
       setPhotos(data.photos || []);
     } catch (error) {
       setError('No se pudieron cargar tus fotos favoritas');
-      console.error('Error:', error);
+      toast.error('Error al cargar fotos favoritas: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
-  
-  // Eliminar una foto de favoritos
+    /**
+   * Elimina una foto de la lista de favoritos del usuario
+   * Actualiza la UI inmediatamente y cierra vista ampliada si es necesario
+   */
   const removeFavorite = async (photoId, e) => {
     e.stopPropagation();
     
@@ -75,9 +88,13 @@ function FavoritePhotos() {
         if (expandedPhoto && expandedPhoto.id === photoId) {
           closeExpandedView();
         }
+        
+        toast.success('Foto eliminada de favoritos');
+      } else {
+        throw new Error('Error al eliminar de favoritos');
       }
     } catch (error) {
-      console.error('Error al eliminar de favoritos:', error);
+      toast.error('Error al eliminar de favoritos: ' + error.message);
     }
   };
 
@@ -168,13 +185,6 @@ function FavoritePhotos() {
           onClick={closeExpandedView}
         >
           <div className="relative max-w-5xl max-h-[90vh] w-full">
-            <button 
-              className="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center z-10"
-              onClick={closeExpandedView}
-            >
-              &times;
-            </button>
-            
             <div 
               className="relative overflow-hidden rounded-lg"
               onClick={e => e.stopPropagation()}

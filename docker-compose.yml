@@ -1,0 +1,88 @@
+services:
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: DockerfileFrontend
+    container_name: eventos-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+    networks:
+      - app-network
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: DockerfileBackend
+    container_name: eventos-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Backend:/app
+      - backend_vendor:/app/vendor
+      - backend_uploads:/app/public/uploads
+    depends_on:
+      - database
+    networks:
+      - app-network
+
+  database:
+    image: mysql:8.0
+    container_name: eventos-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: events
+      MYSQL_USER: IsmaCar
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - database_data:/var/lib/mysql
+    networks:
+      - app-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: eventos-phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: database
+      PMA_USER: IsmaCar
+      PMA_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - database
+    networks:
+      - app-network
+
+  web:
+    build:
+      context: ./nginx
+      dockerfile: DockerfileWeb
+    ports:
+      - "8020:80"
+      - "443:443"
+    volumes:
+      - ./web/certs:/etc/nginx/certs
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  database_data:
+  backend_vendor:
+  backend_uploads:

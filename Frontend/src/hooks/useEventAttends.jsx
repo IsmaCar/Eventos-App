@@ -1,8 +1,3 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
-
-const API_URL = import.meta.env.VITE_API_URL;
-
 /**
  * Hook para gestionar los asistentes de un evento
  * Se encarga de:
@@ -10,6 +5,11 @@ const API_URL = import.meta.env.VITE_API_URL;
  * - Cancelar asistencia del usuario actual (con confirmación)
  * - Permitir al organizador eliminar asistentes (con confirmación)
  */
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
+
+const API_URL = import.meta.env.VITE_API_URL;
+
 export function useEventAttendees(eventId, isEventCreator) {
   const { user, token } = useAuth();
   

@@ -1,7 +1,13 @@
+/**
+ * Página para mostrar el perfil público de un usuario
+ * Permite ver información, eventos creados, lista de amigos 
+ * y gestionar la relación de amistad
+ */
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEvent } from '../context/EventContext';
+import { useToast } from '../hooks/useToast';
 import { Avatar, getRandomGradient } from '../utils/Imagehelper';
 import { formatLongDate, isDatePassed } from '../utils/DateHelper';
 import Spinner from '../components/Spinner';
@@ -9,15 +15,12 @@ import { useFriends } from '../hooks/useFriends';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-/**
- * Componente para mostrar el perfil público de un usuario
- * Permite ver información, eventos creados, lista de amigos 
- * y gestionar la relación de amistad
- */
+
 function PublicProfile() {
   const { id } = useParams();
   const { user, token } = useAuth();
   const { getImageUrl } = useEvent();
+  const toast = useToast();
   const [profile, setProfile] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +28,7 @@ function PublicProfile() {
   const [friends, setFriends] = useState([]);
   const [friendRequestStatus, setFriendRequestStatus] = useState('none');
   const [friendshipId, setFriendshipId] = useState(null);
+  const [isRequester, setIsRequester] = useState(false);
 
   // Utilizar el hook de amigos con un callback de actualización
   const { sendFriendRequest, removeFriend, checkFriendshipStatus, findFriendshipId
@@ -130,9 +134,9 @@ function PublicProfile() {
     loadProfileData();
   }, [id, token, user]);
 
-  /**
-   * Efecto para buscar el ID de amistad en la lista de amigos
-   */
+
+  // Efecto para buscar el ID de amistad en la lista de amigos
+
   useEffect(() => {
     if (friends.length > 0 && !friendshipId && friendRequestStatus === 'friends') {
       const foundId = findFriendshipId(id);
@@ -143,11 +147,12 @@ function PublicProfile() {
   }, [friends, friendRequestStatus, id]);
 
   /**
-   * Función para enviar una solicitud de amistad al usuario del perfil
+   * Maneja el envío de solicitudes de amistad
+   * Actualiza el estado local y muestra notificaciones apropiadas
    */
   const handleFriendRequest = async () => {
     if (!token) {
-      alert('Debes iniciar sesión para enviar solicitudes de amistad');
+      toast.error('Debes iniciar sesión para enviar solicitudes de amistad');
       return;
     }
 
@@ -167,28 +172,29 @@ function PublicProfile() {
           setFriendshipId(statusData.friendship_id);
         }
 
-        alert('Solicitud de amistad enviada correctamente');
+        toast.success('Solicitud de amistad enviada correctamente');
       } else {
         throw new Error(result.error);
       }
     } catch (error) {
-      alert(error.message || 'Error al enviar solicitud de amistad');
+      toast.error(error.message || 'Error al enviar solicitud de amistad');
     }
   };
 
   /**
-   * Función para eliminar una amistad existente usando el hook useFriends
+   * Maneja la eliminación de una amistad existente
+   * Solicita confirmación al usuario y actualiza el estado local
    */
   const handleRemoveFriend = async () => {
     // Obtener el ID de amistad (de estado o buscarlo en amigos)
     let idToUse = friendshipId || findFriendshipId(id);
 
     if (!idToUse) {
-      alert('No se puede eliminar la amistad en este momento');
+      toast.error('No se puede eliminar la amistad en este momento');
       return;
-    }
-
-    if (!confirm('¿Estás seguro de que quieres eliminar a esta persona de tus amigos?')) {
+    }    // Solicitar confirmación para eliminar amistad
+    const isConfirmed = confirm('¿Estás seguro de que quieres eliminar a esta persona de tus amigos?');
+    if (!isConfirmed) {
       return;
     }
 
@@ -208,17 +214,18 @@ function PublicProfile() {
           )
         );
 
-        alert('Amistad eliminada correctamente');
+        toast.success('Amistad eliminada correctamente');
       } else {
         throw new Error(result.error);
       }
     } catch (error) {
-      alert('Error al eliminar la amistad: ' + error.message);
+      toast.error('Error al eliminar la amistad: ' + error.message);
     }
   };
 
   /**
-   * Función para manejar errores de carga de imágenes
+   * Maneja errores de carga de imágenes de eventos
+   * Aplica un gradiente de respaldo y emoji decorativo
    */
   const handleEventImageError = (event) => {
     const target = event.target;
@@ -379,11 +386,13 @@ function PublicProfile() {
                       </svg>
                     </span>
                   </div>
-                )}
-              </>
+                )}              </>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>No hay amigos para mostrar</p>
+              <div className="text-center py-10">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <p className="text-gray-500">Este usuario aún no tiene amigos</p>
               </div>
             )}
           </div>
@@ -391,81 +400,78 @@ function PublicProfile() {
 
         {/* Sección de eventos del usuario */}
         <div className="mt-8 bg-white shadow-md rounded-xl p-6 border border-gray-100">
-  <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-    </svg>
-    Eventos creados
-  </h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+            </svg>
+            Eventos creados
+          </h2>
 
-  {events.length === 0 ? (
-    <div className="text-center py-12">
-      <div className="text-5xl mb-4">📅</div>
-      <p className="text-gray-500 text-lg">Este usuario aún no ha creado eventos.</p>
-    </div>
-  ) : (
-    <>
-      {/* Contenedor con desplazamiento horizontal */}
-      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-fuchsia-300 scrollbar-track-gray-100 pb-4">
-        <div className="flex gap-4" style={{ minWidth: 'min-content', width: '100%' }}>
-          {events.map(event => (
-            <Link
-              to={`/event/${event.id}`}
-              key={event.id}
-              className="relative group rounded-lg overflow-hidden h-48 shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0"
-              style={{ width: '280px' }} // Ancho fijo para cada tarjeta
-            >
-              <div className="absolute inset-0 w-full h-full">
-                {event.image ? (
-                  <div className="w-full h-full relative">
-                    <img
-                      src={getImageUrl(event.image)}
-                      alt={event.title}
-                      className="w-full h-full object-cover"
-                      onError={handleEventImageError}
-                    />
+          {events.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-5xl mb-4">📅</div>
+              <p className="text-gray-500 text-lg">Este usuario aún no ha creado eventos.</p>
+            </div>
+          ) : (
+            <div>
+              {/* Contenedor con desplazamiento horizontal */}
+              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-fuchsia-300 scrollbar-track-gray-100 pb-4">
+                <div className="flex gap-4" style={{ minWidth: 'min-content', width: '100%' }}>          {events.map(event => (
+                  <div
+                    key={event.id}
+                    className="relative group rounded-lg overflow-hidden h-48 shadow-md flex-shrink-0"
+                    style={{ width: '280px' }} // Ancho fijo para cada tarjeta
+                  >
+                    <div className="absolute inset-0 w-full h-full">
+                      {event.image ? (
+                        <div className="w-full h-full relative">
+                          <img
+                            src={getImageUrl(event.image)}
+                            alt={event.title}
+                            className="w-full h-full object-cover"
+                            onError={handleEventImageError}
+                          />
+                        </div>
+                      ) : (
+                        <div className={`w-full h-full ${getRandomGradient()} flex items-center justify-center`}>
+                          <span className="text-white text-4xl"></span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                    <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
+                      <div>
+                        <h3 className="font-medium text-lg text-white line-clamp-1 drop-shadow-sm">{event.title}</h3>
+                        <p className="text-gray-200 text-sm drop-shadow-sm">
+                          {formatLongDate(event.event_date)}
+                        </p>
+                        {isDatePassed(event.event_date) && (
+                          <span className="absolute top-4 right-4 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
+                            Finalizado
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className={`w-full h-full ${getRandomGradient()} flex items-center justify-center`}>
-                    <span className="text-white text-4xl"></span>
-                  </div>
-                )}
-              </div>
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent group-hover:via-black/40 transition-all duration-300"></div>
-
-              <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
-                <div>
-                  <h3 className="font-medium text-lg text-white line-clamp-1 drop-shadow-sm">{event.title}</h3>
-                  <p className="text-gray-200 text-sm drop-shadow-sm">
-                    {formatLongDate(event.event_date)}
-                  </p>
-                  {isDatePassed(event.event_date) && (
-                    <span className="absolute top-4 right-4 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
-                      Finalizado
-                    </span>
-                  )}
+                ))}
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
-      </div>
 
-      {/* Indicador de desplazamiento (solo visible si hay más de 3 eventos) */}
-      {events.length > 3 && (
-        <div className="flex justify-center mt-2">
-          <span className="text-xs text-gray-400 flex items-center">
-            Desliza para ver más
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
+              {/* Indicador de desplazamiento (solo visible si hay más de 3 eventos) */}
+              {events.length > 3 && (
+                <div className="flex justify-center mt-2">
+                  <span className="text-xs text-gray-400 flex items-center">
+                    Desliza para ver más
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
-    </>
-  )}
-</div>
       </div>
     </div>
   );

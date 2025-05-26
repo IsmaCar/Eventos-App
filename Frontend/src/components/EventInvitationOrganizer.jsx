@@ -1,55 +1,40 @@
+/**
+ * Componente para gestionar las invitaciones de un evento desde la perspectiva del organizador
+ * Permite visualizar todas las invitaciones pendientes y cancelarlas si es necesario
+ */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Spinner from './Spinner';
+import { formatLongDate } from '../utils/DateHelper';
+import { useToast } from '../hooks/useToast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function EventInvitations({ eventId, onInvitationProcessed }) {
+/**
+ * Traduce el estado de la invitación a español
+ */
+const translateStatus = (status) => {
+  const statusMap = {
+    'pending': 'Pendiente',
+    'accepted': 'Aceptada',
+    'declined': 'Rechazada',
+    'cancelled': 'Cancelada'
+  };
+  return statusMap[status] || status;
+};
+
+function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {  
   const { token } = useAuth();
+  const toast = useToast();
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  // Función auxiliar para formatear fechas
-  const formatDate = (dateString) => {
-    if (!dateString) return "Fecha desconocida";
-    
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch (err) {
-      return "Fecha inválida";
-    }
-  };
-  
-  // Función para obtener clase de estado
-  const getStatusClass = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-  
-  // Función para traducir el estado
-  const translateStatus = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'Pendiente';
-      case 'accepted':
-        return 'Aceptada';
-      case 'rejected':
-        return 'Rechazada';
-      default:
-        return 'Desconocido';
-    }
-  };
-  
-  // Función para cargar las invitaciones
+ 
+ 
+  /**
+   * Obtiene las invitaciones del evento desde la API
+   * - Filtra para mostrar solo invitaciones pendientes
+   * - Normaliza la estructura de datos recibida
+   */
   const fetchInvitations = async () => {
     if (!token || !eventId) return;
     
@@ -60,37 +45,29 @@ function EventInvitations({ eventId, onInvitationProcessed }) {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      if (!response.ok) {
+        if (!response.ok) {
         throw new Error('Error al cargar invitaciones');
       }
       
       const data = await response.json();
-      
-      // Normalizar los datos de invitaciones si es necesario
-      const normalizedInvitations = data.invitations.map(inv => {
-        return {
-          ...inv,
-          id: inv.id,
-          email: inv.email,
-          status: inv.status,
-          createdAt: inv.createdAt
-        };
-      });
-      
-      // Filtrar para mostrar solo las invitaciones pendientes
-      const pendingInvitations = normalizedInvitations.filter(inv => inv.status === 'pending');
-      
+
+      // Solo mostramos las invitaciones pendientes que pueden ser gestionadas    
+      const pendingInvitations = (data.invitations || data || []).filter(inv => inv.status === 'pending');  
       setInvitations(pendingInvitations);
-      setError(null);
     } catch (err) {
-      setError('No se pudieron cargar las invitaciones');
+      toast.error('No se pudieron cargar las invitaciones');
     } finally {
       setLoading(false);
     }
   };
-  
-  // Función para cancelar una invitación
+
+    /**
+   * Maneja la cancelación de una invitación pendiente
+   * - Solicita confirmación al usuario
+   * - Envía petición DELETE a la API
+   * - Actualiza la lista de invitaciones sin recargar desde el servidor
+   * - Notifica al componente padre del cambio
+   */
   const handleCancelInvitation = async (invitationId) => {
     if (!confirm('¿Estás seguro que deseas cancelar esta invitación?')) {
       return;
@@ -103,12 +80,13 @@ function EventInvitations({ eventId, onInvitationProcessed }) {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      if (response.ok) {
-        // Actualizar la lista sin recargar todo
+        if (response.ok) {
+        // Actualiza el estado local eliminando la invitación cancelada
         setInvitations(invitations.filter(inv => inv.id !== invitationId));
         
-        // Notificar al componente padre si existe el callback
+        toast.success('Invitación cancelada correctamente');
+        
+        // Notifica al componente padre del cambio 
         if (typeof onInvitationProcessed === 'function') {
           onInvitationProcessed();
         }
@@ -116,34 +94,21 @@ function EventInvitations({ eventId, onInvitationProcessed }) {
         throw new Error('Error al cancelar la invitación');
       }
     } catch (err) {
-      alert('No se pudo cancelar la invitación');
+      toast.error('No se pudo cancelar la invitación');
     }
   };
   
-  // Obtener las invitaciones al cargar el componente
+  /**
+   * Efecto para cargar las invitaciones al montar el componente
+   * o cuando cambian el eventId o token
+   */
   useEffect(() => {
     fetchInvitations();
-  }, [eventId, token]);
-  
-  // Mostrar estado de carga
+  }, [eventId, token]);    
   if (loading) {
     return <Spinner size="md" color="indigo" containerClassName="py-8" text="Cargando invitaciones..." />;
   }
   
-  // Mostrar error
-  if (error) {
-    return (
-      <div className="bg-red-50 border-l-4 border-red-400 p-4">
-        <div className="flex">
-          <div className="ml-3">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Si no hay invitaciones
   if (invitations.length === 0) {
     return (
       <div className="text-center py-6 bg-gray-50 rounded-lg">
@@ -207,15 +172,13 @@ function EventInvitations({ eventId, onInvitationProcessed }) {
                         {invitation.email}
                       </div>
                     </div>
-                  </div>
-                </td>
+                  </div>                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(invitation.status)}`}>
+                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                     {translateStatus(invitation.status)}
-                  </span>
-                </td>
+                  </span>                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDate(invitation.createdAt || invitation.created_at)}
+                  {formatLongDate(invitation.createdAt || invitation.created_at) || "Fecha desconocida"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   {invitation.status === 'pending' && (
@@ -238,4 +201,4 @@ function EventInvitations({ eventId, onInvitationProcessed }) {
   );
 }
 
-export default EventInvitations;
+export default EventInvitationOrganizer;

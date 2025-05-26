@@ -56,7 +56,7 @@ class EventRepository extends ServiceEntityRepository
         $ownedEvents = $this->createQueryBuilder('e')
             ->where('e.user = :user')
             ->andWhere('e.banned = :banned')
-            ->andWhere('e.status = :status') // Solo eventos activos
+            ->andWhere('e.status = :status') 
             ->setParameter('user', $user)
             ->setParameter('banned', false)
             ->setParameter('status', 'activated')
@@ -69,7 +69,7 @@ class EventRepository extends ServiceEntityRepository
             ->where('i.invitedUser = :user')
             ->andWhere('i.status = :invitationStatus')
             ->andWhere('e.banned = :banned')
-            ->andWhere('e.status = :eventStatus') // Solo eventos activos
+            ->andWhere('e.status = :eventStatus') 
             ->setParameter('user', $user)
             ->setParameter('invitationStatus', 'accepted')
             ->setParameter('banned', false)
@@ -96,7 +96,7 @@ class EventRepository extends ServiceEntityRepository
     {
         $queryBuilder = $this->createQueryBuilder('e')
             ->where('e.banned = :banned')
-            ->andWhere('e.status = :status') // Solo eventos activos
+            ->andWhere('e.status = :status') 
             ->setParameter('banned', false)
             ->setParameter('status', 'activated');
 

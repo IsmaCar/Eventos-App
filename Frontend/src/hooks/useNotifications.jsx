@@ -1,12 +1,10 @@
+// Hook personalizado para gestionar notificaciones en la aplicación
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-/**
- * Hook personalizado para gestionar notificaciones en la aplicación
- * @returns {Object} Estado y funciones relacionadas con notificaciones
- */
 export const useNotifications = () => {
   const { token } = useAuth();
   const [stats, setStats] = useState({
@@ -17,9 +15,8 @@ export const useNotifications = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /**
-   * Función para obtener las estadísticas de notificaciones del usuario
-   */
+  // Función para obtener las estadísticas de notificaciones del usuario
+   
   const fetchNotifications = useCallback(async () => {
   // No hacer nada si no hay token
   if (!token) {
@@ -64,18 +61,9 @@ export const useNotifications = () => {
     };
 
     setStats(updatedStats);
-    return updatedStats; // Devolver los datos actualizados
+    return updatedStats; 
   } catch (err) {
     setError(err.message);
-    console.error("Error fetching notifications:", err);
-    // Usamos datos de demostración en caso de error
-    const demoStats = {
-      friendRequests: 2,
-      invitationsPending: 3,
-      hasNotifications: true
-    };
-    setStats(demoStats);
-    return demoStats; // Devolver los datos de demostración
   } finally {
     setLoading(false);
   }

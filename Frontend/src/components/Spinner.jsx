@@ -1,15 +1,8 @@
 import React from 'react';
 
-/**
- * Componente de spinner para indicar estados de carga
- * @param {Object} props - Propiedades del componente
- * @param {string} props.size - Tamaño del spinner: 'sm', 'md', 'lg', 'xl' (por defecto: 'lg')
- * @param {string} props.color - Color del spinner (por defecto: 'indigo')
- * @param {string} props.containerClassName - Clases adicionales para el contenedor
- * @param {boolean} props.fullScreen - Si debe ocupar la pantalla completa
- * @param {string} props.text - Texto opcional para mostrar debajo del spinner
- * @returns {JSX.Element} Componente de spinner
- */
+
+ // Componente de spinner para indicar estados de carga
+
 function Spinner({ 
   size = 'lg', 
   color = 'indigo', 

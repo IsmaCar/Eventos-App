@@ -62,7 +62,6 @@ services:
       - database
     networks:
       - app-network
-
   web:
     build:
       context: ./nginx
@@ -71,7 +70,7 @@ services:
       - "8020:80"
       - "443:443"
     volumes:
-      - ./web/certs:/etc/nginx/certs
+      - ./nginx/certs:/etc/nginx/certs
     depends_on:
       - frontend
       - backend

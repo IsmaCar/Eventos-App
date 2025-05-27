@@ -128,12 +128,10 @@ function FormCreateEvent() {
             if (!allowedTypes.includes(file.type)) {
                 toast.error("El archivo no es válido. Solo se permiten imágenes JPG o PNG.");
                 return;
-            }
-
-            // Validación del tamaño máximo
-            const maxSize = 5 * 1024 * 1024; // 5MB
+            }            // Validación del tamaño máximo
+            const maxSize = 1 * 1024 * 1024; // 1MB
             if (file.size > maxSize) {
-                toast.error(`La imagen es demasiado grande. El tamaño máximo es 5MB.`);
+                toast.error(`La imagen es demasiado grande. El tamaño máximo es 1MB.`);
                 return;
             }
 

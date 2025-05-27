@@ -16,7 +16,6 @@ export const useNotifications = () => {
   const [error, setError] = useState(null);
 
   // Función para obtener las estadísticas de notificaciones del usuario
-   
   const fetchNotifications = useCallback(async () => {
   // No hacer nada si no hay token
   if (!token) {

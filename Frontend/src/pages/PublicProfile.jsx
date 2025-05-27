@@ -28,10 +28,16 @@ function PublicProfile() {
   const [friends, setFriends] = useState([]);
   const [friendRequestStatus, setFriendRequestStatus] = useState('none');
   const [friendshipId, setFriendshipId] = useState(null);
-  const [isRequester, setIsRequester] = useState(false);
 
   // Utilizar el hook de amigos con un callback de actualización
-  const { sendFriendRequest, removeFriend, checkFriendshipStatus, findFriendshipId
+  const { 
+    sendFriendRequest, 
+    removeFriend, 
+    confirmRemoveFriend,
+    showRemoveConfirmation,
+    setShowRemoveConfirmation,
+    checkFriendshipStatus, 
+    findFriendshipId
   } = useFriends({
     refreshCallback: async () => {
       // Opcional: actualizar el estado de amistad tras operaciones
@@ -180,46 +186,40 @@ function PublicProfile() {
       toast.error(error.message || 'Error al enviar solicitud de amistad');
     }
   };
-
   /**
    * Maneja la eliminación de una amistad existente
-   * Solicita confirmación al usuario y actualiza el estado local
+   * Abre el modal de confirmación en lugar de usar confirm nativo
    */
-  const handleRemoveFriend = async () => {
+  const handleRemoveFriend = () => {
     // Obtener el ID de amistad (de estado o buscarlo en amigos)
     let idToUse = friendshipId || findFriendshipId(id);
 
     if (!idToUse) {
       toast.error('No se puede eliminar la amistad en este momento');
       return;
-    }    // Solicitar confirmación para eliminar amistad
-    const isConfirmed = confirm('¿Estás seguro de que quieres eliminar a esta persona de tus amigos?');
-    if (!isConfirmed) {
-      return;
     }
 
-    try {
-      // Usar directamente el método del hook para eliminar la amistad
-      const result = await removeFriend(idToUse);
+    // Usar el método del hook que abre el modal de confirmación
+    removeFriend(idToUse);
+  };
 
-      if (result.success) {
-        // Actualizar estado local
-        setFriendRequestStatus('none');
-        setFriendshipId(null);
+  /**
+   * Confirma la eliminación de la amistad y actualiza el estado local
+   */
+  const handleConfirmRemoveFriend = async () => {
+    const result = await confirmRemoveFriend();
 
-        // Actualizar lista de amigos (filtrar el amigo eliminado)
-        setFriends(prevFriends =>
-          prevFriends.filter(friend =>
-            (friend.id !== parseInt(id)) && (friend.user_id !== parseInt(id))
-          )
-        );
+    if (result.success) {
+      // Actualizar estado local
+      setFriendRequestStatus('none');
+      setFriendshipId(null);
 
-        toast.success('Amistad eliminada correctamente');
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      toast.error('Error al eliminar la amistad: ' + error.message);
+      // Actualizar lista de amigos (filtrar el amigo eliminado)
+      setFriends(prevFriends =>
+        prevFriends.filter(friend =>
+          (friend.id !== parseInt(id)) && (friend.user_id !== parseInt(id))
+        )
+      );
     }
   };
 
@@ -469,10 +469,37 @@ function PublicProfile() {
                   </span>
                 </div>
               )}
-            </div>
-          )}
+            </div>          )}
         </div>
       </div>
+
+      {/* Modal de confirmación para eliminar amigo */}
+      {showRemoveConfirmation && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 m-4 max-w-md w-full shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Eliminar amigo
+            </h3>
+            <p className="text-gray-600 mb-6">
+              ¿Estás seguro de que quieres eliminar a esta persona de tus amigos? Esta acción no se puede deshacer.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowRemoveConfirmation(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmRemoveFriend}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+              >
+                Eliminar amigo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

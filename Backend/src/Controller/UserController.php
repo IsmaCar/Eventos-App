@@ -128,9 +128,9 @@ final class UserController extends AbstractController
                 return $this->json(['error' => 'Tipo de archivo no permitido. Use PNG, JPEG, GIF o WEBP.'], 400);
             }
 
-            // Validar tamaño (máximo 8MB)
-            if ($uploadedFile->getSize() > 8 * 1024 * 1024) {
-                return $this->json(['error' => 'El archivo es demasiado grande. Máximo 8MB.'], 400);
+            // Validar tamaño (máximo 1MB)
+            if ($uploadedFile->getSize() > 1 * 1024 * 1024) {
+                return $this->json(['error' => 'El archivo es demasiado grande. Máximo 1MB.'], 400);
             }
 
             // Obtener el usuario de la base de datos 

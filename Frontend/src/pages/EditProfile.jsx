@@ -27,10 +27,25 @@ function EditProfile() {
 
 
   // Procesa el cambio de avatar, crea vista previa y sube el archivo
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Formato de archivo no válido. Solo se permiten JPG, PNG y WEBP.');
+        return;
+      }
+
+      // Validar tamaño de archivo (máximo 1MB)
+      const maxSize = 1 * 1024 * 1024; // 1MB
+      if (file.size > maxSize) {
+        setError('El archivo es demasiado grande. El tamaño máximo es de 1MB.');
+        return;
+      }
+
+      // Si pasa las validaciones, continuar con la carga
+      setError(''); // Limpiar errores previos
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result);

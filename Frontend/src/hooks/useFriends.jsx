@@ -1,6 +1,7 @@
 // Hook personalizado para gestión de amigos
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from './useToast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -16,11 +17,13 @@ export const useFriends = (options = {}) => {
     onRequestAccepted = null,
     refreshCallback = null
   } = options;
-
   const { user, token } = useAuth();
+  const toast = useToast();
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
+  const [removeFriendId, setRemoveFriendId] = useState(null);
 
   /**
    * Obtiene la lista de amigos del usuario
@@ -159,16 +162,28 @@ export const useFriends = (options = {}) => {
     }
   };
 
-
-  // Elimina una amistad existente
-
-  const removeFriend = async (friendshipId) => {
+  // Elimina una amistad existente - solo muestra modal de confirmación
+  const removeFriend = useCallback((friendshipId) => {
     if (!token || !friendshipId) {
+      toast.error('ID de amistad no válido');
+      return { success: false, error: 'ID de amistad no válido' };
+    }
+    
+    // Guardamos el ID para usar en la confirmación
+    setRemoveFriendId(friendshipId);
+    setShowRemoveConfirmation(true);
+    return { success: true };
+  }, [token, toast]);
+
+  // Confirma y ejecuta la eliminación de la amistad
+  const confirmRemoveFriend = useCallback(async () => {
+    if (!removeFriendId) {
+      setShowRemoveConfirmation(false);
       return { success: false, error: 'ID de amistad no válido' };
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/friends/${friendshipId}`, {
+      const response = await fetch(`${API_URL}/api/friends/${removeFriendId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -189,14 +204,21 @@ export const useFriends = (options = {}) => {
         refreshCallback();
       }
 
+      setShowRemoveConfirmation(false);
+      setRemoveFriendId(null);
+      toast.success('Amistad eliminada correctamente');
+
       return { success: true };
     } catch (err) {
+      setShowRemoveConfirmation(false);
+      setRemoveFriendId(null);
+      toast.error('Error al eliminar la amistad');
       return {
         success: false,
         error: err.message || 'Error al eliminar la amistad'
       };
     }
-  };
+  }, [token, removeFriendId, fetchFriends, refreshCallback, toast]);
 
   
    // Verifica el estado de amistad con un usuario
@@ -252,7 +274,6 @@ export const useFriends = (options = {}) => {
       fetchFriends();
     }
   }, [token]);
-
   return {
     friends,
     loading,
@@ -261,6 +282,9 @@ export const useFriends = (options = {}) => {
     sendFriendRequest,
     acceptFriendRequest,
     removeFriend,
+    confirmRemoveFriend,
+    showRemoveConfirmation,
+    setShowRemoveConfirmation,
     checkFriendshipStatus,
     findFriendshipId
   };

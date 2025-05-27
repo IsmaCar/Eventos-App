@@ -89,6 +89,18 @@ final class EventController extends AbstractController
                 ], Response::HTTP_BAD_REQUEST);
             }
 
+            // Validar tipo de archivo
+            $allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+            $mimeType = $imageFile->getMimeType();
+            if (!in_array($mimeType, $allowedTypes)) {
+                return $this->json(['error' => 'Tipo de archivo no permitido. Use PNG, JPEG, GIF o WEBP.'], 400);
+            }
+
+            // Validar tamaño (máximo 1MB)
+            if ($imageFile->getSize() > 1 * 1024 * 1024) {
+                return $this->json(['error' => 'El archivo es demasiado grande. Máximo 1MB.'], 400);
+            }
+
             // Generar nombre de archivo seguro
             $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
             $safeFilename = $slugger->slug($originalFilename);
@@ -172,12 +184,6 @@ final class EventController extends AbstractController
 
     #[Route('/event', name: 'event_get', methods: ['GET'])]
     public function getEvents(
-        /**
-         * Componente de notificación - Notificación individual
-         *
-         * Muestra una sola notificación con diferentes tipos (éxito, error, advertencia, información)
-         * Incluye animaciones y función de cierre automático.
-         */
         EntityManagerInterface $entityManager,
     ): JsonResponse {
         $user = $this->getUser();
@@ -343,6 +349,17 @@ final class EventController extends AbstractController
         $mimeType = $file->getMimeType();
         if (!str_starts_with($mimeType, 'image/')) {
             return $this->json(['message' => 'El archivo debe ser una imagen'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Validar tipos específicos de imagen
+        $allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+        if (!in_array($mimeType, $allowedTypes)) {
+            return $this->json(['message' => 'Tipo de archivo no permitido. Use PNG, JPEG, GIF o WEBP.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Validar tamaño (máximo 1MB)
+        if ($file->getSize() > 1 * 1024 * 1024) {
+            return $this->json(['message' => 'El archivo es demasiado grande. Máximo 1MB.'], Response::HTTP_BAD_REQUEST);
         }
 
         // Generar nombre único para la foto

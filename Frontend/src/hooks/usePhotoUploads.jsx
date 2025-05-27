@@ -5,23 +5,24 @@
  * - Descargar fotos
  * - Eliminar fotos (con verificación de permisos)
  * - Gestionar vistas expandidas
- * - Manejar alertas y redirecciones relacionadas
+ * - Manejar notificaciones toast y redirecciones relacionadas
  */
 import { useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from './useToast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navigate) {
   const { user, token } = useAuth();
+  const { success, error } = useToast();
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [deletingPhotoId, setDeletingPhotoId] = useState(null);
   const [expandedPhoto, setExpandedPhoto] = useState(null);
-
   // Constantes de validación
-  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+  const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 
@@ -38,10 +39,8 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
     if (!ALLOWED_TYPES.includes(file.type)) {
       setUploadError('El formato del archivo no es válido. Por favor, sube una imagen (JPG, PNG o WEBP)');
       return false;
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      setUploadError('El archivo es demasiado grande. El tamaño máximo es de 8MB');
+    }    if (file.size > MAX_FILE_SIZE) {
+      setUploadError('El archivo es demasiado grande. El tamaño máximo es de 1MB');
       return false;
     }
 
@@ -117,8 +116,7 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
     }
   };
 
-
-  // Maneja el proceso completo de subida con alertas y redirecciones
+  // Maneja el proceso completo de subida con toast y redirecciones
   const handleUploadPhoto = async () => {
     if (!selectedFile) return;
 
@@ -127,14 +125,12 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
         navigate('/login', { state: { from: `/events/${eventId}` } });
       }
       return;
-    }
-
-    const result = await uploadPhoto();
+    }    const result = await uploadPhoto();
 
     if (result.success) {
-      alert('Foto subida correctamente');
+      success('Foto subida correctamente');
     } else {
-      alert(`Error al subir la foto: ${result.error}`);
+      error(`Error al subir la foto: ${result.error}`);
     }
   };
 
@@ -235,14 +231,12 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
     }
   };
 
-
-  // Maneja el proceso completo de descarga con alertas
-
+  // Maneja el proceso completo de descarga con toast
   const handleDownloadPhoto = async (photo, eventTitle, e) => {
     const result = await downloadPhoto(photo, eventTitle, e);
 
     if (!result.success) {
-      alert(`Error al descargar la foto: ${result.error}`);
+      error(`Error al descargar la foto: ${result.error}`);
     }
   };
 
@@ -274,12 +268,10 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
     // Estado de archivos
     selectedFile,
     uploadError,
-    uploading,
-
-    // Acciones de archivos
+    uploading,    // Acciones de archivos
     handleFileChange,
     uploadPhoto,
-    handleUploadPhoto,  // Nuevo método con alertas
+    handleUploadPhoto,  // Método con toast
     clearSelectedFile,
 
     // Eliminación
@@ -289,7 +281,7 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
 
     // Descarga
     downloadPhoto,
-    handleDownloadPhoto, // Nuevo método con alertas
+    handleDownloadPhoto, // Método con toast
 
     // Vista expandida
     expandedPhoto,

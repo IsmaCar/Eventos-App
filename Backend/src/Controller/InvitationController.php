@@ -76,7 +76,7 @@ final class InvitationController extends AbstractController
             $invitation->setInvitedBy($user);
             $invitation->setStatus('pending');
             $invitation->setCreatedAt(new \DateTime());
-            $invitation->setToken(null); // Inicializar a null
+            $invitation->setToken(null);
 
             $userExists = false;
 

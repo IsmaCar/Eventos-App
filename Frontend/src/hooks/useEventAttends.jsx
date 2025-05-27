@@ -7,17 +7,22 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from './useToast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export function useEventAttendees(eventId, isEventCreator) {
   const { user, token } = useAuth();
+  const toast = useToast();
   
   // Estados para asistentes
   const [attendees, setAttendees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [processingAction, setProcessingAction] = useState(false);
+
+  // Estado para manejar confirmación de cancelar asistencia
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
 
   // Cargar asistentes del evento
   const fetchAttendees = useCallback(async () => {
@@ -51,15 +56,15 @@ export function useEventAttendees(eventId, isEventCreator) {
   useEffect(() => {
     fetchAttendees();
   }, [fetchAttendees]);
+  // Cancelar asistencia del usuario actual - Solo inicia el proceso de confirmación
+  const cancelAttendance = () => {
+    setShowCancelConfirmation(true);
+  };
 
-  // Cancelar asistencia del usuario actual CON CONFIRMACIÓN
-  const cancelAttendance = async () => {
-    // Solicitar confirmación
-    if (!confirm('¿Estás seguro de que deseas cancelar tu asistencia a este evento?')) {
-      return { success: false, canceled: true };
-    }
-    
+  // Confirmar cancelación de asistencia
+  const confirmCancelAttendance = async () => {
     if (!token || !eventId) {
+      toast.error('No autenticado o ID de evento inválido');
       return { success: false, error: 'No autenticado o ID de evento inválido' };
     }
     
@@ -84,26 +89,27 @@ export function useEventAttendees(eventId, isEventCreator) {
         setAttendees(prev => prev.filter(attendee => parseInt(attendee.id) !== parseInt(user.id)));
       }
       
-      // Mostrar mensaje de éxito
-      alert('Has cancelado tu asistencia al evento correctamente');
+      // Mostrar mensaje de éxito con toast
+      toast.success('Has cancelado tu asistencia al evento correctamente');
+      setShowCancelConfirmation(false);
       return { success: true };
     } catch (error) {
       console.error("Error cancelando asistencia:", error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
       return { success: false, error: error.message };
     } finally {
       setProcessingAction(false);
     }
   };
-
   // Eliminar asistente (solo organizador) CON CONFIRMACIÓN
   const removeAttendee = async (attendeeId) => {
-    // Solicitar confirmación
-    if (!confirm('¿Estás seguro de que deseas eliminar a este usuario del evento?')) {
+    // Solicitar confirmación con toast en lugar de confirm nativo
+    if (!window.confirm('¿Estás seguro de que deseas eliminar a este usuario del evento?')) {
       return { success: false, canceled: true };
     }
     
     if (!token || !isEventCreator || !eventId) {
+      toast.error('No tienes permisos para realizar esta acción');
       return { success: false, error: 'No tienes permisos para realizar esta acción' };
     }
     
@@ -126,12 +132,12 @@ export function useEventAttendees(eventId, isEventCreator) {
       // Actualizar la lista de asistentes eliminando al usuario removido
       setAttendees(prev => prev.filter(attendee => parseInt(attendee.id) !== parseInt(attendeeId)));
       
-      // Mostrar mensaje de éxito
-      alert('Usuario eliminado del evento correctamente');
+      // Mostrar mensaje de éxito con toast
+      toast.success('Usuario eliminado del evento correctamente');
       return { success: true };
     } catch (error) {
       console.error("Error eliminando asistente:", error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
       return { success: false, error: error.message };
     } finally {
       setProcessingAction(false);
@@ -150,7 +156,6 @@ export function useEventAttendees(eventId, isEventCreator) {
     const attendee = attendees.find(a => parseInt(a.id) === parseInt(attendeeId));
     return attendee ? attendee.isCreator : false;
   }, [attendees]);
-
   return {
     attendees,
     loading,
@@ -159,6 +164,9 @@ export function useEventAttendees(eventId, isEventCreator) {
     isCurrentUserAttending,
     isAttendeeOrganizer,
     cancelAttendance,
+    confirmCancelAttendance,
+    showCancelConfirmation,
+    setShowCancelConfirmation,
     removeAttendee,
     refreshAttendees: fetchAttendees
   };

@@ -4,10 +4,39 @@
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Constantes para validación de archivos
+export const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+/**
+ * Valida si un archivo cumple con los requisitos de tamaño y tipo
+ */
+export const validateImageFile = (file) => {
+    const errors = [];
+
+    if (!file) {
+        errors.push('No se ha seleccionado ningún archivo');
+        return { isValid: false, errors };
+    }
+
+    // Validar tipo de archivo
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        errors.push('Formato de archivo no válido. Solo se permiten JPG, PNG, WEBP y GIF.');
+    }
+
+    // Validar tamaño de archivo
+    if (file.size > MAX_FILE_SIZE) {
+        errors.push(`El archivo es demasiado grande. El tamaño máximo es de ${formatFileSize(MAX_FILE_SIZE)}.`);
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
+}
+
 /**
  * Obtiene la URL completa de una imagen
- * @param {string} imagePath - Ruta relativa de la imagen
- * @returns {string|null} - URL completa de la imagen o null si no hay ruta
  */
 export const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
@@ -24,8 +53,6 @@ export const getImageUrl = (imagePath) => {
 
 /**
  * Genera clases condicionales para las tarjetas de eventos
- * @param {Object} event - El evento
- * @returns {string} - Clases CSS para la tarjeta
  */
 export const eventCardClasses = (event) => {
     const baseClasses = "relative rounded-xl h-64 overflow-hidden group shadow-md hover:shadow-lg transition-all duration-300";
@@ -40,7 +67,6 @@ export const eventCardClasses = (event) => {
 /**
  * Genera un fondo aleatorio para eventos sin imagen
  * Útil para crear variedad visual en las tarjetas
- * @returns {string} - Clase CSS con un gradiente vibrante aleatorio
  */
 export const getRandomGradient = () => {
     const gradients = [
@@ -56,8 +82,6 @@ export const getRandomGradient = () => {
 
 /**
  * Verifica si una URL de imagen es válida
- * @param {string} url - URL de la imagen
- * @returns {Promise<boolean>} - Promise que resuelve a true si la imagen es válida
  */
 export const isValidImageUrl = async (url) => {
     try {
@@ -70,8 +94,6 @@ export const isValidImageUrl = async (url) => {
 
 /**
  * Formatea el tamaño de archivo a unidades legibles
- * @param {number} bytes - Tamaño en bytes
- * @returns {string} - Tamaño formateado (ej: "2.5 MB")
  */
 export const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B';
@@ -81,8 +103,6 @@ export const formatFileSize = (bytes) => {
 
 /**
  * Genera la URL completa para un avatar de usuario
- * @param {string|null} avatarFilename - Nombre del archivo de avatar del usuario
- * @returns {string} URL completa del avatar
  */
 export const getAvatarUrl = (avatarFilename) => {
     if (!avatarFilename || avatarFilename.trim() === '') {
@@ -97,7 +117,6 @@ export const getAvatarUrl = (avatarFilename) => {
 
 /**
  * Manejador de error para imágenes de avatar, establece la imagen por defecto
- * @param {Event} event - Evento onError de la imagen
  */
 export const handleAvatarError = (event) => {
     // Prevenir bucles infinitos desactivando el evento onerror
@@ -122,8 +141,6 @@ export const handleAvatarError = (event) => {
 
 /**
  * Genera las iniciales de un nombre de usuario para usarlas como avatar fallback
- * @param {string} username - Nombre de usuario del que extraer iniciales
- * @returns {string} Iniciales en mayúscula (o primera letra si solo hay una palabra)
  */
 export const getUserInitials = (username) => {
     if (!username) return '';
@@ -138,11 +155,6 @@ export const getUserInitials = (username) => {
 
 /**
  * Componente para avatar con fallback a iniciales o imagen por defecto
- * @param {Object} props - Propiedades del componente
- * @param {Object} props.user - Objeto usuario con avatar y username
- * @param {string} props.className - Clases adicionales para el contenedor
- * @param {string} props.size - Tamaño del avatar (sm, md, lg, xl)
- * @returns {JSX.Element} Elemento de avatar
  */
 export const Avatar = ({ user, className = '', size = 'md' }) => {
     const sizeClasses = {
@@ -187,8 +199,6 @@ export const Avatar = ({ user, className = '', size = 'md' }) => {
 
 /**
  * Obtiene las clases adecuadas para una imagen de perfil según el tamaño
- * @param {string} size - Tamaño deseado (sm, md, lg, xl)
- * @returns {string} - Cadena de clases CSS
  */
 export const getProfileImageClasses = (size = 'md') => {
     const baseClasses = "rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400";
@@ -206,8 +216,6 @@ export const getProfileImageClasses = (size = 'md') => {
 
 /**
  * Genera URL para la portada de un perfil o evento
- * @param {string|null} coverImage - Nombre del archivo de portada
- * @returns {string} URL completa de la portada o gradiente predeterminado
  */
 export const getCoverImageStyle = (coverImage) => {
     if (!coverImage) {

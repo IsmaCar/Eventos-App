@@ -34,9 +34,8 @@ function InviteUsers({ eventId, onInvitationSent }) {
     isSearching,           
     handleSearchTermChange, 
     resetSearch,           
-    setSearchTerm          
-  } = useUserSearch({
-    endpoint: '/tools/users/search',  
+    setSearchTerm            } = useUserSearch({
+    endpoint: '/api/tools/users/search',  
     paramName: 'query',               
     minLength: 2,                     
     debounceTime: 100                 

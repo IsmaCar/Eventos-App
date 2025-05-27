@@ -41,10 +41,10 @@ function CardDetail() {
 
     return !isNaN(eventUserId) && currentUserId === eventUserId;
   }, [user, event]);
-
   // Hook personalizado para gestionar los asistentes al evento
   const { attendees, loadingAttendees, processingAction, isCurrentUserAttending,
-    isAttendeeOrganizer, cancelAttendance, removeAttendee } = useEventAttendees(id, isEventCreator());
+    isAttendeeOrganizer, cancelAttendance, confirmCancelAttendance, showCancelConfirmation,
+    setShowCancelConfirmation, removeAttendee } = useEventAttendees(id, isEventCreator());
 
   
    // Hook personalizado para gestionar la galería de fotos del evento
@@ -609,9 +609,7 @@ function CardDetail() {
               </div>
             </div>
           </div>        )}
-      </div>
-
-      {/* Modal de confirmación para eliminar evento */}
+      </div>      {/* Modal de confirmación para eliminar evento */}
       {showDeleteConfirmation && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
@@ -656,6 +654,58 @@ function CardDetail() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                     <span>Eliminar evento</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para cancelar asistencia */}
+      {showCancelConfirmation && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Cancelar asistencia</h3>
+                <p className="text-sm text-gray-500">Confirma que no asistirás al evento</p>
+              </div>
+            </div>
+            
+            <p className="text-gray-700 mb-6">
+              ¿Estás seguro de que deseas cancelar tu asistencia al evento "<strong>{event.title}</strong>"?
+            </p>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCancelConfirmation(false)}
+                disabled={processingAction}
+                className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+              >
+                Mantener asistencia
+              </button>
+              <button
+                onClick={confirmCancelAttendance}
+                disabled={processingAction}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center space-x-2 transition-colors"
+              >
+                {processingAction ? (
+                  <>
+                    <Spinner size="xs" color="white" />
+                    <span>Cancelando...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>No asistiré</span>
                   </>
                 )}
               </button>

@@ -24,7 +24,7 @@ export const ToastProvider = ({ children }) => {
     const newToast = {
       id,
       type: 'info',
-      duration: 5000,
+      duration: 1000,
       ...toast,
     };
 

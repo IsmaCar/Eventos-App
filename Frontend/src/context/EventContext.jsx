@@ -40,12 +40,10 @@ export const EventProvider = ({ children }) => {
                 const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
                 if (!allowedTypes.includes(eventData.image.type)) {
                     throw new Error("Formato de imagen no permitido. Por favor, usa JPG, PNG, GIF o WEBP.");
-                }
-    
-                // Validar el tamaño (máximo 8MB)
-                const maxSize = 8 * 1024 * 1024;
+                }                // Validar el tamaño (máximo 1MB)
+                const maxSize = 1 * 1024 * 1024;
                 if (eventData.image.size > maxSize) {
-                    throw new Error(`La imagen es demasiado grande. El tamaño máximo es 5MB. Tamaño actual: ${(eventData.image.size / (1024 * 1024)).toFixed(2)}MB`);
+                    throw new Error(`La imagen es demasiado grande. El tamaño máximo es 1MB. Tamaño actual: ${(eventData.image.size / (1024 * 1024)).toFixed(2)}MB`);
                 }
     
                 // Si pasa las validaciones, añadir al FormData

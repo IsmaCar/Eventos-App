@@ -29,26 +29,23 @@ final class Version20250525122237 extends AbstractMigration
         $this->addSql(<<<'SQL'
             ALTER TABLE friendship ADD CONSTRAINT FK_7234A45F2261B4C3 FOREIGN KEY (addressee_id) REFERENCES `user` (id)
         SQL);
+        // Check if favorite_photos tables exist before dropping them
         $this->addSql(<<<'SQL'
-            ALTER TABLE favorite_photos_user DROP FOREIGN KEY FK_D99B21EBA76ED395
+            SET FOREIGN_KEY_CHECKS = 0
+        SQL);
+        
+        $this->addSql(<<<'SQL'
+            DROP TABLE IF EXISTS favorite_photos_user
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE favorite_photos_user DROP FOREIGN KEY FK_D99B21EBC91179F0
+            DROP TABLE IF EXISTS favorite_photos_photo
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE favorite_photos_photo DROP FOREIGN KEY FK_2C3B4E2B7E9E4C8C
+            DROP TABLE IF EXISTS favorite_photos
         SQL);
+        
         $this->addSql(<<<'SQL'
-            ALTER TABLE favorite_photos_photo DROP FOREIGN KEY FK_2C3B4E2BC91179F0
-        SQL);
-        $this->addSql(<<<'SQL'
-            DROP TABLE favorite_photos_user
-        SQL);
-        $this->addSql(<<<'SQL'
-            DROP TABLE favorite_photos
-        SQL);
-        $this->addSql(<<<'SQL'
-            DROP TABLE favorite_photos_photo
+            SET FOREIGN_KEY_CHECKS = 1
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE event ADD status VARCHAR(20) NOT NULL, CHANGE description description VARCHAR(500) NOT NULL

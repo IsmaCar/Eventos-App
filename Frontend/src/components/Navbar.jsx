@@ -95,19 +95,17 @@ function Navbar() {
                                 <span className="ml-2 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-indigo-600">
                                     MEMENTO
                                 </span>
-                            </Link>
-
-                            {/* Acceso al panel de administración (solo admins) */}
+                            </Link>                            {/* Acceso al panel de administración (solo admins) */}
                             {token && isAdmin && (
                                 <Link
                                     to="/dashboard"
                                     className="ml-4 hidden md:flex bg-indigo-600 text-white px-3 py-1.5 
                                                rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out items-center"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:mr-0 lg:mr-1" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                                     </svg>
-                                    <span>Administrar</span>
+                                    <span className="hidden lg:inline">Administrar</span>
                                 </Link>
                             )}
                         </div>
@@ -115,17 +113,16 @@ function Navbar() {
                         {/* Menú principal para escritorio (solo usuarios autenticados) */}
                         {token && (
                             <div className="hidden md:flex md:items-center">
-                                <div className="flex items-center space-x-4">
-                                    {/* Fotos favoritas */}
+                                <div className="flex items-center space-x-4">                                    {/* Fotos favoritas */}
                                     <Link
                                         to="/favorite-photos"
                                         className="flex items-center text-white px-3 py-1.5 
-                            rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out"
+                                                   rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-pink-400" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:mr-1 lg:mr-1 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                         </svg>
-                                        <span>Fotos favoritas</span>
+                                        <span className="hidden lg:inline">Fotos favoritas</span>
                                     </Link>
 
                                     {/* Centro de notificaciones */}
@@ -160,7 +157,7 @@ function Navbar() {
                                     <Link
                                         to="/profile"
                                         className="flex items-center text-white px-3 py-1.5 
-                           rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out"
+                                                   rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out"
                                     >
                                         <Avatar
                                             user={user}
@@ -168,18 +165,16 @@ function Navbar() {
                                             className="mr-2 border-2 border-white/30"
                                         />
                                         <span>Perfil</span>
-                                    </Link>
-
-                                    {/* Botón de cierre de sesión */}
+                                    </Link>                                    {/* Botón de cierre de sesión */}
                                     <button
                                         onClick={logout}
-                                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 
-                            rounded-lg transition duration-300 ease-in-out flex items-center"
+                                        className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 
+                                                  rounded-lg transition duration-300 ease-in-out flex items-center"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:mr-0 lg:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                         </svg>
-                                        <span>Cerrar Sesión</span>
+                                        <span className="hidden lg:inline">Cerrar Sesión</span>
                                     </button>
                                 </div>
                             </div>
@@ -216,13 +211,12 @@ function Navbar() {
                 {/* Menú desplegable para dispositivos móviles */}
                 {token && mobileMenuOpen && (
                     <div className="md:hidden bg-zinc-800 shadow-lg">
-                        <div className="px-4 py-3 space-y-2">
-                            <Link
+                        <div className="px-4 py-3 space-y-2">                            <Link
                                 to="/favorite-photos"
                                 className="flex items-center text-white px-3 py-2 rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-pink-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                 </svg>
                                 Fotos favoritas
                             </Link>
@@ -231,7 +225,7 @@ function Navbar() {
                             <button
                                 onClick={handleNotificationsClick}
                                 className={`flex items-center text-white px-3 py-2 w-full text-left
-                                 rounded-lg transition duration-300 ease-in-out relative
+                                            rounded-lg transition duration-300 ease-in-out relative
                                  ${hasNotifications ? 'hover:bg-zinc-700' : 'opacity-70 cursor-not-allowed'}`}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -275,12 +269,11 @@ function Navbar() {
                                     </svg>
                                     Administrar
                                 </Link>
-                            )}
-
+                            )}                           
                             {/* Cerrar sesión en versión móvil */}
                             <button
                                 onClick={logout}
-                                className="w-full flex items-center text-white px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition duration-300 ease-in-out"
+                                className="w-full flex items-center text-white px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 transition duration-300 ease-in-out"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

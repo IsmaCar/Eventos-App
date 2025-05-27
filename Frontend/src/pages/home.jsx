@@ -17,7 +17,7 @@ function home() {
     const { token } = useAuth();
     const { events, fetchEvents, getImageUrl } = useEvent();
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('todos'); // Filtro actual: todos, proximos, pasados
+    const [filter, setFilter] = useState('todos'); 
     const [filteredEvents, setFilteredEvents] = useState([]);
 
     /**
@@ -85,7 +85,8 @@ function home() {
                     if (isNaN(eventDate.getTime())) {
                         console.warn("Fecha inválida para evento:", event);
                         return false;
-                    }                    // Comparar solo la fecha (día, mes, año) sin la hora
+                    }                    
+                    // Comparar solo la fecha (día, mes, año) sin la hora
                     const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
                     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                     
@@ -165,17 +166,16 @@ function home() {
     return (
         token ? (
             <div className="max-w-6xl mx-auto px-4 py-6">
-                <section className="mb-8">
-                    <div className="bg-white rounded-lg shadow-md p-4">
-                        <div className="flex justify-between items-center mb-6">
+                <section className="mb-8">                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                             {/* Selector de filtro con la opción "Todos" */}
-                            <div className="relative w-64">
+                            <div className="relative w-full sm:w-64">
                                 <select
                                     value={filter}
                                     onChange={handleFilterChange}
                                     className="block appearance-none w-full bg-white border border-gray-300 
-                                            hover:border-gray-400 px-4 py-2 pr-8 rounded-lg shadow-sm focus:outline-none focus:ring-2 
-                                            focus:ring-indigo-300 focus:border-indigo-300"
+                                            hover:border-gray-400 px-4 py-3 pr-8 rounded-lg shadow-sm focus:outline-none focus:ring-2 
+                                            focus:ring-indigo-300 focus:border-indigo-300 text-gray-700"
                                 >
                                     <option value="todos">Todos los eventos</option>
                                     <option value="proximos">Próximos eventos</option>
@@ -192,9 +192,13 @@ function home() {
                             {hasEvents && (
                                 <Link
                                     to="/create-event"
-                                    className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white px-4 py-2 
-                                            rounded-full hover:scale-105 transition duration-300 ease-in-out"
+                                    className="bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white px-6 py-3 
+                                            rounded-lg font-medium hover:shadow-lg transform hover:scale-105 
+                                            transition duration-300 ease-in-out flex items-center gap-2 whitespace-nowrap"
                                 >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
                                     Crear Evento
                                 </Link>
                             )}
@@ -269,13 +273,13 @@ function home() {
                                                 : filter === 'proximos'
                                                     ? 'No hay eventos próximos disponibles.'
                                                     : 'No hay eventos pasados para mostrar.'}
-                                        </p>
-                                        <Link
+                                        </p>                                        <Link
                                             to="/create-event"
-                                            className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white px-6 py-2.5 
-                                                rounded-full hover:scale-105 transition duration-300 ease-in-out inline-flex items-center"
+                                            className="bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white px-6 py-3 
+                                                rounded-lg font-medium hover:shadow-lg transform hover:scale-105 
+                                                transition duration-300 ease-in-out inline-flex items-center gap-2"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                             </svg>
                                             Crear tu primer evento

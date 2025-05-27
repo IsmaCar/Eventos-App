@@ -1,5 +1,5 @@
 /**
-* Componente de notificación - Notificación individual
+* Context Notificaciones de la aplicación
 *
 * Muestra una sola notificación con diferentes tipos (éxito, error, advertencia, información)
 * Incluye animaciones y función de cierre automático.

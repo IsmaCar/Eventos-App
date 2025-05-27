@@ -1,73 +1,78 @@
+/**
+ * Context de eventos para la aplicación
+ * 
+ * Proporciona funcionalidades de:
+ * - Creación de eventos con imágenes y ubicación
+ * - Obtención de lista de eventos
+ * - Obtención de eventos individuales por ID
+ * - Estados de carga y gestión de errores
+ */
 import React, { createContext, useContext, useState } from 'react'
 import { useAuth } from './AuthContext';
-
+import { getImageUrl, validateImageFile, MAX_FILE_SIZE, ALLOWED_IMAGE_TYPES } from '../utils/Imagehelper';
 const API_URL = import.meta.env.VITE_API_URL;
+
 const EventContext = createContext();
 
+/**
+ * Proveedor del contexto de eventos
+ * Envuelve la aplicación y proporciona funcionalidades de eventos a todos los componentes
+ */
 export const EventProvider = ({ children }) => {
     const [events, setEvents] = useState(null);
     const [loading, setLoading] = useState(true);
-    const { token } = useAuth(); 
-    
-    
+    const { token } = useAuth();
+
+    /**
+     * Crea un nuevo evento en el sistema
+     */
     const createEvent = async (eventData) => {
         try {
             if (!token || token === "undefined" || token === "null") {
                 console.error("Token no válido:", token);
                 throw new Error("No estás autenticado. Por favor, inicia sesión.");
             }
-    
+
+            // Formatear la fecha al formato esperado por el backend (DD/MM/YYYY)
             const date = new Date(eventData.event_date);
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-    
+
+            // Crear FormData para envío de archivos y datos
             const formData = new FormData();
             formData.append('title', eventData.title);
             formData.append('description', eventData.description);
-            formData.append('event_date', formattedDate);
-    
-            // Validación y añadido de imagen si existe
+            formData.append('event_date', formattedDate);            // Validación y procesamiento de imagen si existe
             if (eventData.image) {
-                if (!(eventData.image instanceof File)) {
-                    throw new Error("El archivo de imagen no es válido.");
+                // Usar la función de validación del ImageHelper
+                const validation = validateImageFile(eventData.image);
+                
+                if (!validation.isValid) {
+                    // Lanzar error con todos los mensajes de validación
+                    throw new Error(validation.errors.join('. '));
                 }
-    
-                // Validar que la imagen no esté vacía (0 bytes)
-                if (eventData.image.size === 0) {
-                    throw new Error("La imagen está vacía o corrupta. Selecciona otra imagen.");
-                }
-    
-                // Validar el tipo de archivo
-                const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-                if (!allowedTypes.includes(eventData.image.type)) {
-                    throw new Error("Formato de imagen no permitido. Por favor, usa JPG, PNG, GIF o WEBP.");
-                }                // Validar el tamaño (máximo 1MB)
-                const maxSize = 1 * 1024 * 1024;
-                if (eventData.image.size > maxSize) {
-                    throw new Error(`La imagen es demasiado grande. El tamaño máximo es 1MB. Tamaño actual: ${(eventData.image.size / (1024 * 1024)).toFixed(2)}MB`);
-                }
-    
-                // Si pasa las validaciones, añadir al FormData
                 formData.append('image', eventData.image);
             }
-    
-            // Añadir información de ubicación si existe
+
+
             if (eventData.location) formData.append('address', eventData.location);
             if (eventData.latitude) formData.append('latitude', eventData.latitude);
             if (eventData.longitude) formData.append('longitude', eventData.longitude);
-    
-    
+
+
             const response = await fetch(`${API_URL}/api/event/create`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
-                body: formData,
+                body: formData, 
             });
-    
+
+            
             if (!response.ok) {
                 const contentType = response.headers.get('Content-Type');
                 let errorMessage = "Error al crear el evento";
-    
+
+                // Intentar parsear respuesta JSON si es posible
                 if (contentType && contentType.includes("application/json")) {
                     const errorData = await response.json();
                     errorMessage = errorData.error || errorMessage;
@@ -76,80 +81,85 @@ export const EventProvider = ({ children }) => {
                     console.error("Respuesta no JSON:", text);
                     errorMessage = text;
                 }
-    
+
                 throw new Error(errorMessage);
             }
-    
-            const data = await response.json();    
-            // Actualizar la lista de eventos con el nuevo evento
+
+            const data = await response.json();
+
+            // Actualizar la lista local de eventos con el nuevo evento
             setEvents(prev => prev ? [...prev, data.event] : [data.event]);
             return data;
-    
+
         } catch (error) {
             console.error("Error en createEvent:", error);
             return { error: error.message || "Error al crear el evento" };
         }
-    };
-
+    };   
+    
+    /**
+     * Obtiene todos los eventos del usuario autenticado
+     * Actualiza el estado de eventos y loading
+     */
     const fetchEvents = async () => {
         setLoading(true);
-        try{
+        try {
             const response = await fetch(`${API_URL}/api/event`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
-            }
-        })
-            if(!response.ok)
-                throw new Error("Error al obtener los eventos")
+                }
+            });
 
-            const data = await response.json()
-            setEvents(data.events)
-            
+
+            if (!response.ok)
+                throw new Error("Error al obtener los eventos");
+
+            const data = await response.json();
+
+            setEvents(data.events);
+
         } catch (error) {
-         throw new Error("Error fetching events: ", error.message);
-            
+            throw new Error("Error fetching events: ", error.message);
+
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     }
 
+    /**
+     * Obtiene un evento específico por su ID
+     */
     const getEventById = async (id) => {
         try {
-          const response = await fetch(`${API_URL}/api/event/${id}`,
-            {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-        });
-          if (!response.ok) {
-            throw new Error(`Error: ${response.status}`);
-          }
-          const data = await response.json();
-          return data;
-        } catch (error) {
-          console.error("Error fetching event:", error);
-          throw error;
-        }
-      };
+            const response = await fetch(`${API_URL}/api/event/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
 
-      const getImageUrl = (imagePath) => {
-        if (!imagePath) return null;
-        // Si la ruta ya incluye el dominio completo, devolverla tal cual
-        if (imagePath.startsWith('http')) return imagePath;     
-        // Si la ruta incluye 'uploads/events' o similar, ya está en formato correcto
-        if (imagePath.includes('uploads/') || imagePath.startsWith('/uploads/')) {
-            const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-            return `${API_URL}${normalizedPath}`;
+            if (!response.ok) {
+                throw new Error(`Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data;        } catch (error) {
+            console.error("Error fetching event:", error);
+            throw error;
         }
-        // De lo contrario, asumimos que es solo el nombre del archivo y añadimos la ruta
-        return `${API_URL}/uploads/backgrounds/${imagePath}`;
     };
 
     return (
-        <EventContext.Provider value={{ fetchEvents, createEvent, getImageUrl, getEventById, events, loading,}}>
+        <EventContext.Provider value={{
+            fetchEvents,
+            createEvent,
+            getImageUrl, 
+            getEventById,
+            events,
+            loading
+        }}>
             {children}
         </EventContext.Provider>
     );

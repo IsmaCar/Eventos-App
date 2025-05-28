@@ -13,10 +13,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 # Copiar archivos del backend al contenedor
 COPY . .
+
 # Instalar dependencias con Composer
-# RUN composer install
-# RUN composer require symfony/orm-pack doctrine/doctrine-bundle
-# RUN composer require doctrine/dbal
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Crear y establecer permisos para los directorios de uploads
 RUN mkdir -p /app/public/uploads/avatars \
@@ -36,6 +35,11 @@ fi
 # Establecer permisos para el directorio var
 RUN mkdir -p /app/var
 RUN chmod -R 777 /app/var /app/migrations
+
+# Crear directorio para las claves JWT y generar las claves
+RUN mkdir -p /app/config/jwt
+RUN php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
+RUN chmod 644 /app/config/jwt/*.pem
 
 # Copiar el script de entrada
 COPY docker-entrypoint.sh /usr/local/bin/

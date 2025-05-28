@@ -334,14 +334,6 @@ function Profile() {
           <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
             <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Invitaciones a eventos</h3>
-              <button
-                onClick={() => handleCloseInvitations()}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
 
             <div className="overflow-y-auto flex-1">
@@ -366,14 +358,6 @@ function Profile() {
           <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
             <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Solicitudes de amistad</h3>
-              <button
-                onClick={() => handleCloseFriendRequests()}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
 
             <div className="overflow-y-auto flex-1">
@@ -398,14 +382,6 @@ function Profile() {
           <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
             <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Mis Eventos</h3>
-              <button
-                onClick={() => setShowMyEvents(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
 
             <div className="overflow-y-auto flex-1">

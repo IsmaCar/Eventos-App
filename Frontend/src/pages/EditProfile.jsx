@@ -11,7 +11,6 @@ function EditProfile() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
-  // Estados para formulario y UI
   const [formData, setFormData] = useState({
     username: user?.username || '',
     email: user?.email || '',
@@ -45,7 +44,7 @@ function EditProfile() {
       }
 
       // Si pasa las validaciones, continuar con la carga
-      setError(''); // Limpiar errores previos
+      setError(''); 
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result);
@@ -57,7 +56,6 @@ function EditProfile() {
 
 
   // Sube el avatar al servidor y actualiza el estado de la aplicación
-
   const uploadAvatar = async (file) => {
     setUpdating(true);
     setSuccess('');
@@ -82,8 +80,8 @@ function EditProfile() {
 
       const data = await response.json();
 
-      // Obtener la ruta del avatar según la estructura de respuesta del servidor
-      const avatarPath = data.avatar || data.user?.avatar || data.filename || data.path || data;
+      
+      const avatarPath = data.user?.avatar
 
       if (!avatarPath) {
         throw new Error('No se pudo obtener la ruta del avatar');
@@ -115,13 +113,11 @@ function EditProfile() {
 
 
   // Actualiza el estado del formulario al cambiar los campos
-
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
   // Procesa la actualización del perfil con validaciones
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -201,15 +197,16 @@ function EditProfile() {
 
   // Determinar la URL del avatar a mostrar
   const avatarUrl = preview || getAvatarUrl(user?.avatar);
-
   return (
     <div className="max-w-4xl mx-auto my-10 p-6 bg-white rounded-xl shadow-lg">
-      <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Editar Perfil</h1>
+      <header className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Editar Perfil</h1>
+      </header>
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <section className="grid md:grid-cols-3 gap-8">
         {/* Columna para el avatar */}
-        <div className="md:col-span-1 flex flex-col items-center">
-          <div className="mb-4 relative">
+        <aside className="md:col-span-1 flex flex-col items-center">
+          <figure className="mb-4 relative">
             <img
               src={avatarUrl}
               alt="Avatar de perfil"
@@ -232,18 +229,17 @@ function EditProfile() {
               ref={fileInputRef}
               className="hidden"
               accept="image/*"
-            />
-          </div>
+            />          
+          </figure>
           {updating && (
             <div className="flex items-center gap-2 text-fuchsia-600 mt-2">
               <Spinner size="xs" color="fuchsia" />
               <span>Actualizando avatar...</span>
             </div>
           )}
-        </div>
-
+        </aside>        
         {/* Columna para el formulario */}
-        <div className="md:col-span-2">
+        <article className="md:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Mensajes de estado */}
             {error && (
@@ -286,7 +282,6 @@ function EditProfile() {
                   className="w-full px-4 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent"
                 />
               </div>
-
               {/* Sección para cambio de contraseña */}
               <div className="pt-4 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Cambiar contraseña</h3>
@@ -334,9 +329,8 @@ function EditProfile() {
                 </div>
               </div>
             </div>
-
             {/* Botones de acción */}
-            <div className="flex justify-end mt-8 space-x-3">
+            <nav className="flex justify-end mt-8 space-x-3">
               <button
                 type="button"
                 onClick={() => navigate('/profile')}
@@ -358,10 +352,10 @@ function EditProfile() {
                   'Guardar cambios'
                 )}
               </button>
-            </div>
+            </nav>
           </form>
-        </div>
-      </div>
+        </article>      
+      </section>
     </div>
   );
 }

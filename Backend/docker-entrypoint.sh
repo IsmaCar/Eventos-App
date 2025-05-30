@@ -20,6 +20,26 @@ if [ $tries -eq $max_tries ]; then
 fi
 echo "MySQL is ready!"
 
+# Generate JWT keys if they don't exist
+echo "Checking JWT keys..."
+if [ ! -f "/app/config/jwt/private.pem" ] || [ ! -f "/app/config/jwt/public.pem" ]; then
+    echo "JWT keys not found. Installing dev dependencies temporarily..."
+    composer install --optimize-autoloader --no-interaction
+    echo "Generating JWT keys..."
+    php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction || true
+    chmod 644 /app/config/jwt/*.pem 2>/dev/null || true
+    echo "Removing dev dependencies..."
+    composer install --no-dev --optimize-autoloader --no-interaction
+    echo "JWT keys generated successfully."
+else
+    echo "JWT keys already exist."
+fi
+
+# Limpiar cache ahora que la base de datos está disponible
+echo "Limpiando cache de Symfony..."
+php bin/console cache:clear --env=prod --no-debug --quiet || true
+php bin/console cache:warmup --env=prod --no-debug --quiet || true
+
 # Check if migrations directory exists, if not create it
 if [ ! -d "/app/migrations" ]; then
     mkdir -p /app/migrations

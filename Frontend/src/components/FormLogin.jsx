@@ -49,15 +49,14 @@ const LoginForm = () => {
       setLoading(false); 
     }
   };
-  
-  return (
+    return (
     <div className="max-w-md mx-auto my-10 p-5 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-semibold text-center text-gray-800">
+      <header className="text-2xl font-semibold text-center text-gray-800">
         INICIAR SESIÓN
-      </h2>   
+      </header>   
 
       <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-        <div>
+        <section>
           <label
             htmlFor="email"
             className="block text-xl font-semibold text-gray-900"
@@ -71,10 +70,9 @@ const LoginForm = () => {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 mt-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"
-          />
-        </div>
-        <div>
+            className="w-full px-4 py-2 mt-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"          />
+        </section>       
+        <section>
           <label
             htmlFor="password"
             className="block text-xl font-semibold text-gray-900"
@@ -88,31 +86,28 @@ const LoginForm = () => {
             value={formData.password}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 mt-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"
-          />
-        </div>       
+            className="w-full px-4 py-2 mt-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"          />
+        </section>       
         <button
           type="submit"
           className="w-full px-4 py-2 text-lg font-semibold text-white bg-gradient-to-r from-fuchsia-400 to-indigo-400 rounded-lg hover:scale-105 transition duration-300"
-        >
-          {loading ? (
-            <div className="flex items-center justify-center gap-3 w-full">
+        >          {loading ? (
+            <span className="flex items-center justify-center gap-3 w-full">
               <Spinner size="xs" color="white" />
               <span>Iniciando sesión...</span>
-            </div>
+            </span>
           ) : (
             'Iniciar Sesión'
           )}
-        </button>
-      </form>      
-      <div className="mt-4 text-center">
+        </button>      </form>      
+      <footer className="mt-4 text-center">
         <p className="text-gray-600">
           ¿No tienes una cuenta?{" "}
           <a href="/register" className="text-indigo-500 hover:underline">
             Regístrate aquí
           </a>
         </p>
-      </div>
+      </footer>
     </div>
   );
 };

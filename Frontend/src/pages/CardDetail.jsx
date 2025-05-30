@@ -41,14 +41,14 @@ function CardDetail() {
 
     return !isNaN(eventUserId) && currentUserId === eventUserId;
   }, [user, event]);
+
   // Hook personalizado para gestionar los asistentes al evento
   const { attendees, loadingAttendees, processingAction, isCurrentUserAttending,
     isAttendeeOrganizer, cancelAttendance, confirmCancelAttendance, showCancelConfirmation,
     setShowCancelConfirmation, removeAttendee } = useEventAttendees(id, isEventCreator());
 
   
-   // Hook personalizado para gestionar la galería de fotos del evento
-  
+  // Hook personalizado para gestionar la galería de fotos del evento
   const { selectedFile, uploadError, uploading, handleFileChange, clearSelectedFile,
     deletingPhotoId, canDeletePhoto, deletePhoto, expandedPhoto, openExpandedView,
     closeExpandedView, maxFileSize, allowedTypesFormatted, handleUploadPhoto,    
@@ -97,12 +97,11 @@ function CardDetail() {
       setShowDeleteConfirmation(false);
     }
   };
+
    /**
    * Maneja la eliminación de una foto con confirmación mediante Toast
    */
   const handleDeletePhoto = async (photoId, e) => {
-    // Mostramos una notificación informativa y luego eliminamos directamente
-    // Para UX mejorada, podrías implementar un modal de confirmación más elegante
     toast.warning('Eliminando foto...', { duration: 1000 });
     
     // Pequeño delay para que el usuario vea el mensaje
@@ -136,11 +135,10 @@ function CardDetail() {
       </div>
     )
   }
-
   return (
     <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-6xl mx-auto mb-8">
       {/* Imagen de cabecera */}
-      <div
+      <header
         className="h-64 md:h-80 bg-cover bg-center"
         style={event.image ? { backgroundImage: `url(${getImageUrl(event.image)})` } : {
           background: `linear-gradient(135deg, rgba(236,72,153,0.9) 0%, rgba(139,92,246,0.9) 100%)`
@@ -151,16 +149,15 @@ function CardDetail() {
             <h1 className="text-3xl font-bold drop-shadow-lg">{event.title}</h1>
             {event.subtitle && (
               <p className="text-xl text-gray-200 mt-2 drop-shadow-md">{event.subtitle}</p>
-            )}
-          </div>
+            )}          </div>
         </div>
-      </div>
-
+      </header>
       {/* Contenido con padding */}
-      <div className="p-6">
+      <main className="p-6">        
         {/* Botón para eliminar evento - solo visible para el creador */}
         {isEventCreator() && (
-          <div className="flex justify-end mb-6">            <button
+          <aside className="flex justify-end mb-6">
+            <button
               onClick={handleRequestDeleteEvent}
               disabled={deletingEvent}
               className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 transition-colors"
@@ -177,15 +174,14 @@ function CardDetail() {
                   </svg>
                   <span>Eliminar evento</span>
                 </>
-              )}
-            </button>
-          </div>
-        )}
-
+              )}            
+              </button>
+          </aside>
+        )}        
         {/* Detalles principales */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
+        <section className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
           {/* Fecha - más pequeña */}
-          <div className="bg-gradient-to-br from-fuchsia-50 to-indigo-50 p-6 rounded-lg border border-fuchsia-100 shadow-sm md:col-span-3">
+          <article className="bg-gradient-to-br from-fuchsia-50 to-indigo-50 p-6 rounded-lg border border-fuchsia-100 shadow-sm md:col-span-3">
             <h3 className="font-semibold text-fuchsia-600 mb-2">Fecha</h3>
             <p className="text-gray-700">{formatDate(event.event_date)}</p>
             {event.time && <p className="text-gray-700 mt-1">{event.time}</p>}
@@ -198,13 +194,11 @@ function CardDetail() {
                   scrollbarColor: '#d8b4fe #f0f0f0'
                 }}
               >
-                <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
-              </div>
+                <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>              </div>
             </div>
-          </div>
-
+          </article>          
           {/* Ubicación - más pequeña */}
-          <div className="bg-gradient-to-br from-fuchsia-50 to-indigo-50 p-6 rounded-lg border border-fuchsia-100 shadow-sm md:col-span-5">
+          <section className="bg-gradient-to-br from-fuchsia-50 to-indigo-50 p-6 rounded-lg border border-fuchsia-100 shadow-sm md:col-span-5">
             <h3 className="font-semibold text-fuchsia-600 mb-3">Ubicación</h3>
 
             {event.location ? (
@@ -225,7 +219,6 @@ function CardDetail() {
                       <p className="text-gray-500 italic">Coordenadas no disponibles</p>
                     )}
                   </div>
-
                   {/* Dirección debajo del mapa */}
                   {event.location.address && (
                     <div className="mt-3 p-2">
@@ -243,14 +236,13 @@ function CardDetail() {
                 <p className="text-gray-700">
                   {typeof event.location === 'string' ? event.location : "No especificada"}
                 </p>
-              )
+              )            
             ) : (
               <p className="text-gray-500 italic">Ubicación no especificada</p>
             )}
-          </div>
-
+          </section>          
           {/* Lista de asistentes */}
-          <div className="bg-gradient-to-br from-indigo-50 to-fuchsia-50 p-6 rounded-lg border border-indigo-100 shadow-sm md:col-span-4">
+          <section className="bg-gradient-to-br from-indigo-50 to-fuchsia-50 p-6 rounded-lg border border-indigo-100 shadow-sm md:col-span-4">
             <h3 className="font-semibold text-indigo-600 mb-3">Asistentes</h3>
 
             {loadingAttendees ? (
@@ -349,17 +341,14 @@ function CardDetail() {
               <div className="py-12 text-center">
                 <p className="text-gray-500 italic">
                   No hay asistentes confirmados aún
-                </p>
+                </p>              
               </div>
             )}
-          </div>
-        </div>
-
-        {/* SECCIÓN DE INVITACIONES (solo para el creador del evento) */}
+          </section>
+        </section>        {/* SECCIÓN DE INVITACIONES (solo para el creador del evento) */}
         {isEventCreator() && (
-          <div className="mt-12 border-t pt-8">
+          <section className="mt-12 border-t pt-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Gestionar invitaciones</h2>
-
             {/* Pestañas para invitar y ver invitaciones */}
             <div className="mb-8">
               <div className="border-b border-gray-200">
@@ -384,7 +373,6 @@ function CardDetail() {
                   </button>
                 </nav>
               </div>
-
               {/* Contenido de las pestañas */}
               <div className="py-6">
                 {activeTab === 'invite' ? (
@@ -394,21 +382,18 @@ function CardDetail() {
                   />
                 ) : (
                   <EventInvitationOrganizer eventId={id} />
-                )}
-              </div>
+                )}              </div>
             </div>
-          </div>
-        )}
-
+          </section>
+        )}        
         {/* SECCIÓN: FOTOS DEL EVENTO */}
-        <div className="mt-12 border-t pt-8">
+        <section className="mt-12 border-t pt-8">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Fotos del evento</h2>
-          </div>
-
+          </div>         
           {/* Subir nueva foto */}
           {token && (
-            <div className="mb-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <form className="mb-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
               <h3 className="text-lg font-medium text-gray-700 mb-4">¿Estuviste en este evento? ¡Comparte tus fotos!</h3>
               <div className="flex flex-col sm:flex-row gap-4">
                 <input
@@ -436,21 +421,18 @@ function CardDetail() {
               </div>
               {uploadError && (
                 <p className="mt-2 text-sm text-red-600">{uploadError}</p>
-              )}
-              <p className="mt-2 text-xs text-gray-500">
+              )}              <p className="mt-2 text-xs text-gray-500">
                 Formatos permitidos: {allowedTypesFormatted}. Tamaño máximo: {(maxFileSize / (1024 * 1024)).toFixed(0)}MB
               </p>
-            </div>
+            </form>
           )}
-
           {/* Mostrar fotos con botones de acción */}
           <div className="mt-6">
             {loadingPhotos ? (
               <Spinner size="md" color="indigo" containerClassName="py-10" text="Cargando fotos..." />
-            ) : photos.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            ) : photos.length > 0 ? (              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {photos.map((photo) => (
-                  <div
+                  <figure
                     key={photo.id}
                     className="relative group overflow-hidden rounded-lg shadow-md aspect-square cursor-pointer"
                     onClick={() => openExpandedView(photo)}
@@ -459,11 +441,9 @@ function CardDetail() {
                       src={`${API_URL}/uploads/event_photos/${photo.filename}`}
                       alt={`Foto de ${event.title}`}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-                      <div className="flex justify-between items-center mb-1">
+                    />                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                      <figcaption className="flex justify-between items-center mb-1">
                         <p className="text-white text-sm font-medium">{photo.user?.username || "Usuario"}</p>
-
                         {/* Botones de acción para la foto */}
                         <div className="flex space-x-2">
                           {/* Botón para marcar/desmarcar favorito */}
@@ -484,7 +464,6 @@ function CardDetail() {
                               )}
                             </button>
                           )}
-
                           {/* Botón para descargar la foto */}
                           <button
                             onClick={(e) => handleDownloadPhoto(photo, event?.title, e)}
@@ -495,7 +474,6 @@ function CardDetail() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
                           </button>
-
                           {/* Botón para eliminar la foto (solo para el propietario o el organizador) */}
                           {token && canDeletePhoto(photo) && (
                             <button
@@ -512,22 +490,20 @@ function CardDetail() {
                                 </svg>
                               )}
                             </button>
-                          )}
-                        </div>
-                      </div>
+                          )}                        
+                          </div>
+                      </figcaption>                      
                       <p className="text-gray-200 text-xs">{new Date(photo.created_at).toLocaleDateString()}</p>
                     </div>
-                  </div>
+                  </figure>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <p className="text-gray-500">Aún no hay fotos para este evento. ¡Sé el primero en compartir una!</p>
-              </div>
-            )}
+              </div>            )}
           </div>
-        </div>
-
+        </section>
         {/* Modal para vista ampliada con botones de acción */}
         {expandedPhoto && (
           <div
@@ -545,7 +521,6 @@ function CardDetail() {
                   alt={`Foto ampliada del evento ${event.title}`}
                   className="w-full h-auto max-h-[85vh] object-contain bg-black"
                 />
-
                 {/* Información del usuario y botones de acción */}
                 <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-4">
                   <div className="flex justify-between items-center">
@@ -553,7 +528,6 @@ function CardDetail() {
                       <p className="font-medium">{expandedPhoto.user?.username || "Usuario"}</p>
                       <p className="text-sm text-gray-200">{new Date(expandedPhoto.created_at).toLocaleDateString()}</p>
                     </div>
-
                     {/* Botones de acción en vista ampliada */}
                     <div className="flex items-center space-x-4">
                       {/* Botón de favorito */}
@@ -574,7 +548,6 @@ function CardDetail() {
                           )}
                         </button>
                       )}
-
                       {/* Botón para descargar foto */}
                       <button
                         onClick={(e) => handleDownloadPhoto(expandedPhoto, event?.title, e)}
@@ -585,7 +558,6 @@ function CardDetail() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
                       </button>
-
                       {/* Botón para eliminar foto (solo para propietario o creador) */}
                       {token && canDeletePhoto(expandedPhoto) && (
                         <button
@@ -607,9 +579,12 @@ function CardDetail() {
                   </div>
                 </div>
               </div>
+            </div>          
             </div>
-          </div>        )}
-      </div>      {/* Modal de confirmación para eliminar evento */}
+        )}
+      </main>
+
+      {/* Modal de confirmación para eliminar evento */}
       {showDeleteConfirmation && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
@@ -710,7 +685,7 @@ function CardDetail() {
                 )}
               </button>
             </div>
-          </div>
+          </div>        
         </div>
       )}
     </div>

@@ -45,11 +45,12 @@ function Profile() {
     minLength: 3,
     filterCurrentUser: true,
   });
+
   // Hook para gestión de amigos
   const { friends, fetchFriends, sendFriendRequest, acceptFriendRequest } = useFriends({
     refreshCallback: refreshNotifications,
     onRequestSent: (userId) => {
-      // Actualizar UI para mostrar "Solicitud enviada" en los resultados
+      // Actualizar para mostrar "Solicitud enviada" en los resultados
       updateUserInResults(userId, {
         friendship_status: 'requested',
         friendship_id: null
@@ -104,7 +105,7 @@ function Profile() {
     resetSearch();
   };
   /**
-   * Maneja el envío de solicitudes de amistad con retroalimentación al usuario
+   * Maneja el envío de solicitudes de amistad 
    */
   const handleSendFriendRequest = async (userId) => {
     const result = await sendFriendRequest(userId);
@@ -163,7 +164,6 @@ function Profile() {
     e.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
     e.target.onerror = null;
   };
-
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
@@ -179,34 +179,30 @@ function Profile() {
   }
 
   const avatarUrl = getAvatarUrl(user.avatar);
-
   if (!isMainProfile) {
     return (
       <div className="min-h-screen bg-gray-50 py-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Barra de navegación para secciones anidadas */}
-          <div className="mb-6 flex space-x-2">
+          <nav className="mb-6 flex space-x-2">
             <Link to="/profile" className="px-4 py-2 bg-white rounded-md shadow hover:bg-gray-50">
               ← Volver al perfil
             </Link>
-          </div>
-
+          </nav>
           {/* Contenedor para el componente anidado */}
           <div>
             <Outlet />
           </div>
-        </div>
+        </section>
       </div>
     );
   }
-
   return (
-    <div className="min-h-screen bg-gray-50 py-10 relative">
+    <main className="min-h-screen bg-gray-50 py-10 relative">
       {/* Modal para búsqueda de amigos */}
       {showFriendSearch && (
-        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
-          <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
-            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+        <dialog className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center" open>
+          <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">            <header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Buscar amigos</h3>
               <button
                 onClick={handleCloseFriendSearch}
@@ -216,8 +212,7 @@ function Profile() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-            </div>
-
+            </header>
             {/* Barra de búsqueda */}
             <div className="mb-4">
               <div className="relative">
@@ -230,17 +225,15 @@ function Profile() {
                 />
                 <div className="absolute left-3 top-2.5 text-gray-400">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />                  </svg>
                 </div>
               </div>
               {searchTerm.length > 0 && searchTerm.length < 3 && (
                 <p className="text-xs text-gray-500 mt-1">Ingresa al menos 3 caracteres para buscar</p>
               )}
             </div>
-
             {/* Resultados de búsqueda */}
-            <div className="overflow-y-auto flex-1">
+            <section className="overflow-y-auto flex-1">
               {isSearching ? (
                 <div className="py-10">
                   <Spinner size="md" color="fuchsia" />
@@ -312,107 +305,102 @@ function Profile() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   <p>Busca usuarios por nombre o email</p>
-                </div>
+                </div>              
               )}
-            </div>
+            </section>
 
-            <div className="mt-4 pt-3 border-t border-gray-100">
+            <footer className="mt-4 pt-3 border-t border-gray-100">              
               <button
                 onClick={handleCloseFriendSearch}
                 className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
               >
                 Cerrar
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+            </footer>
+          </section>
+        </dialog>
+      )}      
       {/* Modal para invitaciones a eventos */}
       {showInvitations && (
-        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
-          <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
-            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+        <dialog className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center" open>
+          <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
+            <header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Invitaciones a eventos</h3>
-            </div>
+            </header>
 
             <div className="overflow-y-auto flex-1">
               <EventRequest onInvitationProcessed={refreshNotifications} />
             </div>
 
-            <div className="mt-4 pt-3 border-t border-gray-100">
+            <footer className="mt-4 pt-3 border-t border-gray-100">
               <button
                 onClick={() => handleCloseInvitations()}
                 className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
               >
                 Cerrar
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+            </footer>
+          </section>
+        </dialog>
+      )}      
       {/* Modal para solicitudes de amistad */}
       {showFriendRequests && (
-        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
-          <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
-            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+        <dialog className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center" open>
+          <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
+            <header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Solicitudes de amistad</h3>
-            </div>
+            </header>
 
             <div className="overflow-y-auto flex-1">
               <FriendRequests onRequestProcessed={refreshNotifications} />
             </div>
 
-            <div className="mt-4 pt-3 border-t border-gray-100">
+            <footer className="mt-4 pt-3 border-t border-gray-100">
               <button
                 onClick={() => handleCloseFriendRequests()}
                 className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
               >
                 Cerrar
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+            </footer>
+          </section>
+        </dialog>
+      )}      
       {/* Nuevo Modal para mis eventos */}
       {showMyEvents && (
-        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
-          <div className="bg-white/95 rounded-xl shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
-            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+        <dialog className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center" open>
+          <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
+            <header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Mis Eventos</h3>
-            </div>
+            </header>
 
             <div className="overflow-y-auto flex-1">
               <EventUser />
             </div>
 
-            <div className="mt-4 pt-3 border-t border-gray-100">
+            <footer className="mt-4 pt-3 border-t border-gray-100">
               <button
                 onClick={() => setShowMyEvents(false)}
                 className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
               >
                 Cerrar
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </footer>
+          </section>
+        </dialog>
+      )}      
       {/* Modal para "No hay notificaciones" */}
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Card principal */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <article className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Portada y Avatar */}
-          <div className="relative">
+          <header className="relative">
             {/* Banner del perfil */}
-            <div className="h-48 w-full bg-gradient-to-r from-fuchsia-500 to-indigo-500">
+            <figure className="h-48 w-full bg-gradient-to-r from-fuchsia-500 to-indigo-500">
               <div className="w-full h-full bg-white/10 backdrop-blur-sm"></div>
-            </div>
-
+            </figure>
             {/* Avatar */}
-            <div className="absolute -bottom-16 left-8 border-4 border-white rounded-full shadow-xl bg-white">
+            <figure className="absolute -bottom-16 left-8 border-4 border-white rounded-full shadow-xl bg-white">
               <div className="w-24 h-24 rounded-full overflow-hidden">
                 <img
                   src={avatarUrl}
@@ -421,27 +409,25 @@ function Profile() {
                   onError={handleDefaultAvatarError}
                 />
               </div>
-            </div>
-          </div>
-
+            </figure>
+          </header>
           {/* Información del usuario */}
-          <div className="pl-8 pt-18 pb-6">
+          <section className="pl-8 pt-18 pb-6">
             <h1 className="text-3xl font-bold text-gray-800">{user.username}</h1>
             <p className="text-gray-500">{user.email}</p>
-          </div>
-        </div>
-
+          </section>
+        </article>        
         {/* Secciones adicionales */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <aside className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Notificaciones (antes Estadísticas) */}
-          <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <section className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+            <header className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
               </svg>
               Notificaciones
-            </h2>
-            <div className="grid grid-cols-1 gap-4">
+            </header>
+            <nav className="grid grid-cols-1 gap-4">
               <button
                 onClick={() => handleOpenFriendRequests()}
                 className="text-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center justify-center"
@@ -474,20 +460,19 @@ function Profile() {
                   {stats.invitationsPending > 0 && (
                     <span className="ml-2 inline-flex h-3 w-3 bg-fuchsia-500 rounded-full animate-pulse"></span>
                   )}
-                </div>
+                </div>                
                 <p className="text-gray-500 text-sm mt-1">Invitaciones a eventos</p>
               </button>
-            </div>
-          </div>
-
+            </nav>
+          </section>
           {/* Lista de amigos */}
-          <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <section className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+            <header className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
               </svg>
               Mis amigos
-            </h2>
+            </header>
             {loading ? (
               <div className="py-4">
                 <Spinner size="sm" color="fuchsia" />
@@ -524,7 +509,6 @@ function Profile() {
                     ))}
                   </ul>
                 </div>
-
                 {/* Indicador de desplazamiento (solo visible si hay más de 2 amigos) */}
                 {friends.length > 2 && (
                   <div className="flex justify-center mt-2 mb-3">
@@ -551,20 +535,19 @@ function Profile() {
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
-              </svg>
+              </svg>              
               Buscar amigos
             </button>
-          </div>
-
+          </section>
           {/* Acciones rápidas - Con elementos reducidos */}
-          <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <section className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+            <header className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
               </svg>
               Acciones rápidas
-            </h2>
-            <div className="space-y-3">
+            </header>
+            <nav className="space-y-3">
               <Link
                 to="edit-profile"
                 className="flex w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md text-gray-700 transition items-center"
@@ -574,7 +557,6 @@ function Profile() {
                 </svg>
                 Editar perfil
               </Link>
-
               {/* Botón para mostrar modal de mis eventos */}
               <button
                 onClick={() => setShowMyEvents(true)}
@@ -582,19 +564,18 @@ function Profile() {
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                </svg>
+                </svg>                
                 Mis eventos
               </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+            </nav>
+          </section>
+        </aside>
+      </section>
       {/* El Outlet está fuera de las tarjetas */}
-      <div className="mt-6 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="mt-6 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <Outlet />
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
 

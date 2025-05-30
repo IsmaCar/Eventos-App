@@ -29,7 +29,7 @@ const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = 
 
     const previousLocationRef = useRef({ lat: null, lng: null, address: '' });
 
-    // Efecto para actualizar la ubicación solo cuando realmente cambia
+
     useEffect(() => {
         // Solo notificar cambios si no estamos en modo readOnly
         if (!readOnly && tempMarker && tempAddress) {
@@ -112,13 +112,13 @@ const LocationPicker = ({ onLocationChange, readOnly = false, initialLocation = 
 
     // Definir opciones del mapa para modo readOnly
     const mapOptions = readOnly ? {
-        disableDefaultUI: false,   // Cambiar a false para mostrar controles UI
-        zoomControl: true,        // Mantener el control de zoom
-        scrollwheel: true,        // Permitir zoom con rueda del ratón
-        draggable: true,          // Permitir arrastrar el mapa
-        fullscreenControl: true,  // Añadir opción de pantalla completa
-        mapTypeControl: false,    // Opcional: controles de tipo de mapa
-        streetViewControl: false  // Opcional: ocultar Street View
+        disableDefaultUI: false,   
+        zoomControl: true,      
+        scrollwheel: true,        
+        draggable: true,         
+        fullscreenControl: true, 
+        mapTypeControl: false,    
+        streetViewControl: false  
     } : {};
 
     return (

@@ -20,12 +20,7 @@ function home() {
     const [filter, setFilter] = useState('todos'); 
     const [filteredEvents, setFilteredEvents] = useState([]);
 
-    /**
-     * Efecto para cargar eventos desde la API cuando el usuario está autenticado
-     * - Solo se ejecuta cuando hay un token válido
-     * - Maneja el estado de carga y posibles errores
-     * - Usa bandera isMounted para evitar actualizar estado en componentes desmontados
-     */
+
     useEffect(() => {
         let isMounted = true;
 
@@ -161,15 +156,14 @@ function home() {
         return <Spinner containerClassName="h-96" color="indigo" text="Cargando eventos..." />;
     }
 
-    const hasEvents = filteredEvents && filteredEvents.length > 0;
-
-    return (
+    const hasEvents = filteredEvents && filteredEvents.length > 0;    return (
         token ? (
-            <div className="max-w-6xl mx-auto px-4 py-6">
-                <section className="mb-8">                    <div className="bg-white rounded-lg shadow-md p-6">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <main className="max-w-6xl mx-auto px-4 py-6">
+                <section className="mb-8">
+                    <article className="bg-white rounded-lg shadow-md p-6">
+                        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                             {/* Selector de filtro con la opción "Todos" */}
-                            <div className="relative w-full sm:w-64">
+                            <nav className="relative w-full sm:w-64">
                                 <select
                                     value={filter}
                                     onChange={handleFilterChange}
@@ -179,15 +173,13 @@ function home() {
                                 >
                                     <option value="todos">Todos los eventos</option>
                                     <option value="proximos">Próximos eventos</option>
-                                    <option value="pasados">Eventos pasados</option>
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <option value="pasados">Eventos pasados</option>                                </select>
+                                <aside className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                         <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                                     </svg>
-                                </div>
-                            </div>
-
+                                </aside>
+                            </nav>
                             {/* Botón Crear Evento - Solo visible si hay eventos */}
                             {hasEvents && (
                                 <Link
@@ -200,70 +192,67 @@ function home() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                     </svg>
                                     Crear Evento
-                                </Link>
-                            )}
-                        </div>
-
+                                </Link>                            )}
+                        </header>
                         {/* Listado de eventos según el filtro */}
-                        <div className="mt-6">
+                        <section className="mt-6">
                             <div className="container mx-auto">
                                 <h1 className="text-2xl font-bold mb-6">
                                     {getFilterTitle()}
                                 </h1>
-
                                 {/* Verificar si hay eventos filtrados */}
                                 {hasEvents ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         {filteredEvents.map((event) => (
                                             <Link
                                                 key={event.id}
                                                 to={`/event/${event.id}`}
                                                 className="block group"
                                             >
-                                                <div
+                                                <article
                                                     className={`relative rounded-xl overflow-hidden h-60 shadow-md cursor-pointer transform 
                                                     transition-transform duration-300 hover:scale-[1.02]`}
                                                 >
                                                     {/* Fondo con imagen o gradiente aleatorio */}
                                                     {event.image ? (
-                                                        <div
+                                                        <figure
                                                             className="absolute inset-0 w-full h-full bg-cover bg-center"
                                                             style={{ backgroundImage: `url(${getImageUrl(event.image)})` }}
-                                                        ></div>
+                                                        ></figure>
                                                     ) : (
-                                                        <div className={`absolute inset-0 w-full h-full ${getRandomGradient()}`}>
+                                                        <figure className={`absolute inset-0 w-full h-full ${getRandomGradient()}`}>
                                                             <div className="flex items-center justify-center h-full">
                                                                 <span className="text-white text-4xl opacity-80"></span>
                                                             </div>
-                                                        </div>
+                                                        </figure>
                                                     )}                                                    {/* Capa de gradiente para mejorar legibilidad */}
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                                                     
                                                     {/* Badge para eventos pasados */}
                                                     {isDatePassed(event.event_date) && (
-                                                        <div className="absolute top-4 right-4 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
+                                                        <aside className="absolute top-4 right-4 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
                                                             Finalizado
-                                                        </div>
+                                                        </aside>
                                                     )}
 
                                                     {/* Contenido de la tarjeta */}
-                                                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
+                                                    <footer className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
                                                         <h2 className="text-xl font-bold drop-shadow-md">
                                                             {event.title}
                                                         </h2>
-                                                        <p className="text-gray-200 mt-1 drop-shadow-sm">
+                                                        <time className="text-gray-200 mt-1 drop-shadow-sm">
                                                             {formatEventDate(event.event_date)}
-                                                        </p>
-                                                    </div>
+                                                        </time>
+                                                    </footer>
 
                                                     {/* Efecto hover para la tarjeta */}
                                                     <div className="absolute inset-0 bg-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                                </div>
+                                                </article>
                                             </Link>
                                         ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-12">
+                                    </section>                                
+                                    ) : (
+                                    <section className="text-center py-12">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
@@ -273,7 +262,8 @@ function home() {
                                                 : filter === 'proximos'
                                                     ? 'No hay eventos próximos disponibles.'
                                                     : 'No hay eventos pasados para mostrar.'}
-                                        </p>                                        <Link
+                                        </p>                                        
+                                        <Link
                                             to="/create-event"
                                             className="bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white px-6 py-3 
                                                 rounded-lg font-medium hover:shadow-lg transform hover:scale-105 
@@ -284,27 +274,26 @@ function home() {
                                             </svg>
                                             Crear tu primer evento
                                         </Link>
-                                    </div>
+                                    </section>
                                 )}
                             </div>
-                        </div>
-                    </div>
+                        </section>
+                    </article>
                 </section>
-            </div>
-        ) : (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-fuchsia-50 py-12 px-4 sm:px-6">
+            </main>        ) : (
+            <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-fuchsia-50 py-12 px-4 sm:px-6">
                 <div className="max-w-5xl mx-auto">
                     {/* Hero Section */}
-                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-12">
-                        <div className="p-8 md:p-12 flex flex-col items-center text-center">
-                            <div className="mb-6">
+                    <section className="bg-white rounded-2xl shadow-xl overflow-hidden mb-12">
+                        <header className="p-8 md:p-12 flex flex-col items-center text-center">
+                            <figure className="mb-6">
                                 <img src="/images/logo.png" alt="Logo Eventos" className="h-24"
                                     onError={(e) => {
                                         e.target.onerror = null;
                                         e.target.style.display = 'none';
                                     }}
                                 />
-                            </div>
+                            </figure>
 
                             <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-indigo-600 mb-4">
                                 MEMENTO
@@ -314,7 +303,7 @@ function home() {
                                 Da vida a invitaciones tan únicas como los momentos que celebras.
                             </p>
 
-                            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                            <nav className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                                 <Link
                                     to="/login"
                                     className="bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white px-6 py-3 
@@ -337,64 +326,64 @@ function home() {
                                     </svg>
                                     Crear cuenta
                                 </Link>
-                            </div>
-                        </div>
-                    </div>
-
+                            </nav>
+                        </header>
+                    </section>
                     {/* Features Section */}
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl font-bold text-gray-800 mb-8">Organiza eventos inolvidables</h2>
+                    <section className="text-center mb-12">
+                        <header className="mb-8">
+                            <h2 className="text-3xl font-bold text-gray-800">Organiza eventos inolvidables</h2>
+                        </header>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {/* Feature 1 */}
-                            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                                <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-4">
+                            <article className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                                <figure className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
-                                </div>
+                                </figure>
                                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Crea eventos</h3>
                                 <p className="text-gray-600">
                                     Diseña y personaliza tus eventos con fechas, ubicaciones y descripciones detalladas.
                                 </p>
-                            </div>
+                            </article>
 
                             {/* Feature 2 */}
-                            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                                <div className="w-16 h-16 rounded-full bg-fuchsia-100 flex items-center justify-center mx-auto mb-4">
+                            <article className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                                <figure className="w-16 h-16 rounded-full bg-fuchsia-100 flex items-center justify-center mx-auto mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-fuchsia-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
-                                </div>
+                                </figure>
                                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Invita asistentes</h3>
                                 <p className="text-gray-600">
                                     Envía invitaciones y gestiona la lista de asistentes fácilmente.
                                 </p>
-                            </div>
+                            </article>
 
                             {/* Feature 3 */}
-                            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                                <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
+                            <article className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                                <figure className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
-                                </div>
+                                </figure>
                                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Comparte memorias</h3>
                                 <p className="text-gray-600">
                                     Sube y comparte fotos de tus eventos con todos los asistentes.
                                 </p>
-                            </div>
+                            </article>
                         </div>
-                    </div>
-
+                    </section>
                     {/* CTA Section */}
-                    <div className="text-center bg-gradient-to-r from-indigo-600 to-fuchsia-600 rounded-2xl shadow-xl p-8 text-white">
+                    <section className="text-center bg-gradient-to-r from-indigo-600 to-fuchsia-600 rounded-2xl shadow-xl p-8 text-white">
                         <h2 className="text-3xl font-bold mb-4">¿Listo para crear tu primer evento?</h2>
                         <p className="text-xl mb-6 max-w-2xl mx-auto">
                             Únete a nuestra comunidad y comienza a organizar eventos inolvidables con herramientas diseñadas para hacerlo todo más fácil.
                         </p>
-                    </div>
+                    </section>
                 </div>
-            </div>
+            </main>
         )
     )
 }

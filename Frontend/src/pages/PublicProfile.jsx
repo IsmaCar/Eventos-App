@@ -40,7 +40,7 @@ function PublicProfile() {
     findFriendshipId
   } = useFriends({
     refreshCallback: async () => {
-      // Opcional: actualizar el estado de amistad tras operaciones
+      // Actualizar el estado de amistad tras operaciones
       if (token && id) {
         const statusData = await checkFriendshipStatus(id);
         if (statusData.status) {
@@ -50,10 +50,6 @@ function PublicProfile() {
     }
   });
 
-  /**
-   * Efecto para cargar los datos del perfil al montar el componente
-   * o cuando cambia el ID del usuario, token o usuario actual
-   */
   useEffect(() => {
     async function loadProfileData() {
       if (!id) {
@@ -113,7 +109,7 @@ function PublicProfile() {
               setFriends(friendsData.friends || []);
             }
           } catch (friendsError) {
-            // Silenciar error - no impide ver el resto del perfil
+            
           }
 
           // Verificar estado de amistad si no es el perfil propio
@@ -186,9 +182,9 @@ function PublicProfile() {
       toast.error(error.message || 'Error al enviar solicitud de amistad');
     }
   };
+
   /**
    * Maneja la eliminación de una amistad existente
-   * Abre el modal de confirmación en lugar de usar confirm nativo
    */
   const handleRemoveFriend = () => {
     // Obtener el ID de amistad (de estado o buscarlo en amigos)
@@ -237,19 +233,18 @@ function PublicProfile() {
   if (loading) {
     return <Spinner containerClassName="h-screen" color="indigo" text="Cargando perfil..." />;
   }
-
   // Mostrar mensaje de error si hay problemas
   if (error || !profile) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="bg-white rounded-lg shadow-md p-8 text-center">
+        <section className="bg-white rounded-lg shadow-md p-8 text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Error</h2>
           <p className="text-gray-600 mb-6">{error || "No se encontró el perfil de usuario"}</p>
           <Link to="/" className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 
                     rounded-full hover:from-purple-600 hover:to-indigo-600 transition-colors">
             Volver al inicio
           </Link>
-        </div>
+        </section>
       </div>
     );
   }
@@ -257,36 +252,32 @@ function PublicProfile() {
   // Determinar si mostrar el botón de amistad
   const isCurrentUser = user && parseInt(user.id) === parseInt(id);
   const showFriendButton = token && !isCurrentUser;
-
   return (
     <div className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Card principal */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <article className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Portada y Avatar */}
-          <div className="relative">
+          <header className="relative">
             {/* Banner del perfil */}
-            <div className="h-48 w-full bg-gradient-to-r from-fuchsia-500 to-indigo-500">
+            <figure className="h-48 w-full bg-gradient-to-r from-fuchsia-500 to-indigo-500">
               <div className="w-full h-full bg-white/10 backdrop-blur-sm"></div>
-            </div>
-
+            </figure>
             {/* Avatar */}
-            <div className="absolute -bottom-16 left-8 border-4 border-white rounded-full shadow-xl bg-white">
+            <figure className="absolute -bottom-16 left-8 border-4 border-white rounded-full shadow-xl bg-white">
               <Avatar user={profile} size="xl" />
-            </div>
-          </div>
-
+            </figure>
+          </header>
           {/* Información del usuario */}
-          <div className="pt-20 pl-8 pb-6 pr-8">
+          <section className="pt-20 pl-8 pb-6 pr-8">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">{profile.username}</h1>
                 {/* Se eliminó la línea de "Miembro desde" */}
               </div>
-
               {/* Botón de añadir/eliminar amigo */}
               {showFriendButton && (
-                <div>
+                <nav>
                   {friendRequestStatus === 'friends' || friendRequestStatus === 'accepted' ? (
                     <button
                       onClick={handleRemoveFriend}
@@ -313,24 +304,23 @@ function PublicProfile() {
                         <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
                       </svg>
                       Añadir amigo
-                    </button>
+                    </button>                  
                   )}
-                </div>
+                </nav>
               )}
             </div>
-          </div>
-        </div>
-
+          </section>
+        </article>
         {/* Secciones adicionales - Estadísticas y Amigos */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <aside className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Estadísticas - Eventos y Amigos */}
-          <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <section className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+            <header className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
               </svg>
               Estadísticas
-            </h2>
+            </header>
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <p className="text-2xl font-bold text-fuchsia-600">{events.length || 0}</p>
@@ -341,16 +331,15 @@ function PublicProfile() {
                 <p className="text-gray-500 text-sm">Amigos</p>
               </div>
             </div>
-          </div>
-
+          </section>
           {/* Lista de amigos */}
-          <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <section className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+            <header className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
               </svg>
               Amigos
-            </h2>
+            </header>
             {friends.length > 0 ? (
               <>
                 {/* Contenedor con altura fija y desplazamiento personalizado */}
@@ -375,7 +364,6 @@ function PublicProfile() {
                     ))}
                   </ul>
                 </div>
-
                 {/* Indicador de desplazamiento (solo visible si hay más de 2 amigos) */}
                 {friends.length > 2 && (
                   <div className="flex justify-center mt-2">
@@ -386,28 +374,26 @@ function PublicProfile() {
                       </svg>
                     </span>
                   </div>
-                )}              </>
+                )}              
+                </>
             ) : (
               <div className="text-center py-10">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+                </svg>                
                 <p className="text-gray-500">Este usuario aún no tiene amigos</p>
               </div>
             )}
-          </div>
-        </div>
-
+          </section>
+        </aside>
         {/* Sección de eventos del usuario */}
-        <div className="mt-8 bg-white shadow-md rounded-xl p-6 border border-gray-100">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+        <section className="mt-8 bg-white shadow-md rounded-xl p-6 border border-gray-100">
+          <header className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
             </svg>
             Eventos creados
-          </h2>
-
-          {events.length === 0 ? (
+          </header>          {events.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-5xl mb-4">📅</div>
               <p className="text-gray-500 text-lg">Este usuario aún no ha creado eventos.</p>
@@ -417,12 +403,12 @@ function PublicProfile() {
               {/* Contenedor con desplazamiento horizontal */}
               <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-fuchsia-300 scrollbar-track-gray-100 pb-4">
                 <div className="flex gap-4" style={{ minWidth: 'min-content', width: '100%' }}>          {events.map(event => (
-                  <div
+                  <article
                     key={event.id}
                     className="relative group rounded-lg overflow-hidden h-48 shadow-md flex-shrink-0"
                     style={{ width: '280px' }} // Ancho fijo para cada tarjeta
                   >
-                    <div className="absolute inset-0 w-full h-full">
+                    <figure className="absolute inset-0 w-full h-full">
                       {event.image ? (
                         <div className="w-full h-full relative">
                           <img
@@ -435,17 +421,17 @@ function PublicProfile() {
                       ) : (
                         <div className={`w-full h-full ${getRandomGradient()} flex items-center justify-center`}>
                           <span className="text-white text-4xl"></span>
-                        </div>
+                        </div>                      
                       )}
-                    </div>
+                    </figure>
 
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
                     <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
                       <div>
                         <h3 className="font-medium text-lg text-white line-clamp-1 drop-shadow-sm">{event.title}</h3>
-                        <p className="text-gray-200 text-sm drop-shadow-sm">
+                        <time className="text-gray-200 text-sm drop-shadow-sm">
                           {formatLongDate(event.event_date)}
-                        </p>
+                        </time>
                         {isDatePassed(event.event_date) && (
                           <span className="absolute top-4 right-4 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
                             Finalizado
@@ -453,11 +439,10 @@ function PublicProfile() {
                         )}
                       </div>
                     </div>
-                  </div>
+                  </article>
                 ))}
                 </div>
               </div>
-
               {/* Indicador de desplazamiento (solo visible si hay más de 3 eventos) */}
               {events.length > 3 && (
                 <div className="flex justify-center mt-2">
@@ -469,21 +454,23 @@ function PublicProfile() {
                   </span>
                 </div>
               )}
-            </div>          )}
-        </div>
-      </div>
-
+            </div>          
+          )}
+        </section>
+      </section>
       {/* Modal de confirmación para eliminar amigo */}
       {showRemoveConfirmation && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 m-4 max-w-md w-full shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Eliminar amigo
-            </h3>
+        <dialog className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" open>
+          <section className="bg-white rounded-lg p-6 m-4 max-w-md w-full shadow-xl">
+            <header>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Eliminar amigo
+              </h3>
+            </header>
             <p className="text-gray-600 mb-6">
               ¿Estás seguro de que quieres eliminar a esta persona de tus amigos? Esta acción no se puede deshacer.
             </p>
-            <div className="flex justify-end space-x-3">
+            <footer className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowRemoveConfirmation(false)}
                 className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
@@ -496,9 +483,9 @@ function PublicProfile() {
               >
                 Eliminar amigo
               </button>
-            </div>
-          </div>
-        </div>
+            </footer>
+          </section>
+        </dialog>
       )}
     </div>
   );

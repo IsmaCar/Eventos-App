@@ -520,8 +520,8 @@ final class EventController extends AbstractController
             return $this->json(['error' => 'Evento no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        // Verificar que el usuario actual es el organizador del evento
-        if ($event->getUser()->getUserIdentifier() !== $user->getUserIdentifier()) {
+        // Verificar que el usuario actual es el organizador del evento o un administrador
+        if ($event->getUser() !== $user && !in_array('ROLE_ADMIN', $user->getRoles())) {
             return $this->json(['error' => 'No tienes permiso para realizar esta acción'], Response::HTTP_FORBIDDEN);
         }
 

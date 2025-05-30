@@ -132,9 +132,9 @@ function Dashboard() {
     // Función para cambiar entre paneles
     const togglePanel = (panel) => {
         if (activePanel === panel) {
-            setActivePanel(null); // Si ya está abierto, lo cerramos
+            setActivePanel(null); 
         } else {
-            setActivePanel(panel); // Si no, abrimos el nuevo panel
+            setActivePanel(panel); 
 
             // Cargar datos específicos según el panel seleccionado
             if (panel === 'users') {
@@ -227,7 +227,6 @@ function Dashboard() {
             fetchStats();
 
         } catch (error) {
-            console.error("Error al cambiar estado del usuario:", error);
             toast.error(`Error al cambiar estado del usuario: ${error.message}`);
         }
     };
@@ -278,73 +277,72 @@ function Dashboard() {
     // Solo renderiza el dashboard si hemos verificado y ES admin
     if (checked && isAdmin === true) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-10 px-6">
-                <div className="max-w-7xl mx-auto">
+            <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-10 px-6">
+                <article className="max-w-7xl mx-auto">
                     <header className="mb-12">
-                        <div className="flex items-center justify-between mb-6">
+                        <section className="flex items-center justify-between mb-6">
                             <h1 className="text-3xl font-bold text-gray-800 bg-clip-text bg-gradient-to-r from-fuchsia-600 to-indigo-600">
                                 Panel de Administración
                             </h1>
                             {/* Botón Volver al inicio eliminado */}
-                        </div>
+                        </section>
                         <p className="text-gray-600 max-w-3xl">
                             Bienvenido al panel de administración. Aquí puedes gestionar los usuarios y eventos de la plataforma.
-                        </p>                    </header>
-
+                        </p>                   
+                    </header>
                     {/* Resumen estadístico modificado - sin indicadores activos/bloqueados */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-                        <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-100">
-                            <div className="flex justify-between">
-                                <div>
+                    <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+                        <article className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-100">
+                            <section className="flex justify-between">
+                                <aside>
                                     <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Usuarios Totales</h2>
                                     <p className="text-3xl font-bold text-gray-800 my-2">{stats.users}</p>
                                     {/* Eliminados los indicadores de usuarios activos/bloqueados */}
-                                </div>
-                                <div className="p-3 bg-indigo-50 rounded-full">
+                                </aside>
+                                <figure className="p-3 bg-indigo-50 rounded-full">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                                     </svg>
-                                </div>
-                            </div>
-                        </div>
+                                </figure>
+                            </section>
+                        </article>
 
-                        <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-100">
-                            <div className="flex justify-between">
-                                <div>
+                        <article className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-100">
+                            <section className="flex justify-between">
+                                <aside>
                                     <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Eventos Totales</h2>
                                     <p className="text-3xl font-bold text-gray-800 my-2">{stats.events}</p>
                                     {/* Eliminados los indicadores de eventos activos/bloqueados */}
-                                </div>
-                                <div className="p-3 bg-fuchsia-50 rounded-full">
+                                </aside>
+                                <figure className="p-3 bg-fuchsia-50 rounded-full">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-fuchsia-500" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                                     </svg>
-                                </div>
-                            </div>
-                        </div>
+                                </figure>
+                            </section>
+                        </article>
 
-                        <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-100">
-                            <div className="flex justify-between">
-                                <div>
+                        <article className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-100">
+                            <section className="flex justify-between">
+                                <aside>
                                     <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Fotografías</h2>
                                     <p className="text-3xl font-bold text-gray-800 my-2">{stats.photos}</p>
-                                    <div className="text-sm text-gray-500 mt-1">
+                                    <span className="text-sm text-gray-500 mt-1">
                                         Contenido compartido en eventos
-                                    </div>
-                                </div>
-                                <div className="p-3 bg-amber-50 rounded-full">
+                                    </span>
+                                </aside>
+                                <figure className="p-3 bg-amber-50 rounded-full">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
                                     </svg>
-                                </div>
-                            </div>
+                                </figure>
+                            </section>
                             {/* Botón eliminado de la tarjeta de fotografías */}
-                        </div>
-                    </div>
-
+                        </article>
+                    </section>
                     {/* Panel de acciones rápidas */}
-                    <div className="bg-white rounded-xl shadow-md overflow-hidden mb-10">
-                        <div className="bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-6 py-4">
+                    <section className="bg-white rounded-xl shadow-md overflow-hidden mb-10">
+                        <header className="bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-6 py-4">
                             <h2 className="text-white text-lg font-semibold flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947z" clipRule="evenodd" />
@@ -352,8 +350,8 @@ function Dashboard() {
                                 </svg>
                                 Acciones Rápidas
                             </h2>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
+                        </header>
+                        <nav className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
                             <button
                                 onClick={() => togglePanel('users')}
                                 className={`flex items-center p-4 rounded-lg transition-all ${activePanel === 'users'
@@ -361,17 +359,17 @@ function Dashboard() {
                                     : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
                                     }`}
                             >
-                                <div className={`p-3 rounded-full ${activePanel === 'users' ? 'bg-indigo-600' : 'bg-white'} mr-4`}>
+                                <figure className={`p-3 rounded-full ${activePanel === 'users' ? 'bg-indigo-600' : 'bg-white'} mr-4`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${activePanel === 'users' ? 'text-white' : 'text-indigo-500'}`} viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                                     </svg>
-                                </div>
-                                <div className="flex-1">
+                                </figure>
+                                <section className="flex-1">
                                     <h3 className="font-semibold text-lg">Gestionar Usuarios</h3>
                                     <p className={`text-sm ${activePanel === 'users' ? 'text-indigo-100' : 'text-gray-500'}`}>
                                         Administrar cuentas de usuario, estados y permisos
                                     </p>
-                                </div>
+                                </section>
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                 </svg>
@@ -384,28 +382,27 @@ function Dashboard() {
                                     : 'bg-fuchsia-50 text-fuchsia-700 hover:bg-fuchsia-100'
                                     }`}
                             >
-                                <div className={`p-3 rounded-full ${activePanel === 'events' ? 'bg-fuchsia-600' : 'bg-white'} mr-4`}>
+                                <figure className={`p-3 rounded-full ${activePanel === 'events' ? 'bg-fuchsia-600' : 'bg-white'} mr-4`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${activePanel === 'events' ? 'text-white' : 'text-fuchsia-500'}`} viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                                     </svg>
-                                </div>
-                                <div className="flex-1">
+                                </figure>
+                                <section className="flex-1">
                                     <h3 className="font-semibold text-lg">Gestionar Eventos</h3>
                                     <p className={`text-sm ${activePanel === 'events' ? 'text-fuchsia-100' : 'text-gray-500'}`}>
                                         Moderar eventos, revisar contenido y gestionar permisos
                                     </p>
-                                </div>
+                                </section>
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                 </svg>
                             </button>
-                        </div>
-                    </div>
-
+                        </nav>
+                    </section>
                     {/* Paneles dinámicos según la selección */}
                     {activePanel === 'users' && (
-                        <div className="bg-white shadow-md rounded-xl overflow-hidden mb-6 transition-all duration-300 animate-fadeIn">
-                            <div className="bg-indigo-500 px-6 py-4 flex justify-between items-center">
+                        <section className="bg-white shadow-md rounded-xl overflow-hidden mb-6 transition-all duration-300 animate-fadeIn">
+                            <header className="bg-indigo-500 px-6 py-4 flex justify-between items-center">
                                 <h3 className="text-lg font-semibold text-white flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -421,12 +418,12 @@ function Dashboard() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
-                            </div>
+                            </header>
 
-                            <div className="p-6">
+                            <article className="p-6">
                                 {usersList.length > 0 ? (
                                     <>
-                                        <div className="overflow-x-auto">
+                                        <section className="overflow-x-auto">
                                             <table className="min-w-full bg-white rounded-lg overflow-hidden">
                                                 <thead>
                                                     <tr className="bg-gray-100 border-b">
@@ -443,12 +440,12 @@ function Dashboard() {
                                                         <tr key={user.id} className="border-b hover:bg-gray-50 transition-colors">
                                                             <td className="py-3 px-4 text-gray-600">{user.id}</td>
                                                             <td className="py-3 px-4">
-                                                                <div className="flex items-center">
-                                                                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 font-semibold mr-3">
+                                                                <section className="flex items-center">
+                                                                    <figure className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 font-semibold mr-3">
                                                                         {user.username.charAt(0).toUpperCase()}
-                                                                    </div>
+                                                                    </figure>
                                                                     <span className="font-medium text-gray-700">{user.username}</span>
-                                                                </div>
+                                                                </section>
                                                             </td>
                                                             <td className="py-3 px-4 text-gray-500">{user.email}</td>
                                                             <td className="py-3 px-4">
@@ -468,7 +465,7 @@ function Dashboard() {
                                                                 </span>
                                                             </td>
                                                             <td className="py-3 px-4">
-                                                                <div className="flex space-x-2">
+                                                                <nav className="flex space-x-2">
                                                                     <Link
                                                                         to={`/profile/${user.id}`}
                                                                         className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-100 transition-colors text-sm font-medium"
@@ -490,37 +487,37 @@ function Dashboard() {
                                                                             {user.banned ? 'Activar' : 'Bloquear'}
                                                                         </button>
                                                                     )}
-                                                                </div>
+                                                                </nav>
                                                             </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
                                             </table>
-                                        </div>
+                                        </section>
 
-                                        <div className="mt-6">
+                                        <footer className="mt-6">
                                             <Pagination
                                                 currentPage={usersPagination.currentPage}
                                                 totalPages={usersPagination.totalPages}
                                                 onPageChange={handleUserPageChange}
                                             />
-                                            <div className="text-sm text-gray-500 text-center mt-2">
+                                            <aside className="text-sm text-gray-500 text-center mt-2">
                                                 Mostrando {usersList.length} de {usersPagination.totalItems} usuarios
-                                            </div>
-                                        </div>
+                                            </aside>
+                                        </footer>
                                     </>
                                 ) : (
-                                    <div className="py-10 flex flex-col items-center justify-center">
+                                    <section className="py-10 flex flex-col items-center justify-center">
                                         <Spinner size="md" color="indigo" text="Cargando usuarios..." />
-                                    </div>
+                                    </section>
                                 )}
-                            </div>
-                        </div>
+                            </article>
+                        </section>
                     )}
 
                     {activePanel === 'events' && (
-                        <div className="bg-white shadow-md rounded-xl overflow-hidden mb-6 transition-all duration-300 animate-fadeIn">
-                            <div className="bg-fuchsia-500 px-6 py-4 flex justify-between items-center">
+                        <section className="bg-white shadow-md rounded-xl overflow-hidden mb-6 transition-all duration-300 animate-fadeIn">
+                            <header className="bg-fuchsia-500 px-6 py-4 flex justify-between items-center">
                                 <h3 className="text-lg font-semibold text-white flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
@@ -536,12 +533,12 @@ function Dashboard() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
-                            </div>
+                            </header>
 
-                            <div className="p-6">
+                            <article className="p-6">
                                 {eventsList.length > 0 ? (
                                     <>
-                                        <div className="overflow-x-auto">
+                                        <section className="overflow-x-auto">
                                             <table className="min-w-full bg-white rounded-lg overflow-hidden">
                                                 <thead>
                                                     <tr className="bg-gray-100 border-b">
@@ -558,23 +555,23 @@ function Dashboard() {
                                                         <tr key={event.id} className="border-b hover:bg-gray-50 transition-colors">
                                                             <td className="py-3 px-4 text-gray-600">{event.id}</td>
                                                             <td className="py-3 px-4">
-                                                                <div className="flex items-center">
-                                                                    <div className="w-8 h-8 rounded bg-fuchsia-100 flex items-center justify-center text-fuchsia-500 mr-3">
+                                                                <section className="flex items-center">
+                                                                    <figure className="w-8 h-8 rounded bg-fuchsia-100 flex items-center justify-center text-fuchsia-500 mr-3">
                                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                                             <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                                                                         </svg>
-                                                                    </div>
+                                                                    </figure>
                                                                     <span className="font-medium text-gray-700">{event.title}</span>
-                                                                </div>
+                                                                </section>
                                                             </td>
                                                             <td className="py-3 px-4 text-gray-500">{event.event_date}</td>
                                                             <td className="py-3 px-4">
-                                                                <div className="flex items-center">
-                                                                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs mr-2">
+                                                                <section className="flex items-center">
+                                                                    <figure className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs mr-2">
                                                                         {event.user.username.charAt(0).toUpperCase()}
-                                                                    </div>
+                                                                    </figure>
                                                                     <span>{event.user.username}</span>
-                                                                </div>
+                                                                </section>
                                                             </td>
                                                             <td className="py-3 px-4">
                                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${!event.banned
@@ -585,7 +582,7 @@ function Dashboard() {
                                                                 </span>
                                                             </td>
                                                             <td className="py-3 px-4">
-                                                                <div className="flex space-x-2">
+                                                                <nav className="flex space-x-2">
                                                                     <Link
                                                                         to={`/event/${event.id}`}
                                                                         className="px-3 py-1 bg-fuchsia-50 text-fuchsia-600 rounded hover:bg-fuchsia-100 transition-colors text-sm font-medium"
@@ -601,35 +598,35 @@ function Dashboard() {
                                                                     >
                                                                         {!event.banned ? 'Bloquear' : 'Activar'}
                                                                     </button>
-                                                                </div>
+                                                                </nav>
                                                             </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
                                             </table>
-                                        </div>
+                                        </section>
 
-                                        <div className="mt-6">
+                                        <footer className="mt-6">
                                             <Pagination
                                                 currentPage={eventsPagination.currentPage}
                                                 totalPages={eventsPagination.totalPages}
                                                 onPageChange={handleEventPageChange}
                                             />
-                                            <div className="text-sm text-gray-500 text-center mt-2">
+                                            <aside className="text-sm text-gray-500 text-center mt-2">
                                                 Mostrando {eventsList.length} de {eventsPagination.totalItems} eventos
-                                            </div>
-                                        </div>
+                                            </aside>
+                                        </footer>
                                     </>
                                 ) : (
-                                    <div className="py-10 flex flex-col items-center justify-center">
+                                    <section className="py-10 flex flex-col items-center justify-center">
                                         <Spinner size="md" color="fuchsia" text="Cargando eventos..." />
-                                    </div>
+                                    </section>
                                 )}
-                            </div>
-                        </div>
+                            </article>
+                        </section>
                     )}
-                </div>
-            </div>
+                </article>
+            </main>
         );
     }
 

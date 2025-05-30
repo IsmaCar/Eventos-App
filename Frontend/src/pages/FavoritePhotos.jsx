@@ -29,19 +29,15 @@ function FavoritePhotos() {
     handleDownloadPhoto
   } = usePhotoUploads(null, false, null, navigate);
   useEffect(() => {
-    // Redireccionar si no hay usuario autenticado
     if (!token) {
-      navigate('/login', { state: { from: '/favorite-photos' } });
+      navigate('/login');
       return;
     }
     
     fetchFavoritePhotos();
   }, [token, navigate]);
 
-  /**
-   * Obtiene las fotos favoritas del usuario desde la API
-   * Maneja errores y estados de carga apropiadamente
-   */
+
   const fetchFavoritePhotos = async () => {
     try {
       setLoading(true);
@@ -64,7 +60,8 @@ function FavoritePhotos() {
       setLoading(false);
     }
   };
-    /**
+
+  /**
    * Elimina una foto de la lista de favoritos del usuario
    * Actualiza la UI inmediatamente y cierra vista ampliada si es necesario
    */
@@ -101,7 +98,6 @@ function FavoritePhotos() {
   if (loading) {
     return <Spinner containerClassName="h-64" color="fuchsia" text="Cargando fotos favoritas..." />;
   }
-
   return (
     <div className="max-w-6xl mx-auto p-4">
       <header className="mb-8">
@@ -110,24 +106,26 @@ function FavoritePhotos() {
       </header>
       
       {error ? (
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg text-center mb-6">
+        <section className="bg-red-50 text-red-600 p-4 rounded-lg text-center mb-6">
           {error}
-        </div>
-      ) : photos.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        </section>
+      ) : photos.length > 0 ? (        
+      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {photos.map((photo) => (
-            <div 
+            <article 
               key={photo.id} 
               className="relative group overflow-hidden rounded-lg shadow-md aspect-square cursor-pointer"
               onClick={() => openExpandedView(photo)}
             >
-              <img
-                src={`${API_URL}/uploads/event_photos/${photo.filename}`}
-                alt={`Foto de evento`}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-                <div className="flex justify-between items-center">
+              <figure className="w-full h-full">
+                <img
+                  src={`${API_URL}/uploads/event_photos/${photo.filename}`}
+                  alt={`Foto de evento`}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </figure>
+              <aside className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                <nav className="flex justify-between items-center">
                   <Link 
                     to={`/events/${photo.event.id}`}
                     onClick={(e) => e.stopPropagation()}
@@ -136,7 +134,7 @@ function FavoritePhotos() {
                     {photo.event.title}
                   </Link>
                   
-                  <div className="flex space-x-2">
+                  <span className="flex space-x-2">
                     {/* Botón para descargar la foto */}
                     <button
                       onClick={(e) => handleDownloadPhoto(photo, photo.event?.title, e)}
@@ -146,8 +144,7 @@ function FavoritePhotos() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
-                    </button>
-                    
+                    </button>                  
                     {/* Botón para eliminar de favoritos */}
                     <button 
                       onClick={(e) => removeFavorite(photo.id, e)}
@@ -158,15 +155,15 @@ function FavoritePhotos() {
                         <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                       </svg>
                     </button>
-                  </div>
-                </div>
+                  </span>
+                </nav>
                 {/* Se ha eliminado la línea con la fecha */}
-              </div>
-            </div>
+              </aside>
+            </article>
           ))}
-        </div>
-      ) : (
-        <div className="text-center p-10 bg-gray-50 rounded-lg">
+        </section>      
+        ) : (
+        <section className="text-center p-10 bg-gray-50 rounded-lg">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
@@ -175,29 +172,30 @@ function FavoritePhotos() {
           <Link to="/" className="inline-block px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition">
             Explorar eventos
           </Link>
-        </div>
-      )}
-      
+        </section>
+      )}   
       {/* Vista ampliada - utilizando el estado del hook */}
       {expandedPhoto && (
-        <div 
+        <dialog 
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={closeExpandedView}
         >
-          <div className="relative max-w-5xl max-h-[90vh] w-full">
-            <div 
+          <article className="relative max-w-5xl max-h-[90vh] w-full">
+            <section 
               className="relative overflow-hidden rounded-lg"
               onClick={e => e.stopPropagation()}
             >
-              <img
-                src={`${API_URL}/uploads/event_photos/${expandedPhoto.filename}`}
-                alt="Foto favorita"
-                className="w-full h-auto max-h-[85vh] object-contain bg-black"
-              />
+              <figure className="w-full h-auto max-h-[85vh] object-contain bg-black">
+                <img
+                  src={`${API_URL}/uploads/event_photos/${expandedPhoto.filename}`}
+                  alt="Foto favorita"
+                  className="w-full h-auto max-h-[85vh] object-contain bg-black"
+                />
+              </figure>
               
-              <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-4">
+              <footer className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-4">
                 <div className="flex justify-between items-center">
-                  <div>
+                  <aside>
                     <Link 
                       to={`/events/${expandedPhoto.event.id}`}
                       onClick={(e) => {e.stopPropagation(); closeExpandedView();}}
@@ -209,9 +207,9 @@ function FavoritePhotos() {
                       {expandedPhoto.user?.username || "Usuario"}
                       {/* Se ha eliminado la fecha */}
                     </p>
-                  </div>
+                  </aside>
                   
-                  <div className="flex items-center space-x-4">
+                  <nav className="flex items-center space-x-4">
                     {/* Botón para descargar foto en vista ampliada */}
                     <button
                       onClick={(e) => handleDownloadPhoto(expandedPhoto, expandedPhoto.event?.title, e)}
@@ -233,12 +231,12 @@ function FavoritePhotos() {
                         <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                       </svg>
                     </button>
-                  </div>
+                  </nav>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
+              </footer>
+            </section>
+          </article>
+        </dialog>
       )}
     </div>
   );

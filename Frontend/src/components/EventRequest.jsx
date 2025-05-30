@@ -136,21 +136,20 @@ function EventRequest({ onInvitationProcessed }) {
       e.target.onerror = null;
     };
   };
-  
-  return (
+    return (
     <div className="bg-white rounded-xl shadow p-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Invitaciones a eventos</h2>
         {loading ? (
         <Spinner size="md" color="fuchsia" containerClassName="py-10" text="Cargando invitaciones..." />
       ) : 
     
-      invitations.length > 0 ? (<div className="space-y-4">
-          {invitations.map(invitation => (
-            <div key={invitation.id} className="bg-gray-50 p-4 rounded-lg">
+      invitations.length > 0 ? (<main className="space-y-4">          
+      {invitations.map(invitation => (
+            <article key={invitation.id} className="bg-gray-50 p-4 rounded-lg">
               {/* Información básica del evento */}
-              <div className="flex items-center">
+              <header className="flex items-center">
                 {/* Imagen o inicial del evento */}
-                <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex-shrink-0">
+                <figure className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex-shrink-0">
                   {invitation.event?.image ? (
                     <img
                       src={`${API_URL}/uploads/events/${invitation.event.image}`}
@@ -160,30 +159,30 @@ function EventRequest({ onInvitationProcessed }) {
                       onError={handleEventImageError}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-lg font-bold">
+                    <aside className="w-full h-full flex items-center justify-center text-white text-lg font-bold">
                       {invitation.event?.title ? invitation.event.title.charAt(0).toUpperCase() : 'E'}
-                    </div>
+                    </aside>
                   )}
-                </div>
+                </figure>
                 {/* Detalles del evento */}
-                <div className="ml-4">
+                <section className="ml-4">
                   <p className="text-gray-800 font-medium">{invitation.event?.title || 'Sin título'}</p>                  <p className="text-gray-500 text-sm">
                     {invitation.event?.eventDate 
                       ? formatShortDate(invitation.event.eventDate) 
                       : invitation.event?.event_date
                         ? formatShortDate(invitation.event.event_date)
                         : 'Fecha no disponible'}
-                  </p>
+                  </p>                  
                   {/* Información de quién envió la invitación */}
                   {invitation.invitedBy && (
                     <p className="text-gray-500 text-xs mt-1">
                       Invitado por: {invitation.invitedBy.username}
                     </p>
                   )}
-                </div>
-              </div>
+                </section>
+              </header>
               {/* Botones de acción para aceptar o rechazar */}
-              <div className="flex justify-end space-x-2 mt-4">
+              <nav className="flex justify-end space-x-2 mt-4">
                 {/* Botón para aceptar invitación */}
                 <button
                   onClick={() => handleEventInvitation(invitation.id, 'accepted')}
@@ -204,22 +203,20 @@ function EventRequest({ onInvitationProcessed }) {
                     invitation.processing 
                       ? 'bg-gray-400 cursor-not-allowed' 
                       : 'bg-red-500 hover:bg-red-600'
-                  } text-white rounded transition-colors`}
-                >
+                  } text-white rounded transition-colors`}                >
                   {invitation.processing ? 'Procesando...' : 'Rechazar'}
                 </button>
-              </div>
-            </div>
+              </nav>
+            </article>
           ))}        
-        </div>
+        </main>
       ) : (
         // Estado vacío - No hay invitaciones pendientes
-        <div className="text-center py-10">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <article className="text-center py-10">          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l-4-4m4 4l4-4" />
           </svg>
           <p className="text-gray-500">No tienes invitaciones pendientes</p>
-        </div>
+        </article>
       )}
     </div>
   );

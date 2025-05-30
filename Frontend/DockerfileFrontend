@@ -3,6 +3,11 @@ FROM node:22.2.0-alpine
 
 WORKDIR /app
 
+# Configurar variables de entorno para optimizar memoria
+ENV NODE_OPTIONS="--max-old-space-size=128"
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_AUDIT=false
+
 # Copiar el package.json y package-lock.json e instalar dependencias
 COPY package*.json ./
 

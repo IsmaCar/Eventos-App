@@ -24,10 +24,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
     loading: false  
   });
 
-  /**
-   * Configuración e integración del hook de búsqueda de usuarios
-   * Permite buscar usuarios registrados en tiempo real a medida que se escribe
-   */
+ // Hook useUserSearch para gestionar la búsqueda de usuarios
   const {
     searchTerm,            
     searchResults,         
@@ -78,15 +75,9 @@ function InviteUsers({ eventId, onInvitationSent }) {
       setSelectedUser(null);
     }
   };
-  /**
-   * Procesa el envío del formulario para invitar a un usuario al evento
-   * Flujo de la invitación:
-   * 1. Valida que el email sea válido
-   * 2. Envía la petición a la API
-   * 3. Procesa la respuesta y muestra feedback adecuado
-   * 4. Notifica al componente padre en caso de éxito
-
-   */  const handleSubmit = async (e) => {
+  
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!searchTerm.trim()) return;
@@ -144,12 +135,12 @@ function InviteUsers({ eventId, onInvitationSent }) {
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Campo unificado de búsqueda/email - Permite tanto buscar usuarios como introducir emails directamente */}
-        <div className="relative">
+        {/* Campo unificado de búsqueda/email - Permite tanto buscar por nombre o email */}
+        <section className="relative">          
           <label htmlFor="search-email" className="block text-sm font-medium text-gray-700 mb-1">
             Buscar usuario o introducir email
           </label>
-          <div className="relative">
+          <article className="relative">
             <input
               id="search-email"
               type="text"
@@ -176,9 +167,9 @@ function InviteUsers({ eventId, onInvitationSent }) {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-              </div>
+              </div>            
             )}
-          </div>
+          </article>
 
           {/* Texto de ayuda contextual - Guía al usuario según el estado actual del campo */}
           {searchTerm && !isSearching && (
@@ -190,10 +181,9 @@ function InviteUsers({ eventId, onInvitationSent }) {
                 : "Continúa escribiendo para buscar usuarios o introduce un email válido."}
             </p>
           )}
-          
-          {/* Visualización del usuario seleccionado - Permite confirmar la selección y editarla */}
+            {/* Visualización del usuario seleccionado - Permite confirmar la selección y editarla */}
           {selectedUser && (
-            <div className="mt-2 bg-indigo-50 p-2 rounded-md flex items-center">
+            <aside className="mt-2 bg-indigo-50 p-2 rounded-md flex items-center">
               {selectedUser.avatar ? (
                 <img
                   src={`${API_URL}/uploads/avatars/${selectedUser.avatar}`}
@@ -203,34 +193,31 @@ function InviteUsers({ eventId, onInvitationSent }) {
                     e.target.onerror = null;
                     e.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
                   }}
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center mr-3">
+                />             
+               ) : (
+                <figure className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center mr-3">
                   {selectedUser.username?.charAt(0).toUpperCase() || selectedUser.email?.charAt(0).toUpperCase()}
-                </div>
+                </figure>
               )}
-              <div className="flex-1">
+              <header className="flex-1">                
                 <p className="text-sm font-medium">{selectedUser.username || "Usuario"}</p>
                 <p className="text-xs text-gray-500">{selectedUser.email}</p>
-              </div>
+              </header>
               <button
                 type="button"
                 onClick={removeSelectedUser}
                 className="text-indigo-600 hover:text-indigo-800"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />                </svg>
               </button>
-            </div>
+            </aside>
           )}
-        </div>
-
+        </section>        
         {/* Resultados de búsqueda */}
         {!selectedUser && searchResults.length > 0 && (
-          <div className="mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-            {searchResults.map(user => (
-              <div
+          <section className="mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">            {searchResults.map(user => (
+              <article
                 key={user.id}
                 onClick={() => selectUser(user)}
                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
@@ -244,21 +231,22 @@ function InviteUsers({ eventId, onInvitationSent }) {
                       e.target.onerror = null;
                       e.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
                     }}
-                  />
+                  />                
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center mr-3">
+                  <figure className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center mr-3">
                     {user.username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                  </div>
+                  </figure>
                 )}
-                <div>
+                <header>
                   <p className="text-sm font-medium">{user.username || "Usuario"}</p>
                   <p className="text-xs text-gray-500">{user.email}</p>
-                </div>
-              </div>
+                </header>
+              </article>            
             ))}
-          </div>
-        )}        {/* Botón de envío de invitación */}
-        <div>
+          </section>
+        )}        
+        {/* Botón de envío de invitación */}
+        <nav>
           <button
             type="submit"
             disabled={status.loading || !searchTerm.trim() || !isValidEmail(searchTerm.trim())}
@@ -267,17 +255,17 @@ function InviteUsers({ eventId, onInvitationSent }) {
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:from-fuchsia-600 hover:to-indigo-600'
             }`}
-          >
-            {status.loading ? (
-              <div className="flex items-center justify-center">
+          >           
+           {status.loading ? (
+              <span className="flex items-center justify-center">
                 <Spinner size="xs" color="white" containerClassName="mr-2" />
                 <span>Enviando...</span>
-              </div>
+              </span>
             ) : (
               'Enviar invitación'
             )}
           </button>
-        </div>
+        </nav>
       </form>
     </div>
   );

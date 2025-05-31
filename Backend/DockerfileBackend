@@ -19,7 +19,7 @@ WORKDIR /app
 COPY . .
 
 # Instalar dependencias de producción
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Crear directorios necesarios y establecer permisos
 RUN mkdir -p /app/public/uploads/avatars \

@@ -44,7 +44,11 @@ final class EventController extends AbstractController
 
         // Validación datos obligatorios
         if (!$title || !$description || !$eventDateStr) {
-            return $this->json(['error' => 'Title, description and event_date are required'], Response::HTTP_BAD_REQUEST);
+            return $this->json(['error' => 'Titulo, descripción y fecha son obligatorios'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if(strlen($title) < 5 || strlen($title) > 20) {
+            return $this->json(['error' => 'El título debe tener entre 5 y 100 caracteres'], Response::HTTP_BAD_REQUEST);
         }
 
         // Validar longitud de la descripción
@@ -577,7 +581,7 @@ final class EventController extends AbstractController
 
         // Verificar que el evento esté actualmente activado
         if ($event->getStatus() !== 'activated') {
-            return $this->json(['error' => 'El evento ya ha sido desactivado'], Response::HTTP_BAD_REQUEST);
+            return $this->json(['error' => 'El evento ya ha sido eliminado'], Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -587,7 +591,7 @@ final class EventController extends AbstractController
             $entityManager->flush();
 
             return $this->json([
-                'message' => 'Evento desactivado correctamente',
+                'message' => 'Evento eliminado correctamente',
                 'event' => [
                     'id' => $event->getId(),
                     'title' => $event->getTitle(),

@@ -60,13 +60,7 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
     }
   };
 
-  /**
- * Maneja la cancelación de una invitación pendiente
- * - Solicita confirmación al usuario
- * - Envía petición DELETE a la API
- * - Actualiza la lista de invitaciones sin recargar desde el servidor
- * - Notifica al componente padre del cambio
- */
+
   const handleCancelInvitation = async (invitationId) => {
     if (!confirm('¿Estás seguro que deseas cancelar esta invitación?')) {
       return;

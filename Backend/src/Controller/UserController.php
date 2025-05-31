@@ -191,6 +191,7 @@ final class UserController extends AbstractController
         }
     }
 
+
     #[Route('/users/update', name: 'update_user', methods: ['PUT'])]
     public function updateUser(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -202,7 +203,7 @@ final class UserController extends AbstractController
         }
 
         try {
-            // Obtener el usuario real de la base de datos (igual que haces en uploadAvatar)
+            // Obtener el usuario real de la base de datos
             $identifier = $authUser->getUserIdentifier();
 
             // Intentar buscar primero por email
@@ -218,22 +219,53 @@ final class UserController extends AbstractController
 
             $data = json_decode($request->getContent(), true);
 
+            // VALIDACIÓN DE EMAIL - IGUAL QUE EN REGISTRO
             if (isset($data['email'])) {
-                $user->setEmail($data['email']);
+                if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $data['email'])) {
+                    return $this->json(['error' => 'El email debe tener un formato válido (ejemplo: usuario@dominio.com)'], 400);
+                }
+
+                // Verificar que el email no esté en uso por otro usuario
+                $existingEmailUser = $this->userRepository->findOneBy(['email' => $data['email']]);
+                if ($existingEmailUser && $existingEmailUser->getId() !== $user->getId()) {
+                    return $this->json(['error' => 'Este email ya está registrado por otro usuario'], 400);
+                }
+
+                $user->setEmail(strtolower(trim($data['email']))); // Normalizar email
             }
 
+            // VALIDACIÓN DE USERNAME - IGUAL QUE EN REGISTRO
             if (isset($data['username'])) {
+                if (strlen($data['username']) < 3 || strlen($data['username']) > 20) {
+                    return $this->json(['error' => 'El nombre de usuario debe tener entre 3 y 20 caracteres'], 400);
+                }
+
+                if (!preg_match('/^[a-zA-Z0-9_-]+$/', $data['username'])) {
+                    return $this->json(['error' => 'El nombre de usuario solo puede contener letras, números, guiones y guiones bajos'], 400);
+                }
+
+                // Verificar que el username no esté en uso por otro usuario
+                $existingUsernameUser = $this->userRepository->findOneBy(['username' => $data['username']]);
+                if ($existingUsernameUser && $existingUsernameUser->getId() !== $user->getId()) {
+                    return $this->json(['error' => 'Este nombre de usuario ya está registrado por otro usuario'], 400);
+                }
+
                 $user->setUsername($data['username']);
             }
 
+            // VALIDACIÓN DE PASSWORD - IGUAL QUE EN REGISTRO
             if (isset($data['newPassword'])) {
+                // Validar longitud de la nueva contraseña
+                if (strlen($data['newPassword']) < 6) {
+                    return $this->json(['error' => 'La nueva contraseña debe tener al menos 6 caracteres'], 400);
+                }
+
                 // Verificar la contraseña actual si se proporciona
                 if (isset($data['currentPassword'])) {
-                    $passwordEncoder = $this->passwordHasher;
-                    if (!$passwordEncoder->isPasswordValid($user, $data['currentPassword'])) {
+                    if (!$this->passwordHasher->isPasswordValid($user, $data['currentPassword'])) {
                         return $this->json(['error' => 'La contraseña actual es incorrecta'], 400);
                     }
-                    $user->setPassword($passwordEncoder->hashPassword($user, $data['newPassword']));
+                    $user->setPassword($this->passwordHasher->hashPassword($user, $data['newPassword']));
                 } else {
                     return $this->json(['error' => 'Debes proporcionar la contraseña actual para cambiar la contraseña'], 400);
                 }
@@ -360,5 +392,4 @@ final class UserController extends AbstractController
             return $this->json(['error' => 'Error al buscar usuarios: ' . $e->getMessage()], 500);
         }
     }
-
 }

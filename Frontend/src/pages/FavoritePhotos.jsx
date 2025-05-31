@@ -176,7 +176,7 @@ function FavoritePhotos() {
       )}   
       {/* Vista ampliada - utilizando el estado del hook */}
       {expandedPhoto && (
-        <dialog 
+        <div 
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={closeExpandedView}
         >
@@ -236,7 +236,7 @@ function FavoritePhotos() {
               </footer>
             </section>
           </article>
-        </dialog>
+        </div>
       )}
     </div>
   );

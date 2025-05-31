@@ -198,11 +198,10 @@ function Profile() {
     );
   }
   return (
-    <main className="min-h-screen bg-gray-50 py-10 relative">
-      {/* Modal para búsqueda de amigos */}
+    <main className="min-h-screen bg-gray-50 py-10 relative">      {/* Modal para búsqueda de amigos */}
       {showFriendSearch && (
-        <dialog className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center" open>
-          <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">            <header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
+          <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200"><header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Buscar amigos</h3>
               <button
                 onClick={handleCloseFriendSearch}
@@ -315,14 +314,12 @@ function Profile() {
                 className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
               >
                 Cerrar
-              </button>
-            </footer>
+              </button>            </footer>
           </section>
-        </dialog>
-      )}      
-      {/* Modal para invitaciones a eventos */}
+        </div>
+      )}        {/* Modal para invitaciones a eventos */}
       {showInvitations && (
-        <dialog className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center" open>
+        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
           <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
             <header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Invitaciones a eventos</h3>
@@ -341,11 +338,10 @@ function Profile() {
               </button>
             </footer>
           </section>
-        </dialog>
-      )}      
-      {/* Modal para solicitudes de amistad */}
+        </div>
+      )}      {/* Modal para solicitudes de amistad */}
       {showFriendRequests && (
-        <dialog className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center" open>
+        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
           <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
             <header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Solicitudes de amistad</h3>
@@ -364,11 +360,10 @@ function Profile() {
               </button>
             </footer>
           </section>
-        </dialog>
-      )}      
-      {/* Nuevo Modal para mis eventos */}
+        </div>
+      )}      {/* Nuevo Modal para mis eventos */}
       {showMyEvents && (
-        <dialog className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center" open>
+        <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
           <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
             <header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Mis Eventos</h3>
@@ -387,8 +382,8 @@ function Profile() {
               </button>
             </footer>
           </section>
-        </dialog>
-      )}      
+        </div>
+      )}
       {/* Modal para "No hay notificaciones" */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Card principal */}

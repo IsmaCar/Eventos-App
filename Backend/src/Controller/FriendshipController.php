@@ -151,12 +151,13 @@ class FriendshipController extends AbstractController
             return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        // Comprobar si ya hay una amistad o solicitud entre estos usuarios
-        $existingFriendship = $friendshipRepository->findFriendshipBetween($requester, $addressee);
+        // FIX: Comprobar si ya hay una amistad EN CUALQUIER DIRECCIÓN
+        $existingFriendship = $friendshipRepository->findAnyFriendshipBetween($requester, $addressee);
 
         if ($existingFriendship) {
             $status = $existingFriendship->getStatus();
 
+            // FIX: Si ya son amigos, no permitir enviar solicitud
             if ($status === Friendship::STATUS_ACCEPTED) {
                 return $this->json(['message' => 'Ya sois amigos'], Response::HTTP_CONFLICT);
             }
@@ -166,7 +167,7 @@ class FriendshipController extends AbstractController
                 if ($existingFriendship->getRequester() === $requester) {
                     return $this->json(['message' => 'Ya has enviado una solicitud de amistad a este usuario'], Response::HTTP_CONFLICT);
                 } else {
-                    // Si el otro usuario nos envió una solicitud, la aceptamos en lugar de crear una nueva
+                    // Si el otro usuario nos envió una solicitud, la aceptamos automáticamente
                     $existingFriendship->setStatus(Friendship::STATUS_ACCEPTED);
                     $entityManager->flush();
 
@@ -182,17 +183,21 @@ class FriendshipController extends AbstractController
             }
 
             if ($status === Friendship::STATUS_REJECTED) {
-                // Podríamos permitir volver a enviar una solicitud si fue rechazada
-                $existingFriendship->setStatus(Friendship::STATUS_PENDING);
-                $entityManager->flush();
+                // FIX: Solo permitir reenvío si el usuario actual fue quien envió la solicitud original
+                if ($existingFriendship->getRequester() === $requester) {
+                    $existingFriendship->setStatus(Friendship::STATUS_PENDING);
+                    $entityManager->flush();
 
-                return $this->json([
-                    'message' => 'Solicitud de amistad reenviada',
-                    'friendship' => [
-                        'id' => $existingFriendship->getId(),
-                        'status' => $existingFriendship->getStatus()
-                    ]
-                ]);
+                    return $this->json([
+                        'message' => 'Solicitud de amistad reenviada',
+                        'friendship' => [
+                            'id' => $existingFriendship->getId(),
+                            'status' => $existingFriendship->getStatus()
+                        ]
+                    ]);
+                } else {
+                    return $this->json(['message' => 'No puedes enviar solicitud a este usuario'], Response::HTTP_FORBIDDEN);
+                }
             }
 
             if ($status === Friendship::STATUS_BLOCKED) {

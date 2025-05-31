@@ -56,12 +56,6 @@ function EventRequest({ onInvitationProcessed }) {
   };
   /**
    * Gestiona la respuesta del usuario a una invitación (aceptar o rechazar)
-   * 
-   * Flujo del proceso:
-   * 1. Actualiza la UI para mostrar estado de procesamiento
-   * 2. Envía la respuesta a la API (accept/reject)
-   * 3. Elimina la invitación de la lista en caso de éxito
-   * 4. Revierte el estado visual y muestra error en caso de fallo)
    */
   const handleEventInvitation = async (invitationId, status) => {
     try {

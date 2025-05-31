@@ -3,14 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getAvatarUrl, handleAvatarError } from '../utils/Imagehelper';
 import Spinner from '../components/Spinner';
+import { useToast } from '../hooks/useToast'
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function EditProfile() {
-  const { user, token, updateUser } = useAuth();
+  const { user, token, updateUser, logout } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-
+  const { success, error } = useToast();
+  // Estados para formulario y UI
   const [formData, setFormData] = useState({
     username: user?.username || '',
     email: user?.email || '',
@@ -18,33 +20,16 @@ function EditProfile() {
     newPassword: '',
     confirmPassword: ''
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
 
 
   // Procesa el cambio de avatar, crea vista previa y sube el archivo
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validar tipo de archivo
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        setError('Formato de archivo no válido. Solo se permiten JPG, PNG y WEBP.');
-        return;
-      }
-
-      // Validar tamaño de archivo (máximo 1MB)
-      const maxSize = 1 * 1024 * 1024; // 1MB
-      if (file.size > maxSize) {
-        setError('El archivo es demasiado grande. El tamaño máximo es de 1MB.');
-        return;
-      }
-
-      // Si pasa las validaciones, continuar con la carga
-      setError(''); 
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result);
@@ -54,12 +39,9 @@ function EditProfile() {
     }
   }
 
-
   // Sube el avatar al servidor y actualiza el estado de la aplicación
   const uploadAvatar = async (file) => {
     setUpdating(true);
-    setSuccess('');
-    setError('');
 
     const formData = new FormData();
     formData.append('avatar', file);
@@ -74,17 +56,20 @@ function EditProfile() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al subir el avatar');
-      }
+      const errorData = await response.json().catch(() => ({}));
+      error(errorData.error || errorData.message || 'Error al subir el avatar');
+      setUpdating(false);
+      return;
+    }
 
       const data = await response.json();
 
-      
-      const avatarPath = data.user?.avatar
+      // Obtener la ruta del avatar según la estructura de respuesta del servidor
+      const avatarPath = data.user?.avatar;
 
       if (!avatarPath) {
-        throw new Error('No se pudo obtener la ruta del avatar');
+        error('No se pudo obtener la ruta del avatar');
+        setUpdating(false)
       }
 
       // Actualizar el contexto con la nueva ruta de avatar
@@ -94,17 +79,14 @@ function EditProfile() {
       });
 
       // Actualizar la vista previa con la nueva URL
-      const fullAvatarUrl = getAvatarUrl(avatarPath);
-
-      // Forzar recarga evitando caché
+      const fullAvatarUrl = getAvatarUrl(avatarPath);      
       const timestamp = new Date().getTime();
       setPreview(`${fullAvatarUrl}?t=${timestamp}`);
 
-      setSuccess('Avatar actualizado con éxito');
+      success('Avatar actualizado con éxito');
 
-    } catch (error) {
-      console.error('Error al subir el avatar', error);
-      setError('Error al subir el avatar: ' + (error.message || 'Intenta de nuevo'));
+    } catch (err) {
+      error('Error al subir el avatar: ' + (err.message || 'Intenta de nuevo'));
       setPreview(null);
     } finally {
       setUpdating(false);
@@ -113,33 +95,32 @@ function EditProfile() {
 
 
   // Actualiza el estado del formulario al cambiar los campos
+
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
-
   // Procesa la actualización del perfil con validaciones
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     setLoading(true);
-    try {
+
+    try {      
       // Validar cambio de contraseña
       if (formData.newPassword || formData.confirmPassword || formData.currentPassword) {
         if (!formData.currentPassword) {
-          setError('Debes introducir tu contraseña actual para cambiar la contraseña');
+          error('Debes introducir tu contraseña actual para cambiar la contraseña');
           setLoading(false);
           return;
         }
 
         if (!formData.newPassword) {
-          setError('Debes introducir una nueva contraseña');
+          error('Debes introducir una nueva contraseña');
           setLoading(false);
           return;
         }
 
         if (formData.newPassword !== formData.confirmPassword) {
-          setError('Las contraseñas nuevas no coinciden');
+          error('Las contraseñas nuevas no coinciden');
           setLoading(false);
           return;
         }
@@ -157,6 +138,11 @@ function EditProfile() {
         dataToUpdate.newPassword = formData.newPassword;
       }
 
+      // Verificar si se están cambiando credenciales críticas
+      const isChangingEmail = formData.email !== user.email;
+      const isChangingPassword = !!formData.newPassword;
+      const hasCriticalChanges = isChangingEmail || isChangingPassword;
+
       const response = await fetch(`${API_URL}/api/users/update`, {
         method: 'PUT',
         headers: {
@@ -164,32 +150,38 @@ function EditProfile() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(dataToUpdate)
-      });
-
+      });      
       if (!response.ok) {
-        response.status === 409
-          ? setError('El nombre de usuario o el correo electrónico ya están en uso')
-          : setError('Error al actualizar el perfil');
+        // Obtener el mensaje de error específico del backend
+        const errorData = await response.json();
+        error(errorData.error || 'Error al actualizar el perfil');
         setLoading(false);
         return;
       }
 
-      setSuccess('Perfil actualizado con éxito');
       const data = await response.json();
-      if (data.user) {
-        updateUser(data.user);
-      }
 
-      // Reiniciar campos de contraseña
-      setFormData({
-        ...formData,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-    } catch (error) {
-      console.error('Error al actualizar el perfil', error);
-      setError('Error al actualizar el perfil, intenta de nuevo');
+      if (hasCriticalChanges) {
+        logout();
+        window.location.href = '/login';
+        return;      
+      } else {
+        // Solo cambios menores (username): actualizar contexto y continuar
+        success('Perfil actualizado con éxito');
+        if (data.user) {
+          updateUser(data.user);
+        }
+
+        // Reiniciar campos de contraseña
+        setFormData({
+          ...formData,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      }    
+    } catch (err) {
+      error('Error al actualizar el perfil, intenta de nuevo');
     } finally {
       setLoading(false);
     }
@@ -197,16 +189,15 @@ function EditProfile() {
 
   // Determinar la URL del avatar a mostrar
   const avatarUrl = preview || getAvatarUrl(user?.avatar);
+
   return (
     <div className="max-w-4xl mx-auto my-10 p-6 bg-white rounded-xl shadow-lg">
-      <header className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Editar Perfil</h1>
-      </header>
+      <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Editar Perfil</h1>
 
-      <section className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-8">
         {/* Columna para el avatar */}
-        <aside className="md:col-span-1 flex flex-col items-center">
-          <figure className="mb-4 relative">
+        <div className="md:col-span-1 flex flex-col items-center">
+          <div className="mb-4 relative">
             <img
               src={avatarUrl}
               alt="Avatar de perfil"
@@ -229,29 +220,18 @@ function EditProfile() {
               ref={fileInputRef}
               className="hidden"
               accept="image/*"
-            />          
-          </figure>
+            />
+          </div>
           {updating && (
             <div className="flex items-center gap-2 text-fuchsia-600 mt-2">
               <Spinner size="xs" color="fuchsia" />
               <span>Actualizando avatar...</span>
             </div>
           )}
-        </aside>        
+        </div>        
         {/* Columna para el formulario */}
-        <article className="md:col-span-2">
+        <div className="md:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Mensajes de estado */}
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-                {success}
-              </div>
-            )}
 
             <div className="grid grid-cols-1 gap-6">
               {/* Campos principales */}
@@ -282,6 +262,7 @@ function EditProfile() {
                   className="w-full px-4 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent"
                 />
               </div>
+
               {/* Sección para cambio de contraseña */}
               <div className="pt-4 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Cambiar contraseña</h3>
@@ -329,8 +310,9 @@ function EditProfile() {
                 </div>
               </div>
             </div>
+
             {/* Botones de acción */}
-            <nav className="flex justify-end mt-8 space-x-3">
+            <div className="flex justify-end mt-8 space-x-3">
               <button
                 type="button"
                 onClick={() => navigate('/profile')}
@@ -352,10 +334,10 @@ function EditProfile() {
                   'Guardar cambios'
                 )}
               </button>
-            </nav>
+            </div>
           </form>
-        </article>      
-      </section>
+        </div>
+      </div>
     </div>
   );
 }

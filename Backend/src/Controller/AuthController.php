@@ -59,16 +59,47 @@ final class AuthController extends AbstractController
             }
         }
 
+        // VALIDACIÓN ADICIONAL DE EMAIL 
+        if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $data['email'])) {
+            return $this->json(
+                ['error' => 'El email debe tener un formato válido (ejemplo: usuario@dominio.com)'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        // VALIDACIÓN DE USERNAME 
+        if (strlen($data['username']) < 3 || strlen($data['username']) > 20) {
+            return $this->json(
+                ['error' => 'El nombre de usuario debe tener entre 3 y 20 caracteres'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $data['username'])) {
+            return $this->json(
+                ['error' => 'El nombre de usuario solo puede contener letras, números, guiones y guiones bajos'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        // VALIDACIÓN DE PASSWORD 
+        if (strlen($data['password']) < 6) {
+            return $this->json(
+                ['error' => 'La contraseña debe tener al menos 6 caracteres'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
         $userRepository = $entityManager->getRepository(User::class);
 
-        if($userRepository->findOneBy(['email' => $data['email']])) {
+        if ($userRepository->findOneBy(['email' => $data['email']])) {
             return $this->json(
                 ['error' => 'Este Email ya está registrado'],
                 Response::HTTP_UNPROCESSABLE_ENTITY
             );
         }
 
-        if($userRepository->findOneBy(['username' => $data['username']])) {
+        if ($userRepository->findOneBy(['username' => $data['username']])) {
             return $this->json(
                 ['error' => 'Este Nombre de usuario ya está registrado'],
                 Response::HTTP_UNPROCESSABLE_ENTITY
@@ -160,7 +191,7 @@ final class AuthController extends AbstractController
             // Buscar usuario por email
             $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
             if (!$user) {
-                return $this->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+                return $this->json(['error' => 'Usuario no registrado'], Response::HTTP_NOT_FOUND);
             }
 
             if ($user->isBanned()) {

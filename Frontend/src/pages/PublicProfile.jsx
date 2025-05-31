@@ -460,7 +460,7 @@ function PublicProfile() {
       </section>
       {/* Modal de confirmación para eliminar amigo */}
       {showRemoveConfirmation && (
-        <dialog className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" open>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" open>
           <section className="bg-white rounded-lg p-6 m-4 max-w-md w-full shadow-xl">
             <header>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -485,7 +485,7 @@ function PublicProfile() {
               </button>
             </footer>
           </section>
-        </dialog>
+        </div>
       )}
     </div>
   );

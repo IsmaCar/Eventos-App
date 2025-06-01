@@ -1,91 +1,224 @@
-# 📜 README - Aplicación Web de Eventos
+# Memento - Sistema de Gestión de Eventos
 
-## 🌟 Misión del Proyecto
+## Descripción del Proyecto
 
-Esta aplicación web tiene como misión facilitar la **organización, gestión y disfrute de eventos sociales y culturales** entre usuarios, proporcionando un entorno colaborativo donde puedan crear eventos, invitar a otras personas, compartir fotos, gestionar playlists musicales y comentar en tiempo real.
+**Memento** es una aplicación web completa para la gestión de eventos sociales desarrollada como Trabajo de Fin de Grado. La aplicación permite a los usuarios crear, gestionar y participar en eventos, así como mantener redes sociales con otros usuarios a través de invitaciones y sistema de amistad.
 
-La plataforma busca **mejorar la experiencia del usuario** durante la planificación de un evento y fomentar la interacción entre los asistentes, combinando funcionalidades de redes sociales con herramientas de organización personal.
+### Características Principales
 
----
+- **Autenticación JWT** - Sistema seguro de registro y login
+- **Gestión de Usuarios** - Perfiles personalizables con avatares
+- **Eventos** - Creación y gestión de eventos
+- **Ubicaciones** - Integración con Google Maps para localización
+- **Galería de Fotos** - Subida y gestión de imágenes por evento
+- **Fotos Favoritas** - Sistema de favoritos para fotos
+- **Sistema de Amistad** - Envío de solicitudes y gestión de amigos
+- **Invitaciones** - Invitar usuarios a eventos con estados de respuesta
+- **Panel de Administración** - Gestión completa para administradores
 
-## 💡 Resumen General
+## Arquitectura del Sistema
 
-La aplicación permite a los usuarios:
+### Stack Tecnológico
 
-- Crear y gestionar eventos personalizados.
-- Invitar a otros usuarios registrados o por correo electrónico.
-- Compartir comentarios y fotografías dentro de cada evento.
-- Crear y modificar playlists asociadas a eventos, con historial de cambios.
-- Consultar la ubicación exacta de los eventos mediante coordenadas y direcciones.
-- Llevar un control organizado del contenido compartido por los asistentes.
+**Frontend:**
+- React 19.0.0 con Vite
+- TailwindCSS 4.1.4 para estilos
+- Google Maps API para ubicaciones
+- React Router DOM para navegación
 
----
+**Backend:**
+- PHP 8.2 con Symfony 7.0
+- JWT Authentication con LexikJWTAuthenticationBundle
+- Doctrine ORM para base de datos
+- CORS configurado para desarrollo
 
-## ⚙️ Principales Funcionalidades
+**Base de Datos:**
+- MySQL 8.0
+- phpMyAdmin para administración
 
-### 👥 Usuarios
+**Infraestructura:**
+- Docker Compose para orquestación
+- Nginx como proxy reverso
+- Volúmenes persistentes para datos
 
-- Registro, inicio de sesión y gestión de cuenta.
-- Distinción entre **usuarios estándar** y **administrador**.
-- Cada usuario puede crear eventos y gestionar su contenido.
+## Instrucciones de Instalación y Despliegue
 
-### 📅 Eventos
+### Prerrequisitos
 
-- Creación de eventos con título, descripción, fecha y ubicación.
-- Visualización de eventos organizados por el usuario o a los que ha sido invitado.
+- **Docker** y **Docker Compose** instalados
+- **Git** para clonar el repositorio
+- **Puerto 5173** (Frontend), **8000** (Backend), **3306** (MySQL), **8080** (phpMyAdmin) disponibles
 
-### ✉️ Invitaciones
+### 1. Clonar el Repositorio
 
-- Envío de invitaciones a otros usuarios o a correos externos.
-- Gestión de invitaciones enviadas y recibidas.
+```bash
+git clone [https://github.com/IsmaCar/Eventos-App]
+cd Eventos-App
+```
 
-### 💬 Comentarios
+### 2. Configuración del Entorno
 
-- Sistema de comentarios en cada evento para fomentar la conversación.
+El proyecto incluye configuración automática a través de Docker. No se requiere configuración manual adicional.
 
-### 🖼️ Fotos
+### 3. Lanzar la Aplicación
 
-- Subida de imágenes dentro de cada evento por los asistentes.
-- Organización visual del contenido multimedia del evento.
+```bash
+# Construir y ejecutar todos los servicios
+docker-compose up --build
 
-### 🎶 Playlists
+# Ejecutar en segundo plano (opcional)
+docker-compose up -d --build
+```
 
-- Cada evento puede tener una playlist.
-- Se pueden añadir canciones con nombre, artista e imagen.
-- Funcionalidad de historial para registrar cambios (quién añadió o eliminó qué canción y cuándo).
+### 4. Verificar la Instalación
 
-### 📍 Ubicaciones
+La aplicación estará disponible a nivel local en:
 
-- Asignación de coordenadas geográficas y dirección física a cada evento.
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000
+- **phpMyAdmin**: http://localhost:8080
+- *modificar puerto servidor en docker-compose, por defecto p 8020* 
+- **Nginx (Proxy)**: https://localhost
 
-### 📢 Notificaciones
+La aplicación estará disponible deplegada en:
+- **Nginx (Proxy)**: https://52.4.36.65/
+- **Backend API**: http://52.4.36.65:8000/api (API Platform)
+- **EndPoints**: http://52.4.36.65:8000
+- **phpMyAdmin**: https://52.4.36.65/phpmyadmin
 
-- Sistema de notificaciones implementado desde el inicio.
-- Los usuarios reciben alertas en tiempo real sobre invitaciones, comentarios, cambios en playlists o nuevas fotos.
-- Mejora la participación y el seguimiento de los eventos en los que están involucrados.
 
----
+## Credenciales de Acceso
 
-## 🔐 Seguridad y Roles
+### Base de Datos MySQL
+- **Host**: localhost:3306
+- **Usuario**: `IsmaCar`
+- **Contraseña**: `secret`
+- **Base de datos**: `events`
 
-- Usuarios acceden mediante autenticación.
-- Solo los organizadores pueden modificar eventos.
-- Los administradores pueden visualizar toda la actividad dentro de la plataforma (para moderación o análisis).
+### phpMyAdmin
+- **URL**: http://localhost:8080
+- **Usuario**: `IsmaCar`
+- **Contraseña**: `secret`
 
----
+### Usuarios de Prueba
 
-## 🛠️ Tecnologías Utilizadas 
+La aplicación incluye **datos de prueba** preconfigurados:
 
-- **Frontend**: HTML, CSS, JavaScript, React/Vue, tailwind
-- **Backend**: Symfony
-- **Base de Datos**: MySQL 
-- **ORM**: Sequelize / Prisma / Eloquent
-- **Autenticación**: JWT / sesiones
+#### Usuario Administrador
+- **Email**: `admin@eventos.com`
+- **Contraseña**: `lur123`
+- **Rol**: Administrador
 
----
+#### Usuarios Normales
+- **Email**: `user1@eventos.com` a `user9@eventos.com`
+- **Contraseña**: `lur123` (para todos)
+- **Rol**: Usuario
 
-## 🚀 Próximas funcionalidades
+#### Ejemplos de usuarios específicos:
+- **María García**: `maria.garcia@email.com` - `lur123`
+- **Carlos López**: `carlos.lopez@email.com` - `lur123`
+- **Ana Martín**: `ana.martin@email.com` - `lur123`
 
-- Sugerencias automáticas de canciones o ubicaciones.
-- Modo privado/público de eventos.
+## Datos de Prueba Incluidos
+
+El sistema incluye un conjunto completo de datos de prueba:
+
+### Usuarios (10 registros)
+- 1 administrador + 9 usuarios normales
+- Todos con contraseña `lur123`
+- Perfiles con nombres, emails y biografías realistas
+
+### Eventos (10 registros)
+- Variedad de eventos: conferencias, festivales, workshops, etc.
+- Fechas futuras distribuidas en los próximos 6 meses
+- Diferentes organizadores y capacidades
+
+### Ubicaciones (5 registros)
+- Ciudades españolas: Madrid, Barcelona, Valencia, Sevilla, Bilbao
+- Coordenadas GPS reales para integración con mapas
+
+### Invitaciones (10 registros)
+- Estados diversos: pendiente, aceptada, rechazada
+- Relaciones cruzadas entre diferentes usuarios
+
+### Fotos (15 registros)
+- Imágenes distribuidas entre eventos
+- Diferentes usuarios como autores
+
+### Fotos Favoritas (10 registros)
+- Usuarios marcando fotos como favoritas
+- Simula interacción real del sistema
+
+### Amistades (10 registros)
+- Estados variados: aceptada, pendiente, rechazada
+- Red social realista entre usuarios
+
+## Configuración Automática
+
+### Docker Setup
+- **Migración automática** de base de datos al iniciar
+- **Generación automática** de claves JWT
+- **Creación automática** de carpetas de uploads
+- **Inserción automática** de datos de prueba
+
+### Volúmenes Persistentes
+- `database_data`: Datos de MySQL
+- `backend_vendor`: Dependencias de Composer
+- `backend_uploads`: Archivos subidos (avatares, fotos)
+
+## Endpoints de la API
+- Todos los endpoints se encuentran en la url http://localhost:8000
+
+## Funcionalidades de la Aplicación
+
+### Para Usuarios Regulares
+1. **Registro y Perfil**
+   - Crear cuenta con email único
+   - Personalizar perfil con avatar y biografía
+   - Visualizar perfiles de otros usuarios
+
+2. **Gestión de Eventos**
+   - Crear eventos con detalles completos
+   - Eliminar eventos
+   - Ver lista de todos los eventos disponibles
+   - Ver detalles específicos de cada evento
+   - Invitar usuarios de la app a los eventos
+
+3. **Sistema Social**
+   - Enviar y recibir solicitudes de amistad
+   - Gestionar lista de amigos
+   - Responder a invitaciones recibidas
+
+4. **Galería de Fotos**
+   - Subir fotos a eventos
+   - Ver galerías de todos los eventos
+   - Marcar fotos como favoritas
+   - Gestionar fotos favoritas
+
+### Para Administradores
+- **Panel de Administración** completo
+- **Gestión de usuarios** y eventos
+- **Moderación de contenido**
+- **Acceso a estadísticas del sistema**
+
+
+## Comandos de Gestión nivel Local
+
+### Docker
+```bash
+# Ver estado de todos los servicios
+docker-compose ps
+
+# Ver logs de un servicio específico
+docker-compose logs [servicio]
+
+# Reiniciar un servicio
+docker-compose restart [servicio]
+
+# Parar todos los servicios
+docker-compose down
+
+# Limpiar volúmenes
+docker-compose down -v
+```
 

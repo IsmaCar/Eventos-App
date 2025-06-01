@@ -9,65 +9,66 @@ use Symfony\Component\Routing\Attribute\Route;
 final class MainController extends AbstractController
 {    #[Route('/', name: 'app_main')]
     public function index(): Response
-    {
-        return $this->render('welcome.html.twig', [
+    {        return $this->render('welcome.html.twig', [
             'app_name' => 'Eventos App',
-            'environment' => $this->getParameter('kernel.environment'),
+            'environment' => $this->getParameter('kernel.environment'),            
             'api_endpoints' => [
                 'Autenticación' => [
-                    '/api/register' => 'Registro de usuarios',
-                    '/api/auth/login' => 'Autenticacíon de usuarios'
+                    'POST /api/register' => 'Registro de usuarios',
+                    'POST /api/login' => 'Autenticación de usuarios'
                 ],
                 'Gestión de eventos' => [
-                    '/api/event/create' => 'Crear nuevo evento',
-                    '/api/event' => 'Obtener eventos del usuario',
-                    '/api/event/{id}' => 'Obtener detalles del evento',
-                    '/api/event/delete/{id}' => 'Eliminar evento (solo creador)',
-                    '/api/events/{id}/photos' => 'Ver/subir fotos del evento',
-                    '/api/events/{id}/attendees' => 'Ver asistentes del evento',
-                    '/api/events/{id}/cancel-attendance' => 'Cancelar asistencia del evento',
-                    '/api/events/{id}/remove-attendee/{attendeeId}' => 'Borrar asistente (solo organizador)'
+                    'POST /api/event/create' => 'Crear nuevo evento',
+                    'GET /api/event' => 'Obtener eventos del usuario',
+                    'GET /api/event/{id}' => 'Obtener detalles del evento',
+                    'DELETE /api/event/delete/{id}' => 'Eliminar evento (solo creador)',
+                    'GET /api/events/{id}/photos' => 'Ver fotos del evento',
+                    'POST /api/events/{id}/photos' => 'Subir foto a evento',
+                    'GET /api/events/{id}/attendees' => 'Ver asistentes del evento',
+                    'POST /api/events/{id}/cancel-attendance' => 'Cancelar asistencia del evento',
+                    'DELETE /api/events/{id}/remove-attendee/{attendeeId}' => 'Borrar asistente (solo organizador)'
                 ],
                 'Gestión de usuarios' => [
-                    '/api/user/stats' => 'Estadísticas del usuario',
-                    '/api/user/event/' => 'Eventos del usuario autenticado',
-                    '/api/public/user/{id}' => 'Perfil público de usuario',
-                    '/api/public/user/{id}/events' => 'Eventos públicos del usuario',
-                    '/api/users/upload-avatar' => 'Actualizar avatar de usuario',
-                    '/api/users/update' => 'Actualizar información de usuario',
-                    '/api/tools/users/search' => 'Buscar usuarios'
+                    'GET /api/user/stats' => 'Estadísticas del usuario',
+                    'GET /api/user/event/' => 'Eventos del usuario autenticado',
+                    'GET /api/public/user/{id}' => 'Perfil público de usuario',
+                    'GET /api/public/user/{id}/events' => 'Eventos públicos del usuario',
+                    'POST /api/users/upload-avatar' => 'Actualizar avatar de usuario',
+                    'PUT /api/users/update' => 'Actualizar información de usuario',
+                    'GET /api/tools/users/search' => 'Buscar usuarios'
                 ],
                 'Gestión de amistades' => [
-                    '/api/friends' => 'Lista de amigos',
-                    '/api/friends/requests/received' => 'Solicitudes recibidas',
-                    '/api/friends/sent-requests' => 'Solicitudes enviadas',
-                    '/api/friends/request/{id}' => 'Enviar solicitud de amistad',
-                    '/api/friends/accept/{id}' => 'Acpetar solicitud de amistad',
-                    '/api/friends/reject/{id}' => 'Rechazar solicitud de amistad',
-                    '/api/friends/{id}' => 'Borrar amigo',
-                    '/api/friends/check/{id}' => 'Verificar estado de amistad',
-                    '/api/friends/search' => 'Buscar amigos',
-                    '/api/friends/user/{id}' => 'Amigos de un usuario'
+                    'GET /api/friends' => 'Lista de amigos',
+                    'GET /api/friends/requests/received' => 'Solicitudes recibidas',
+                    'GET /api/friends/sent-requests' => 'Solicitudes enviadas',
+                    'POST /api/friends/request/{id}' => 'Enviar solicitud de amistad',
+                    'POST /api/friends/accept/{id}' => 'Aceptar solicitud de amistad',
+                    'POST /api/friends/reject/{id}' => 'Rechazar solicitud de amistad',
+                    'DELETE /api/friends/{id}' => 'Borrar amigo',
+                    'GET /api/friends/check/{id}' => 'Verificar estado de amistad',
+                    'GET /api/friends/search' => 'Buscar amigos',
+                    'GET /api/friends/user/{id}' => 'Amigos de un usuario'
                 ],
                 'Gestión invitaciones a eventos' => [
-                    '/api/events/{id}/invite' => 'Enviar invitación a evento',
-                    '/api/invitations/{id}/respond' => 'Responder a invitación',
-                    '/api/invitations' => 'Invitaciones del usuario',
-                    '/api/events/{id}/invitations' => 'Invitaciones del evento',
-                    '/api/invitations/verify/{token}' => 'Verificar token de invitación',
-                    '/api/invitations/user/received' => 'Invitaciones recibidas'
+                    'POST /api/events/{id}/invite' => 'Enviar invitación a evento',
+                    'POST /api/invitations/{id}/respond' => 'Responder a invitación',
+                    'GET /api/invitations' => 'Invitaciones del usuario',
+                    'GET /api/events/{id}/invitations' => 'Invitaciones del evento',
+                    'GET /api/invitations/verify/{token}' => 'Verificar token de invitación',
+                    'GET /api/invitations/user/received' => 'Invitaciones recibidas'
                 ],
                 'Gestión fotos' => [
-                    '/api/photos/{id}/favorite' => 'Marcar foto favorita',
-                    '/api/photos/{id}/is-favorite' => 'Verificar si es favorita',
-                    '/api/user/favorite-photos' => 'Fotos favoritas del usuario',
-                    '/api/photos/{id}/download' => 'Descargar foto'
+                    'POST /api/photos/{id}/favorite' => 'Marcar/desmarcar foto favorita',
+                    'GET /api/photos/{id}/favorite' => 'Verificar si foto es favorita',
+                    'GET /api/photos/{id}/is-favorite' => 'Verificar estado de favorito',
+                    'GET /api/user/favorite-photos' => 'Fotos favoritas del usuario',
+                    'GET /api/photos/{id}/download' => 'Descargar foto'
                 ],
                 'Administración' => [
-                    '/api/admin/stats' => 'Estadísticas de administrador',
-                    '/api/admin/manage' => 'Panel de gestión',
-                    '/api/admin/user/{id}/toggle-status' => 'Banear/Desbanear usuario',
-                    '/api/admin/event/{id}/toggle-status' => 'Banear/Desbanear evento',
+                    'GET /api/admin/stats' => 'Estadísticas de administrador',
+                    'GET /api/admin/manage' => 'Panel de gestión de usuarios y eventos',
+                    'PUT /api/admin/user/{id}/toggle-status' => 'Banear/Desbanear usuario',
+                    'PUT /api/admin/event/{id}/toggle-status' => 'Banear/Desbanear evento'
                 ]
             ]
         ]);

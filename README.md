@@ -125,7 +125,7 @@ La aplicación incluye **datos de prueba** preconfigurados:
 - **Contraseña**: `secret`
   
 
-## Datos de Prueba Incluidos
+## Datos de Prueba Incluidos desplegado
 
 El sistema incluye un conjunto completo de datos de prueba:
 
@@ -158,7 +158,6 @@ El sistema incluye un conjunto completo de datos de prueba:
 - **Migración automática** de base de datos al iniciar
 - **Generación automática** de claves JWT
 - **Creación automática** de carpetas de uploads
-- **Inserción automática** de datos de prueba
 
 ### Volúmenes Persistentes
 - `database_data`: Datos de MySQL

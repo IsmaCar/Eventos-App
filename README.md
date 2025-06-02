@@ -82,7 +82,7 @@ docker-compose up -d --build
 - *modificar puerto servidor nginx en docker-compose, por defecto p 8020* 
 - **Aplicción app completa**: https://localhost
 
-## La aplicación estará disponible deplegada en AWS y estas son los enlaces:
+## La aplicación estará deplegada en AWS y estas son los enlaces:
 - **Enlace app completa**: https://52.4.36.65/
 - **Backend API**: http://52.4.36.65:8000/api (API Platform)
 - **EndPoints**: http://52.4.36.65:8000

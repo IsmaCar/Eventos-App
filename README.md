@@ -112,7 +112,7 @@ La aplicación incluye **datos de prueba** preconfigurados:
 - **Base de datos**: `events`
 
 ### phpMyAdmin
-- **URL**: http://localhost:8080
+- **URL**: http://localhost:8080 (en local), http://54.4.36.65:80 (despliegue) 
 - **Usuario**: `IsmaCar`
 - **Contraseña**: `secret`
 
@@ -168,7 +168,7 @@ El sistema incluye un conjunto completo de datos de prueba:
 ## Endpoints de la API
 - Todos los endpoints se encuentran en la url http://localhost:8000 cuando esta desplegado en local
 - Todos los endpoints se encuentran en la url http://52.4.36.65:8000 desplegado en AWS
-- 
+
 ## Funcionalidades de la Aplicación
 
 ### Para Usuarios Regulares

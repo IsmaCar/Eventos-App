@@ -125,7 +125,7 @@ La aplicación incluye **datos de prueba** preconfigurados:
 - **Contraseña**: `secret`
   
 
-## Datos de Prueba Incluidos desplegado
+## Datos de Prueba Incluidos Desplegado
 
 El sistema incluye un conjunto completo de datos de prueba:
 

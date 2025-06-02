@@ -166,8 +166,9 @@ El sistema incluye un conjunto completo de datos de prueba:
 - `backend_uploads`: Archivos subidos (avatares, fotos)
 
 ## Endpoints de la API
-- Todos los endpoints se encuentran en la url http://localhost:8000
-
+- Todos los endpoints se encuentran en la url http://localhost:8000 cuando esta desplegado en local
+- Todos los endpoints se encuentran en la url http://52.4.36.65:8000 desplegado en AWS
+- 
 ## Funcionalidades de la Aplicación
 
 ### Para Usuarios Regulares

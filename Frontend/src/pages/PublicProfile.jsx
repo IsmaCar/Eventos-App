@@ -194,8 +194,6 @@ function PublicProfile() {
       toast.error('No se puede eliminar la amistad en este momento');
       return;
     }
-
-    // Usar el método del hook que abre el modal de confirmación
     removeFriend(idToUse);
   };
 

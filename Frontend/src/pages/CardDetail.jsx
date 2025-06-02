@@ -19,6 +19,7 @@ import { useEventDetails } from '../hooks/useEventDetails'
 import { useEventAttendees } from '../hooks/useEventAttends'
 import { usePhotoUploads } from '../hooks/usePhotoUploads'
 import { useToast } from '../hooks/useToast'
+import { Avatar } from '../utils/Imagehelper'
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -264,19 +265,13 @@ function CardDetail() {
                           <Link
                             to={profileLink}
                             className="py-2 flex items-center gap-3 hover:bg-indigo-50/50 rounded px-2 transition-colors flex-grow"
-                          >
-                            {/* Avatar del usuario con imagen de perfil si existe */}
-                            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-indigo-100 bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex items-center justify-center">
-                              <img
-                                src={attendee.avatar ? `${API_URL}/uploads/avatars/${attendee.avatar}` : ''}
-                                alt={`${attendee.username}`}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
-                                  e.target.onerror = null;
-                                }}
-                              />
-                            </div>
+                          >                            
+                          {/* Avatar del usuario con imagen de perfil si existe */}
+                            <Avatar 
+                              user={attendee} 
+                              size="md" 
+                              className="border-2 border-indigo-100" 
+                            />
 
                             {/* Nombre de usuario */}
                             <span className="text-gray-700 font-medium">
@@ -345,7 +340,8 @@ function CardDetail() {
               </div>
             )}
           </section>
-        </section>        {/* SECCIÓN DE INVITACIONES (solo para el creador del evento) */}
+        </section>        
+        {/* SECCIÓN DE INVITACIONES (solo para el creador del evento) */}
         {isEventCreator() && (
           <section className="mt-12 border-t pt-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Gestionar invitaciones</h2>
@@ -382,7 +378,8 @@ function CardDetail() {
                   />
                 ) : (
                   <EventInvitationOrganizer eventId={id} />
-                )}              </div>
+                )}              
+                </div>
             </div>
           </section>
         )}        
@@ -421,7 +418,8 @@ function CardDetail() {
               </div>
               {uploadError && (
                 <p className="mt-2 text-sm text-red-600">{uploadError}</p>
-              )}              <p className="mt-2 text-xs text-gray-500">
+              )}              
+              <p className="mt-2 text-xs text-gray-500">
                 Formatos permitidos: {allowedTypesFormatted}. Tamaño máximo: {(maxFileSize / (1024 * 1024)).toFixed(0)}MB
               </p>
             </form>
@@ -430,7 +428,8 @@ function CardDetail() {
           <div className="mt-6">
             {loadingPhotos ? (
               <Spinner size="md" color="indigo" containerClassName="py-10" text="Cargando fotos..." />
-            ) : photos.length > 0 ? (              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            ) : photos.length > 0 ? (              
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {photos.map((photo) => (
                   <figure
                     key={photo.id}
@@ -583,7 +582,6 @@ function CardDetail() {
             </div>
         )}
       </main>
-
       {/* Modal de confirmación para eliminar evento */}
       {showDeleteConfirmation && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -636,7 +634,6 @@ function CardDetail() {
           </div>
         </div>
       )}
-
       {/* Modal de confirmación para cancelar asistencia */}
       {showCancelConfirmation && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

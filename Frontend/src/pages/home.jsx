@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useEvent } from '../context/EventContext';
 import { getRandomGradient } from '../utils/Imagehelper'
-import { isDatePassed } from '../utils/DateHelper';
+import { isDatePassed, formatLongDate } from '../utils/DateHelper';
 import { useAuth } from '../context/AuthContext';
 import Spinner from '../components/Spinner';
 
@@ -52,11 +52,8 @@ function home() {
 
     // Efecto separado para filtrar los eventos
     useEffect(() => {
-        if (!events || loading) {
-            return;
+        if (!events || loading) {            return;
         }
-
-        const now = new Date();
 
         try {
             // Filtrar eventos según el criterio seleccionado
@@ -70,8 +67,7 @@ function home() {
                     const eventDate = new Date(event.event_date);
                     return !isNaN(eventDate.getTime());
                 });
-            } else {
-                // Para "próximos" o "pasados", aplicamos el filtro de fecha
+            } else {                // Para "próximos" o "pasados", aplicamos el filtro de fecha
                 filtered = events.filter(event => {
                     if (!event.event_date) return false;
 
@@ -81,14 +77,11 @@ function home() {
                         console.warn("Fecha inválida para evento:", event);
                         return false;
                     }                    
-                    // Comparar solo la fecha (día, mes, año) sin la hora
-                    const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                     
                     if (filter === 'proximos') {
-                        return eventDay >= today;
+                        return !isDatePassed(event.event_date);
                     } else {
-                        return eventDay < today;
+                        return isDatePassed(event.event_date);
                     }
                 });
             }
@@ -115,28 +108,10 @@ function home() {
     // Manejador para el cambio de filtro
     const handleFilterChange = (e) => {
         setFilter(e.target.value);
-    };
-
-    // Función para formatear la fecha de manera legible - Sin hora
+    };    // Función para formatear la fecha de manera legible - Sin hora
     const formatEventDate = (dateString) => {
-        try {
-            const date = new Date(dateString);
-
-            if (isNaN(date.getTime())) {
-                return "Fecha no disponible";
-            }
-
-            const options = {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            };
-
-            return date.toLocaleDateString('es-ES', options);
-        } catch (error) {
-            console.error("Error formateando fecha:", error);
-            return "Fecha no disponible";
-        }
+        const formattedDate = formatLongDate(dateString);
+        return formattedDate || "Fecha no disponible";
     };
 
     // Función para obtener el título según el filtro seleccionado
@@ -283,7 +258,7 @@ function home() {
             </main>        ) : (
             <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-fuchsia-50 py-12 px-4 sm:px-6">
                 <div className="max-w-5xl mx-auto">
-                    {/* Hero Section */}
+                    {/* Sección principal */}
                     <section className="bg-white rounded-2xl shadow-xl overflow-hidden mb-12">
                         <header className="p-8 md:p-12 flex flex-col items-center text-center">
                             <figure className="mb-6">
@@ -329,13 +304,12 @@ function home() {
                             </nav>
                         </header>
                     </section>
-                    {/* Features Section */}
+                    {/* Sección de características */}
                     <section className="text-center mb-12">
                         <header className="mb-8">
                             <h2 className="text-3xl font-bold text-gray-800">Organiza eventos inolvidables</h2>
                         </header>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {/* Feature 1 */}
                             <article className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
                                 <figure className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -347,8 +321,6 @@ function home() {
                                     Diseña y personaliza tus eventos con fechas, ubicaciones y descripciones detalladas.
                                 </p>
                             </article>
-
-                            {/* Feature 2 */}
                             <article className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
                                 <figure className="w-16 h-16 rounded-full bg-fuchsia-100 flex items-center justify-center mx-auto mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-fuchsia-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -360,8 +332,6 @@ function home() {
                                     Envía invitaciones y gestiona la lista de asistentes fácilmente.
                                 </p>
                             </article>
-
-                            {/* Feature 3 */}
                             <article className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
                                 <figure className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -375,7 +345,6 @@ function home() {
                             </article>
                         </div>
                     </section>
-                    {/* CTA Section */}
                     <section className="text-center bg-gradient-to-r from-indigo-600 to-fuchsia-600 rounded-2xl shadow-xl p-8 text-white">
                         <h2 className="text-3xl font-bold mb-4">¿Listo para crear tu primer evento?</h2>
                         <p className="text-xl mb-6 max-w-2xl mx-auto">

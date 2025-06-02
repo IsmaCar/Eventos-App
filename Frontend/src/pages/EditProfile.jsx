@@ -26,7 +26,6 @@ function EditProfile() {
 
 
   // Procesa el cambio de avatar, crea vista previa y sube el archivo
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {

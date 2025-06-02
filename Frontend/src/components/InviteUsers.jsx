@@ -11,6 +11,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Spinner from './Spinner';
 import useUserSearch from '../hooks/useUserSearch';
+import { Avatar } from '../utils/Imagehelper';
 import { useToast } from '../hooks/useToast';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -31,7 +32,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
     isSearching,           
     handleSearchTermChange, 
     resetSearch,           
-    setSearchTerm            } = useUserSearch({
+    setSearchTerm} = useUserSearch({
     endpoint: '/api/tools/users/search',  
     paramName: 'query',               
     minLength: 2,                     
@@ -152,8 +153,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
                 ${searchTerm && isValidEmail(searchTerm) ? 'border-green-300 focus:ring-green-500 focus:border-green-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} 
                 rounded-md shadow-sm focus:outline-none`}
               disabled={status.loading}
-            />
-            
+            />           
             {/* Indicador visual de búsqueda en curso */}
             {isSearching && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -170,7 +170,6 @@ function InviteUsers({ eventId, onInvitationSent }) {
               </div>            
             )}
           </article>
-
           {/* Texto de ayuda contextual - Guía al usuario según el estado actual del campo */}
           {searchTerm && !isSearching && (
             <p className="mt-1 text-xs text-gray-500">
@@ -180,25 +179,15 @@ function InviteUsers({ eventId, onInvitationSent }) {
                   : "Email válido. Si no es un usuario registrado, se enviará una invitación por email." 
                 : "Continúa escribiendo para buscar usuarios o introduce un email válido."}
             </p>
-          )}
-            {/* Visualización del usuario seleccionado - Permite confirmar la selección y editarla */}
+          )}            
+          {/* Visualización del usuario seleccionado - Permite confirmar la selección y editarla */}
           {selectedUser && (
             <aside className="mt-2 bg-indigo-50 p-2 rounded-md flex items-center">
-              {selectedUser.avatar ? (
-                <img
-                  src={`${API_URL}/uploads/avatars/${selectedUser.avatar}`}
-                  alt={selectedUser.username}
-                  className="w-8 h-8 rounded-full mr-3"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
-                  }}
-                />             
-               ) : (
-                <figure className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center mr-3">
-                  {selectedUser.username?.charAt(0).toUpperCase() || selectedUser.email?.charAt(0).toUpperCase()}
-                </figure>
-              )}
+              <Avatar 
+                user={selectedUser}
+                size="sm"
+                className="mr-3"
+              />
               <header className="flex-1">                
                 <p className="text-sm font-medium">{selectedUser.username || "Usuario"}</p>
                 <p className="text-xs text-gray-500">{selectedUser.email}</p>
@@ -222,21 +211,11 @@ function InviteUsers({ eventId, onInvitationSent }) {
                 onClick={() => selectUser(user)}
                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
               >
-                {user.avatar ? (
-                  <img
-                    src={`${API_URL}/uploads/avatars/${user.avatar}`}
-                    alt={user.username}
-                    className="w-8 h-8 rounded-full mr-3"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
-                    }}
-                  />                
-                ) : (
-                  <figure className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center mr-3">
-                    {user.username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                  </figure>
-                )}
+                <Avatar 
+                  user={user}
+                  size="sm"
+                  className="mr-3"
+                />
                 <header>
                   <p className="text-sm font-medium">{user.username || "Usuario"}</p>
                   <p className="text-xs text-gray-500">{user.email}</p>

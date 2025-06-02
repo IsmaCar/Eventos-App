@@ -13,8 +13,8 @@ import { useAuth } from '../context/AuthContext';
 import Spinner from './Spinner';
 import { useFriends } from '../hooks/useFriends';
 import { formatShortDate } from '../utils/DateHelper';
+import { Avatar } from '../utils/Imagehelper';
 import { useToast } from '../hooks/useToast';
-
 const API_URL = import.meta.env.VITE_API_URL;
 
 function FriendRequests({ onRequestProcessed }) {
@@ -105,32 +105,12 @@ function FriendRequests({ onRequestProcessed }) {
     }
   };
 
-
   useEffect(() => {
     if (token) {
       fetchFriendRequests();
     }
   }, [token]);
 
-  // Maneja errores de carga de imágenes de avatar y establece imagen por defecto
-
-  const handleDefaultAvatarError = (e) => {
-    e.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
-    e.target.onerror = null; 
-  };
-
-  // Obtiene el nombre del usuario o proporciona un valor por defecto
-  const getUsername = (user) => {
-    if (!user) return 'Usuario desconocido';
-    return user.username || 'Sin nombre';
-  };
-
-  // Extrae la primera letra del nombre de usuario para mostrar como inicial
-  const getUserInitial = (user) => {
-    if (!user || !user.username) return '?';
-    return user.username.charAt(0).toUpperCase();
-  };
-  
   // Combina estados de carga del componente y del hook
   const isLoading = loading || friendsLoading;
     return (
@@ -142,26 +122,19 @@ function FriendRequests({ onRequestProcessed }) {
           requests.length > 0 ? (<section className="space-y-4">            
           {requests.map(request => (
               <article key={request.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-                {/* Sección de información del usuario que envía la solicitud */}
+                {/* Sección de información del usuario que envía la solicitud */}                
                 <aside className="flex items-center">                  
-                  {/* Avatar con imagen o inicial */}
-                  <figure className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-fuchsia-400 to-indigo-400 flex-shrink-0">
-                    {request.requester && request.requester.avatar ? (
-                      <img
-                        src={`${API_URL}/uploads/avatars/${request.requester.avatar}`}
-                        alt={`Avatar de ${getUsername(request.requester)}`}
-                        className="w-full h-full object-cover"
-                        onError={handleDefaultAvatarError}
-                      />                    ) : (
-                      <figcaption className="w-full h-full flex items-center justify-center text-white text-lg font-bold">
-                        {getUserInitial(request.requester)}
-                      </figcaption>
-                    )}                  
-                  </figure>
+                  <Avatar 
+                    user={request.requester || { username: 'Usuario desconocido' }}
+                    size="md"
+                    className="flex-shrink-0"
+                  />
                   <header className="ml-4">
-                    <p className="text-gray-800 font-medium">{getUsername(request.requester)}</p>
+                    <p className="text-gray-800 font-medium">
+                      {request.requester?.username || 'Usuario desconocido'}
+                    </p>
                     <time className="text-gray-500 text-sm">{formatShortDate(request.created_at)}</time>
-                 </header>               
+                 </header>
                  </aside>
                 <nav className="flex space-x-2">
                   <button

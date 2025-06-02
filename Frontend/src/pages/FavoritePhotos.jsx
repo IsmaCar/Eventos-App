@@ -8,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePhotoUploads } from '../hooks/usePhotoUploads';
 import { useToast } from '../hooks/useToast';
+import { getImageUrl } from '../utils/Imagehelper';
 import Spinner from '../components/Spinner';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -98,6 +99,7 @@ function FavoritePhotos() {
   if (loading) {
     return <Spinner containerClassName="h-64" color="fuchsia" text="Cargando fotos favoritas..." />;
   }
+
   return (
     <div className="max-w-6xl mx-auto p-4">
       <header className="mb-8">
@@ -116,10 +118,9 @@ function FavoritePhotos() {
               key={photo.id} 
               className="relative group overflow-hidden rounded-lg shadow-md aspect-square cursor-pointer"
               onClick={() => openExpandedView(photo)}
-            >
-              <figure className="w-full h-full">
+            >              <figure className="w-full h-full">
                 <img
-                  src={`${API_URL}/uploads/event_photos/${photo.filename}`}
+                  src={getImageUrl(`/uploads/event_photos/${photo.filename}`)}
                   alt={`Foto de evento`}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
@@ -184,10 +185,9 @@ function FavoritePhotos() {
             <section 
               className="relative overflow-hidden rounded-lg"
               onClick={e => e.stopPropagation()}
-            >
-              <figure className="w-full h-auto max-h-[85vh] object-contain bg-black">
+            >              <figure className="w-full h-auto max-h-[85vh] object-contain bg-black">
                 <img
-                  src={`${API_URL}/uploads/event_photos/${expandedPhoto.filename}`}
+                  src={getImageUrl(`/uploads/event_photos/${expandedPhoto.filename}`)}
                   alt="Foto favorita"
                   className="w-full h-auto max-h-[85vh] object-contain bg-black"
                 />

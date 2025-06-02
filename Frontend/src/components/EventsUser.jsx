@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Link } from 'react-router-dom'
 import { useEvent } from '../context/EventContext'
-import { getRandomGradient } from '../utils/Imagehelper'
+import { getRandomGradient } from '../utils/Imagehelper';
 import { formatLongDate, isDatePassed } from '../utils/DateHelper'
 import Spinner from './Spinner'
 import { useToast } from '../hooks/useToast'
@@ -84,7 +84,7 @@ function EventsUser() {
                 {event.image ? (
                   <figure
                     className="absolute inset-0 w-full h-full bg-cover bg-center"
-                    style={{ backgroundImage: `url(${getImageUrl(event.image)})` }}
+                    style={{ backgroundImage: `url(${getImageUrl(`/uploads/backgrounds/${event.image}`)})` }}
                   ></figure>
                 ) : (
                   <aside className={`absolute inset-0 w-full h-full ${getRandomGradient()}`}>

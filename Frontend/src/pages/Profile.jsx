@@ -74,18 +74,16 @@ function Profile() {
       setShowInvitations(true);
     }
   };
+
   // Función para abrir el modal de invitaciones y actualizar estadísticas
   const handleOpenInvitations = () => {
     setShowInvitations(true);
-    
-    // Actualizamos las estadísticas al abrir el modal para tener datos actualizados
-    refreshNotifications();
+        refreshNotifications();
   };
 
   // Función para cerrar el modal de invitaciones y actualizar estadísticas
   const handleCloseInvitations = () => {
     setShowInvitations(false);
-    // Actualizamos las estadísticas al cerrar el modal para reflejar los cambios
     refreshNotifications();
   };
   // Funciones para solicitudes de amistad
@@ -314,10 +312,12 @@ function Profile() {
                 className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors"
               >
                 Cerrar
-              </button>            </footer>
+              </button>            
+            </footer>
           </section>
         </div>
-      )}        {/* Modal para invitaciones a eventos */}
+      )}        
+      {/* Modal para invitaciones a eventos */}
       {showInvitations && (
         <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
           <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
@@ -339,7 +339,8 @@ function Profile() {
             </footer>
           </section>
         </div>
-      )}      {/* Modal para solicitudes de amistad */}
+      )}      
+      {/* Modal para solicitudes de amistad */}
       {showFriendRequests && (
         <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
           <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
@@ -361,7 +362,8 @@ function Profile() {
             </footer>
           </section>
         </div>
-      )}      {/* Nuevo Modal para mis eventos */}
+      )}      
+      {/* Nuevo Modal para mis eventos */}
       {showMyEvents && (
         <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
           <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
@@ -522,7 +524,6 @@ function Profile() {
                 <p className="text-sm mt-2">Agrega amigos para verlos aquí</p>
               </div>
             )}
-
             {/* Botón para buscar amigos */}
             <button
               onClick={() => setShowFriendSearch(true)}

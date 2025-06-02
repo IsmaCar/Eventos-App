@@ -265,7 +265,6 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
   };
 
   return {
-    // Estado de archivos
     selectedFile,
     uploadError,
     uploading,    // Acciones de archivos
@@ -273,22 +272,14 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
     uploadPhoto,
     handleUploadPhoto,  // Método con toast
     clearSelectedFile,
-
-    // Eliminación
     deletingPhotoId,
     canDeletePhoto,
     deletePhoto,
-
-    // Descarga
     downloadPhoto,
     handleDownloadPhoto, // Método con toast
-
-    // Vista expandida
     expandedPhoto,
     openExpandedView,
     closeExpandedView,
-
-    // Constantes para interfaz de usuario
     maxFileSize: MAX_FILE_SIZE,
     allowedTypes: ALLOWED_TYPES,
     allowedTypesFormatted: 'JPG, PNG, WEBP'

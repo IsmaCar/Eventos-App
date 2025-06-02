@@ -65,10 +65,10 @@ export const eventCardClasses = (event) => {
 };
 
 /**
- * Genera un fondo aleatorio para eventos sin imagen
- * Útil para crear variedad visual en las tarjetas
+ * Genera un gradiente determinístico basado en un identificador
+ * Evita re-renderizados innecesarios al usar el mismo gradiente para el mismo ID
  */
-export const getRandomGradient = () => {
+export const getRandomGradient = (id = null) => {
     const gradients = [
         "bg-gradient-to-br from-fuchsia-500 via-pink-500 to-indigo-500",
         "bg-gradient-to-br from-purple-500 via-pink-500 to-red-500",
@@ -77,7 +77,14 @@ export const getRandomGradient = () => {
         "bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500"
     ];
     
-    return gradients[Math.floor(Math.random() * gradients.length)];
+    // Si se proporciona un ID, usarlo para generar un índice determinístico
+    if (id !== null && id !== undefined) {
+        const index = Math.abs(parseInt(id) || 0) % gradients.length;
+        return gradients[index];
+    }
+    
+    // Si no hay ID, devolver el primer gradiente como fallback
+    return gradients[0];
 };
 
 /**

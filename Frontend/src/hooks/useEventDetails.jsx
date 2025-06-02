@@ -148,22 +148,15 @@ export function useEventDetails(eventId) {
   };
 
   return {
-    // Datos del evento
     event,
     loading,
     error,
     getImageUrl,
-    
-    // Fotos y favoritos
     photos,
     loadingPhotos,
     photoFavorites,
     toggleFavorite,
-    
-    // Utilidades
     formatDate,
-    
-    // Recargar datos
     fetchEventPhotos
   };
 }

@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import Spinner from './Spinner';
 import { formatLongDate } from '../utils/DateHelper';
 import { useToast } from '../hooks/useToast';
+import { Avatar } from '../utils/Imagehelper';
 const API_URL = import.meta.env.VITE_API_URL;
 
 /**
@@ -31,8 +32,6 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
 
   /**
    * Obtiene las invitaciones del evento desde la API
-   * - Filtra para mostrar solo invitaciones pendientes
-   * - Normaliza la estructura de datos recibida
    */
   const fetchInvitations = async () => {
     if (!token || !eventId) return;
@@ -79,7 +78,7 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
 
         toast.success('Invitación cancelada correctamente');
 
-        // Notifica al componente padre del cambio 
+        // Notifica al componente del cambio 
         if (typeof onInvitationProcessed === 'function') {
           onInvitationProcessed();
         }
@@ -98,6 +97,7 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
   useEffect(() => {
     fetchInvitations();
   }, [eventId, token]);
+
   if (loading) {
     return <Spinner size="md" color="indigo" containerClassName="py-8" text="Cargando invitaciones..." />;
   }
@@ -130,41 +130,31 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {invitations.map((invitation) => (
-              <tr key={invitation.id}>                
-            <td className="px-6 py-4 whitespace-nowrap">
-                <figure className="flex items-center">
-                  {/* Avatar o inicial */}
-                  {invitation.invitedUser?.avatar ? (
-                    <img
-                      className="h-8 w-8 rounded-full mr-3"
-                      src={`${API_URL}/uploads/avatars/${invitation.invitedUser.avatar}`}
-                      alt="Avatar de usuario"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = `${API_URL}/uploads/avatars/default-avatar.png`;
+              <tr key={invitation.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <figure className="flex items-center">
+                    {/*Utilizar HelperImage para la obtención del avatar*/}
+                    <Avatar
+                      user={invitation.invitedUser || {
+                        username: invitation.email || 'Usuario',
+                        avatar: null
                       }}
+                      size="sm"
+                      className="mr-3"
                     />
-                  ) : (
-                    <aside className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
-                      <span className="text-indigo-700 font-medium text-sm">
-                        {invitation.email ? invitation.email[0].toUpperCase() : "?"}
-                      </span>
-                    </aside>
-                  )}
-
-                  {/* Información del usuario */}
-                  <figcaption>
-                    <header className="text-sm font-medium text-gray-900">
-                      {invitation.invitedUser
-                        ? (invitation.invitedUser.username || "Usuario sin nombre")
-                        : "Usuario no registrado"}
-                    </header>
-                    <address className="text-sm text-gray-500">
-                      {invitation.email}
-                    </address>
-                  </figcaption>
-                </figure>
-                  </td>
+                    {/* Información del usuario */}
+                    <figcaption>
+                      <header className="text-sm font-medium text-gray-900">
+                        {invitation.invitedUser
+                          ? (invitation.invitedUser.username || "Usuario sin nombre")
+                          : "Usuario no registrado"}
+                      </header>
+                      <address className="text-sm text-gray-500">
+                        {invitation.email}
+                      </address>
+                    </figcaption>
+                  </figure>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                     {translateStatus(invitation.status)}
@@ -182,9 +172,9 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
                       </button>
                     </nav>
                   )}
-              </td>
+                </td>
               </tr>
-            ))}          
+            ))}
           </tbody>
         </table>
       </article>

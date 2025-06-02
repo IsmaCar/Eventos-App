@@ -27,7 +27,7 @@
 - React Router DOM para navegación
 
 **Backend:**
-- PHP 8.2 con Symfony 7.0
+- PHP 8.3 con Symfony 7.0
 - JWT Authentication con LexikJWTAuthenticationBundle
 - Doctrine ORM para base de datos
 - CORS configurado para desarrollo
@@ -52,7 +52,7 @@
 ### 1. Clonar el Repositorio
 
 ```bash
-git clone [https://github.com/IsmaCar/Eventos-App]
+git clone https://github.com/IsmaCar/Eventos-App
 cd Eventos-App
 ```
 
@@ -72,33 +72,22 @@ docker-compose up -d --build
 
 ### 4. Verificar la Instalación
 
-La aplicación estará disponible a nivel local en:
+## La aplicación estará disponible a nivel local en:
+
+### Actualizar dominio en etc\hosts el puerto 127.0.0.1 debe llamarse localhost para su funcionamiento en local
 
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:8000
 - **phpMyAdmin**: http://localhost:8080
-- *modificar puerto servidor en docker-compose, por defecto p 8020* 
-- **Nginx (Proxy)**: https://localhost
+- *modificar puerto servidor nginx en docker-compose, por defecto p 8020* 
+- **Aplicción app completa**: https://localhost
 
-La aplicación estará disponible deplegada en:
-- **Nginx (Proxy)**: https://52.4.36.65/
+## La aplicación estará disponible deplegada en AWS y estas son los enlaces:
+- **Enlace app completa**: https://52.4.36.65/
 - **Backend API**: http://52.4.36.65:8000/api (API Platform)
 - **EndPoints**: http://52.4.36.65:8000
 - **phpMyAdmin**: https://52.4.36.65/phpmyadmin
 
-
-## Credenciales de Acceso
-
-### Base de Datos MySQL
-- **Host**: localhost:3306
-- **Usuario**: `IsmaCar`
-- **Contraseña**: `secret`
-- **Base de datos**: `events`
-
-### phpMyAdmin
-- **URL**: http://localhost:8080
-- **Usuario**: `IsmaCar`
-- **Contraseña**: `secret`
 
 ### Usuarios de Prueba
 
@@ -114,10 +103,44 @@ La aplicación incluye **datos de prueba** preconfigurados:
 - **Contraseña**: `lur123` (para todos)
 - **Rol**: Usuario
 
-#### Ejemplos de usuarios específicos:
-- **María García**: `maria.garcia@email.com` - `lur123`
-- **Carlos López**: `carlos.lopez@email.com` - `lur123`
-- **Ana Martín**: `ana.martin@email.com` - `lur123`
+## Credenciales de Acceso
+
+### Base de Datos MySQL
+- **Host**: localhost:3306
+- **Usuario**: `IsmaCar`
+- **Contraseña**: `secret`
+- **Base de datos**: `events`
+
+### phpMyAdmin
+- **URL**: http://localhost:8080
+- **Usuario**: `IsmaCar`
+- **Contraseña**: `secret`
+
+Si la base de datos no se ha creado correctamente (falta alguna tabla o columna)
+Ejecutar estos comandos:
+- **Entrar en el contenedor**: sudo docker exec -it eventos-backend bash
+- **Sincronizodar migraciones**: 
+```bash
+php bin/console doctrine:migrations:version --add --all --no-interaction
+php bin/console doctrine:migrations:migrate --no-interaction
+```
+### Usuarios de Prueba
+
+La aplicación incluye **datos de prueba** preconfigurados:
+
+#### Usuario Administrador
+- **Email**: `admin@eventos.com`
+- **Contraseña**: `adminMemento123`
+- **Rol**: Administrador
+
+#### Usuarios Normales
+- **Email**: `user1@eventos.com` a `user9@eventos.com`
+- **Contraseña**: `lur123` (para todos)
+- **Rol**: Usuario
+
+Cada usuario tendra varios amigos, notificaciones y eventos diferentes,
+user1 y user2 serán los que usaremos para probar las funcionalidades de la app
+aunque todos los usuarios registrados se pueden utilizar.
 
 ## Datos de Prueba Incluidos
 
@@ -140,14 +163,6 @@ El sistema incluye un conjunto completo de datos de prueba:
 ### Invitaciones (10 registros)
 - Estados diversos: pendiente, aceptada, rechazada
 - Relaciones cruzadas entre diferentes usuarios
-
-### Fotos (15 registros)
-- Imágenes distribuidas entre eventos
-- Diferentes usuarios como autores
-
-### Fotos Favoritas (10 registros)
-- Usuarios marcando fotos como favoritas
-- Simula interacción real del sistema
 
 ### Amistades (10 registros)
 - Estados variados: aceptada, pendiente, rechazada
@@ -196,29 +211,5 @@ El sistema incluye un conjunto completo de datos de prueba:
    - Gestionar fotos favoritas
 
 ### Para Administradores
-- **Panel de Administración** completo
-- **Gestión de usuarios** y eventos
-- **Moderación de contenido**
+- **Gestión de usuarios y eventos** 
 - **Acceso a estadísticas del sistema**
-
-
-## Comandos de Gestión nivel Local
-
-### Docker
-```bash
-# Ver estado de todos los servicios
-docker-compose ps
-
-# Ver logs de un servicio específico
-docker-compose logs [servicio]
-
-# Reiniciar un servicio
-docker-compose restart [servicio]
-
-# Parar todos los servicios
-docker-compose down
-
-# Limpiar volúmenes
-docker-compose down -v
-```
-

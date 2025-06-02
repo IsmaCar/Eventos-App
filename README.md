@@ -82,7 +82,7 @@ docker-compose up -d --build
 - *modificar puerto servidor nginx en docker-compose, por defecto p 8020* 
 - **Aplicción app completa**: https://localhost
 
-## La aplicación estará deplegada en AWS y estas son los enlaces:
+## La aplicación estará disponible deplegada en AWS y estas son los enlaces:
 - **Enlace app completa**: https://52.4.36.65/
 - **Backend API**: http://52.4.36.65:8000/api (API Platform)
 - **EndPoints**: http://52.4.36.65:8000
@@ -95,7 +95,7 @@ La aplicación incluye **datos de prueba** preconfigurados:
 
 #### Usuario Administrador
 - **Email**: `admin@eventos.com`
-- **Contraseña**: `lur123`
+- **Contraseña**: `adminMemento123`
 - **Rol**: Administrador
 
 #### Usuarios Normales
@@ -124,23 +124,6 @@ Ejecutar estos comandos:
 php bin/console doctrine:migrations:version --add --all --no-interaction
 php bin/console doctrine:migrations:migrate --no-interaction
 ```
-### Usuarios de Prueba
-
-La aplicación incluye **datos de prueba** preconfigurados:
-
-#### Usuario Administrador
-- **Email**: `admin@eventos.com`
-- **Contraseña**: `adminMemento123`
-- **Rol**: Administrador
-
-#### Usuarios Normales
-- **Email**: `user1@eventos.com` a `user9@eventos.com`
-- **Contraseña**: `lur123` (para todos)
-- **Rol**: Usuario
-
-Cada usuario tendra varios amigos, notificaciones y eventos diferentes,
-user1 y user2 serán los que usaremos para probar las funcionalidades de la app
-aunque todos los usuarios registrados se pueden utilizar.
 
 ## Datos de Prueba Incluidos
 

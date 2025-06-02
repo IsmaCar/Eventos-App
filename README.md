@@ -112,7 +112,7 @@ La aplicación incluye **datos de prueba** preconfigurados:
 - **Base de datos**: `events`
 
 ### phpMyAdmin
-- **URL**: http://localhost:8080 (en local), http://54.4.36.65:80 (despliegue) 
+- **URL**: http://localhost:8080 (en local)
 - **Usuario**: `IsmaCar`
 - **Contraseña**: `secret`
 

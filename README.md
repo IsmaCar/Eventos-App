@@ -95,7 +95,7 @@ La aplicación incluye **datos de prueba** preconfigurados:
 
 #### Usuario Administrador
 - **Email**: `admin@eventos.com`
-- **Contraseña**: `lur123`
+- **Contraseña**: `adminMemento123`
 - **Rol**: Administrador
 
 #### Usuarios Normales
@@ -112,7 +112,7 @@ La aplicación incluye **datos de prueba** preconfigurados:
 - **Base de datos**: `events`
 
 ### phpMyAdmin
-- **URL**: http://localhost:8080
+- **URL**: http://localhost:8080 (en local)
 - **Usuario**: `IsmaCar`
 - **Contraseña**: `secret`
 
@@ -124,23 +124,6 @@ Ejecutar estos comandos:
 php bin/console doctrine:migrations:version --add --all --no-interaction
 php bin/console doctrine:migrations:migrate --no-interaction
 ```
-### Usuarios de Prueba
-
-La aplicación incluye **datos de prueba** preconfigurados:
-
-#### Usuario Administrador
-- **Email**: `admin@eventos.com`
-- **Contraseña**: `adminMemento123`
-- **Rol**: Administrador
-
-#### Usuarios Normales
-- **Email**: `user1@eventos.com` a `user9@eventos.com`
-- **Contraseña**: `lur123` (para todos)
-- **Rol**: Usuario
-
-Cada usuario tendra varios amigos, notificaciones y eventos diferentes,
-user1 y user2 serán los que usaremos para probar las funcionalidades de la app
-aunque todos los usuarios registrados se pueden utilizar.
 
 ## Datos de Prueba Incluidos
 
@@ -148,7 +131,8 @@ El sistema incluye un conjunto completo de datos de prueba:
 
 ### Usuarios (10 registros)
 - 1 administrador + 9 usuarios normales
-- Todos con contraseña `lur123`
+- El administrador tiene esta contraseña: `adminMemento123`
+- Todos los usuarios normales tienen esta contraseña: `lur123`
 - Perfiles con nombres, emails y biografías realistas
 
 ### Eventos (10 registros)
@@ -182,7 +166,8 @@ El sistema incluye un conjunto completo de datos de prueba:
 - `backend_uploads`: Archivos subidos (avatares, fotos)
 
 ## Endpoints de la API
-- Todos los endpoints se encuentran en la url http://localhost:8000
+- Todos los endpoints se encuentran en la url http://localhost:8000 cuando esta desplegado en local
+- Todos los endpoints se encuentran en la url http://52.4.36.65:8000 desplegado en AWS
 
 ## Funcionalidades de la Aplicación
 

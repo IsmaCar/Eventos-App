@@ -131,7 +131,8 @@ El sistema incluye un conjunto completo de datos de prueba:
 
 ### Usuarios (10 registros)
 - 1 administrador + 9 usuarios normales
-- Todos con contraseña `lur123`
+- El administrador tiene esta contraseña: `adminMemento123`
+- Todos los usuarios normales tienen esta contraseña: `lur123`
 - Perfiles con nombres, emails y biografías realistas
 
 ### Eventos (10 registros)

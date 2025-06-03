@@ -152,6 +152,12 @@ El sistema incluye un conjunto completo de datos de prueba:
 - Estados variados: aceptada, pendiente, rechazada
 - Red social realista entre usuarios
 
+## Datos de Prueba Incluidos en la Documentación
+Habrá dos archivos script, uno con las tablas que este no será neceesarió en principio
+y otro con datos de prueba para la verificación del funcionamiento en local
+hay datos para todas las tablas para las pruebas pero se recomienda introducir imagenes reales 
+para una verificación completa.
+
 ## Configuración Automática
 
 ### Docker Setup

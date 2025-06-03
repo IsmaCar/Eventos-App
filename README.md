@@ -78,8 +78,6 @@ Ejecutar estos comandos:
 ```bash
 php bin/console doctrine:migrations:version --add --all --no-interaction
 php bin/console doctrine:migrations:migrate --no-interaction
-docker-compose exec backend php bin/console doctrine:schema:update --force
-docker-compose exec backend php bin/console doctrine:migrations:version --add --all
 ```
 
 ## La aplicación estará disponible a nivel local en:

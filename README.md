@@ -71,6 +71,14 @@ docker-compose up -d --build
 ```
 
 ### 4. Verificar la Instalación
+Si la base de datos no se ha creado correctamente (falta alguna tabla o columna)
+Ejecutar estos comandos:
+- **Entrar en el contenedor**: sudo docker exec -it eventos-backend bash
+- **Sincronizodar migraciones**: 
+```bash
+php bin/console doctrine:migrations:version --add --all --no-interaction
+php bin/console doctrine:migrations:migrate --no-interaction
+```
 
 ## La aplicación estará disponible a nivel local en:
 
@@ -115,15 +123,7 @@ La aplicación incluye **datos de prueba** preconfigurados:
 - **URL**: http://localhost:8080 (en local)
 - **Usuario**: `IsmaCar`
 - **Contraseña**: `secret`
-
-Si la base de datos no se ha creado correctamente (falta alguna tabla o columna)
-Ejecutar estos comandos:
-- **Entrar en el contenedor**: sudo docker exec -it eventos-backend bash
-- **Sincronizodar migraciones**: 
-```bash
-php bin/console doctrine:migrations:version --add --all --no-interaction
-php bin/console doctrine:migrations:migrate --no-interaction
-```
+  
 
 ## Datos de Prueba Incluidos Desplegado
 
@@ -164,7 +164,6 @@ para una verificación completa.
 - **Migración automática** de base de datos al iniciar
 - **Generación automática** de claves JWT
 - **Creación automática** de carpetas de uploads
-- **Inserción automática** de datos de prueba
 
 ### Volúmenes Persistentes
 - `database_data`: Datos de MySQL

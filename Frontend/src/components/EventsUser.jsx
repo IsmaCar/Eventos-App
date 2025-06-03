@@ -79,7 +79,7 @@ function EventsUser() {
               className="block group"
             >
               <article
-                className="relative rounded-xl overflow-hidden h-56 shadow-md cursor-pointer transform transition-transform duration-300 hover:scale-[1.02]"              >
+                className="relative rounded-xl overflow-hidden h-56 shadow-md cursor-pointer transform transition-transform duration-300">
                 {/* Renderizado condicional para el fondo: usa imagen del evento si existe o gradiente aleatorio si no */}
                 {event.image ? (
                   <figure

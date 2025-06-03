@@ -66,7 +66,6 @@ export const eventCardClasses = (event) => {
 
 /**
  * Genera un gradiente determinístico basado en un identificador
- * Evita re-renderizados innecesarios al usar el mismo gradiente para el mismo ID
  */
 export const getRandomGradient = (id = null) => {
     const gradients = [

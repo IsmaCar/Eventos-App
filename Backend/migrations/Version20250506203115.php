@@ -15,19 +15,16 @@ final class Version20250506203115 extends AbstractMigration
     public function getDescription(): string
     {
         return '';
-    }
-
-    public function up(Schema $schema): void
+    }    public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
+        // Check if comment table exists before trying to drop it
         $this->addSql(<<<'SQL'
-            ALTER TABLE comment DROP FOREIGN KEY FK_9474526C71F7E88B
-        SQL);
-        $this->addSql(<<<'SQL'
-            ALTER TABLE comment DROP FOREIGN KEY FK_9474526CA76ED395
-        SQL);
-        $this->addSql(<<<'SQL'
-            DROP TABLE comment
+            SET @table_exists = (SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comment');
+            SET @sql = IF(@table_exists > 0, 'DROP TABLE comment', 'SELECT "Table comment does not exist"');
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
         SQL);
     }
 

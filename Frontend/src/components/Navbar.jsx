@@ -10,7 +10,7 @@ import { Avatar } from '../utils/Imagehelper';
 
 function Navbar() {
     const { token, user, isAdmin, logout } = useAuth();
-    const { stats, hasNotifications } = useNotifications();
+    const { hasNotifications } = useNotifications();
     const location = useLocation();
     const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -37,12 +37,12 @@ function Navbar() {
         setMobileMenuOpen(false);
     }, [location.pathname]);
  
-    // Cierra el tooltip después de 2 egundos
+    // Cierra el tooltip después de 2 segundos
     useEffect(() => {
         if (showNoNotificationsTooltip) {
             const timer = setTimeout(() => {
                 setShowNoNotificationsTooltip(false);
-            }, 200);
+            }, 2000);
 
             return () => clearTimeout(timer);
         }

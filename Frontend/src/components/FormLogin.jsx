@@ -99,7 +99,8 @@ const LoginForm = () => {
           ) : (
             'Iniciar Sesión'
           )}
-        </button>      </form>      
+        </button>      
+      </form>      
       <footer className="mt-4 text-center">
         <p className="text-gray-600">
           ¿No tienes una cuenta?{" "}

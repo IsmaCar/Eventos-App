@@ -15,31 +15,30 @@ final class Version20250506160759 extends AbstractMigration
     public function getDescription(): string
     {
         return '';
-    }
-
-    public function up(Schema $schema): void
+    }    public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
+        // Check if participant tables exist before trying to drop them
         $this->addSql(<<<'SQL'
-            ALTER TABLE participant_user DROP FOREIGN KEY FK_5927C4779D1C3019
+            SET @table_exists = (SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'participant_user');
+            SET @sql = IF(@table_exists > 0, 'DROP TABLE participant_user', 'SELECT "Table participant_user does not exist"');
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE participant_user DROP FOREIGN KEY FK_5927C477A76ED395
+            SET @table_exists = (SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'participant_event');
+            SET @sql = IF(@table_exists > 0, 'DROP TABLE participant_event', 'SELECT "Table participant_event does not exist"');
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE participant_event DROP FOREIGN KEY FK_FA1BA31E71F7E88B
-        SQL);
-        $this->addSql(<<<'SQL'
-            ALTER TABLE participant_event DROP FOREIGN KEY FK_FA1BA31E9D1C3019
-        SQL);
-        $this->addSql(<<<'SQL'
-            DROP TABLE participant
-        SQL);
-        $this->addSql(<<<'SQL'
-            DROP TABLE participant_user
-        SQL);
-        $this->addSql(<<<'SQL'
-            DROP TABLE participant_event
+            SET @table_exists = (SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'participant');
+            SET @sql = IF(@table_exists > 0, 'DROP TABLE participant', 'SELECT "Table participant does not exist"');
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
         SQL);
     }
 

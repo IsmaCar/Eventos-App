@@ -42,22 +42,22 @@ function CardDetail() {
 
     return !isNaN(eventUserId) && currentUserId === eventUserId;
   }, [user, event]);
-
   // Hook personalizado para gestionar los asistentes al evento
   const { attendees, loadingAttendees, processingAction, isCurrentUserAttending,
     isAttendeeOrganizer, cancelAttendance, confirmCancelAttendance, showCancelConfirmation,
-    setShowCancelConfirmation, removeAttendee } = useEventAttendees(id, isEventCreator());
+    setShowCancelConfirmation, removeAttendee, confirmRemoveAttendee, showRemoveConfirmation,
+    setShowRemoveConfirmation, attendeeToRemove } = useEventAttendees(id, isEventCreator());
 
-  
+
   // Hook personalizado para gestionar la galería de fotos del evento
   const { selectedFile, uploadError, uploading, handleFileChange, clearSelectedFile,
     deletingPhotoId, canDeletePhoto, deletePhoto, expandedPhoto, openExpandedView,
-    closeExpandedView, maxFileSize, allowedTypesFormatted, handleUploadPhoto,    
+    closeExpandedView, maxFileSize, allowedTypesFormatted, handleUploadPhoto,
     handleDownloadPhoto } = usePhotoUploads(id, isEventCreator(), fetchEventPhotos, navigate);
 
 
   const [deletingEvent, setDeletingEvent] = useState(false);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);  
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   /**
    * Inicia el proceso de confirmación para eliminar evento
    */
@@ -73,7 +73,7 @@ function CardDetail() {
     if (!token || !isEventCreator()) return;
 
     try {
-      setDeletingEvent(true);      
+      setDeletingEvent(true);
       const response = await fetch(`${API_URL}/api/event/delete/${id}`, {
         method: 'DELETE',
         headers: {
@@ -99,12 +99,12 @@ function CardDetail() {
     }
   };
 
-   /**
-   * Maneja la eliminación de una foto con confirmación mediante Toast
-   */
+  /**
+  * Maneja la eliminación de una foto con confirmación mediante Toast
+  */
   const handleDeletePhoto = async (photoId, e) => {
     toast.warning('Eliminando foto...', { duration: 1000 });
-    
+
     // Pequeño delay para que el usuario vea el mensaje
     setTimeout(async () => {
       await deletePhoto(photoId, photos, e);
@@ -154,7 +154,7 @@ function CardDetail() {
         </div>
       </header>
       {/* Contenido con padding */}
-      <main className="p-6">        
+      <main className="p-6">
         {/* Botón para eliminar evento - solo visible para el creador */}
         {isEventCreator() && (
           <aside className="flex justify-end mb-6">
@@ -175,10 +175,10 @@ function CardDetail() {
                   </svg>
                   <span>Eliminar evento</span>
                 </>
-              )}            
-              </button>
+              )}
+            </button>
           </aside>
-        )}        
+        )}
         {/* Detalles principales */}
         <section className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
           {/* Fecha - más pequeña */}
@@ -197,7 +197,7 @@ function CardDetail() {
               >
                 <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>              </div>
             </div>
-          </article>          
+          </article>
           {/* Ubicación - más pequeña */}
           <section className="bg-gradient-to-br from-fuchsia-50 to-indigo-50 p-6 rounded-lg border border-fuchsia-100 shadow-sm md:col-span-5">
             <h3 className="font-semibold text-fuchsia-600 mb-3">Ubicación</h3>
@@ -237,11 +237,11 @@ function CardDetail() {
                 <p className="text-gray-700">
                   {typeof event.location === 'string' ? event.location : "No especificada"}
                 </p>
-              )            
+              )
             ) : (
               <p className="text-gray-500 italic">Ubicación no especificada</p>
             )}
-          </section>          
+          </section>
           {/* Lista de asistentes */}
           <section className="bg-gradient-to-br from-indigo-50 to-fuchsia-50 p-6 rounded-lg border border-indigo-100 shadow-sm md:col-span-4">
             <h3 className="font-semibold text-indigo-600 mb-3">Asistentes</h3>
@@ -265,12 +265,12 @@ function CardDetail() {
                           <Link
                             to={profileLink}
                             className="py-2 flex items-center gap-3 hover:bg-indigo-50/50 rounded px-2 transition-colors flex-grow"
-                          >                            
-                          {/* Avatar del usuario con imagen de perfil si existe */}
-                            <Avatar 
-                              user={attendee} 
-                              size="md" 
-                              className="border-2 border-indigo-100" 
+                          >
+                            {/* Avatar del usuario con imagen de perfil si existe */}
+                            <Avatar
+                              user={attendee}
+                              size="md"
+                              className="border-2 border-indigo-100"
                             />
 
                             {/* Nombre de usuario */}
@@ -336,11 +336,11 @@ function CardDetail() {
               <div className="py-12 text-center">
                 <p className="text-gray-500 italic">
                   No hay asistentes confirmados aún
-                </p>              
+                </p>
               </div>
             )}
           </section>
-        </section>        
+        </section>
         {/* SECCIÓN DE INVITACIONES (solo para el creador del evento) */}
         {isEventCreator() && (
           <section className="mt-12 border-t pt-8">
@@ -378,16 +378,16 @@ function CardDetail() {
                   />
                 ) : (
                   <EventInvitationOrganizer eventId={id} />
-                )}              
-                </div>
+                )}
+              </div>
             </div>
           </section>
-        )}        
+        )}
         {/* SECCIÓN: FOTOS DEL EVENTO */}
         <section className="mt-12 border-t pt-8">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Fotos del evento</h2>
-          </div>         
+          </div>
           {/* Subir nueva foto */}
           {token && (
             <form className="mb-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
@@ -418,7 +418,7 @@ function CardDetail() {
               </div>
               {uploadError && (
                 <p className="mt-2 text-sm text-red-600">{uploadError}</p>
-              )}              
+              )}
               <p className="mt-2 text-xs text-gray-500">
                 Formatos permitidos: {allowedTypesFormatted}. Tamaño máximo: {(maxFileSize / (1024 * 1024)).toFixed(0)}MB
               </p>
@@ -428,8 +428,8 @@ function CardDetail() {
           <div className="mt-6">
             {loadingPhotos ? (
               <Spinner size="md" color="indigo" containerClassName="py-10" text="Cargando fotos..." />
-            ) : photos.length > 0 ? (              
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            ) : photos.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {photos.map((photo) => (
                   <figure
                     key={photo.id}
@@ -489,9 +489,9 @@ function CardDetail() {
                                 </svg>
                               )}
                             </button>
-                          )}                        
-                          </div>
-                      </figcaption>                      
+                          )}
+                        </div>
+                      </figcaption>
                       <p className="text-gray-200 text-xs">{new Date(photo.created_at).toLocaleDateString()}</p>
                     </div>
                   </figure>
@@ -500,7 +500,7 @@ function CardDetail() {
             ) : (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <p className="text-gray-500">Aún no hay fotos para este evento. ¡Sé el primero en compartir una!</p>
-              </div>            )}
+              </div>)}
           </div>
         </section>
         {/* Modal para vista ampliada con botones de acción */}
@@ -509,7 +509,7 @@ function CardDetail() {
             className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
             onClick={closeExpandedView}
           >
-            <div className="relative max-w-5xl max-h-[90vh] w-full">              
+            <div className="relative max-w-5xl max-h-[90vh] w-full">
               {/* Imagen ampliada */}
               <div
                 className="relative overflow-hidden rounded-lg"
@@ -578,8 +578,8 @@ function CardDetail() {
                   </div>
                 </div>
               </div>
-            </div>          
             </div>
+          </div>
         )}
       </main>
       {/* Modal de confirmación para eliminar evento */}
@@ -597,12 +597,12 @@ function CardDetail() {
                 <p className="text-sm text-gray-500">Esta acción no se puede deshacer</p>
               </div>
             </div>
-            
+
             <p className="text-gray-700 mb-6">
-              ¿Estás seguro de que deseas eliminar el evento "<strong>{event.title}</strong>"? 
+              ¿Estás seguro de que deseas eliminar el evento "<strong>{event.title}</strong>"?
               Perderás todas las fotos que no esten guardadas, invitaciones y datos asociados.
             </p>
-            
+
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteConfirmation(false)}
@@ -649,11 +649,11 @@ function CardDetail() {
                 <p className="text-sm text-gray-500">Confirma que no asistirás al evento</p>
               </div>
             </div>
-            
+
             <p className="text-gray-700 mb-6">
               ¿Estás seguro de que deseas cancelar tu asistencia al evento "<strong>{event.title}</strong>"?
             </p>
-            
+
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowCancelConfirmation(false)}
@@ -680,9 +680,76 @@ function CardDetail() {
                     <span>No asistiré</span>
                   </>
                 )}
+              </button>            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para eliminar asistente */}
+      {showRemoveConfirmation && attendeeToRemove && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Eliminar asistente</h3>
+                <p className="text-sm text-gray-500">Esta acción no se puede deshacer</p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              {(() => {
+                const attendee = attendees.find(a => parseInt(a.id) === parseInt(attendeeToRemove));
+                return (
+                  <div className="flex items-center p-4 bg-gray-50">
+                    <Avatar user={attendee} size="md" className="mr-3" />
+                    <div>
+                      <p className="font-medium text-gray-900">{attendee?.username || 'Usuario'}</p>
+                      <p className="text-sm text-gray-500">
+                        ¿Estás seguro de que deseas eliminar a este usuario del evento "<strong>{event.title}</strong>"?
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowRemoveConfirmation(false);
+                  setAttendeeToRemove(null);
+                }}
+                disabled={processingAction}
+                className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmRemoveAttendee}
+                disabled={processingAction}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center space-x-2 transition-colors"
+              >
+                {processingAction ? (
+                  <>
+                    <Spinner size="xs" color="white" />
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>Eliminar usuario</span>
+                  </>
+                )}
               </button>
             </div>
-          </div>        
+          </div>
         </div>
       )}
     </div>

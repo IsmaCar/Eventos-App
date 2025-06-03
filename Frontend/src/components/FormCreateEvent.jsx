@@ -12,6 +12,7 @@ import LocationPicker from './Maps';
 import { useEvent } from '../context/EventContext';
 import Spinner from './Spinner';
 import { useToast } from '../hooks/useToast';
+import { isDatePassed } from '../utils/DateHelper';
 
 function FormCreateEvent() {
     const { createEvent } = useEvent();
@@ -33,19 +34,11 @@ function FormCreateEvent() {
     const [isDragging, setIsDragging] = useState(false);
     const [descriptionLength, setDescriptionLength] = useState(0);
     const [descriptionError, setDescriptionError] = useState("");
-    const [dateError, setDateError] = useState("");
+    const [dateError, setDateError] = useState("");    const MAX_DESCRIPTION_LENGTH = 500;
 
-    const MAX_DESCRIPTION_LENGTH = 500;
-
-    // Valida si una fecha es igual o posterior al día de hoy
-    const isValidDate = (dateString) => {
-        if (!dateString) return false;
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Resetear la hora para comparar solo fechas
-
-        const selectedDate = new Date(dateString);
-        return selectedDate >= today;
+    // Valida si una fecha es válida para un evento (no puede ser en el pasado)
+    const isValidEventDate = (dateString) => {
+        return dateString && !isDatePassed(dateString);
     };
 
     /**
@@ -64,11 +57,10 @@ function FormCreateEvent() {
 
             setDescriptionLength(value.length);
             setDescriptionError("");
-        }
-
+        }        
         // Validación para el campo de fecha
         if (name === 'event_date') {
-            if (!isValidDate(value)) {
+            if (!isValidEventDate(value)) {
                 setDateError("La fecha del evento no puede ser anterior a hoy");
             } else {
                 setDateError("");
@@ -189,9 +181,7 @@ function FormCreateEvent() {
             toast.error(`La descripción no puede exceder los ${MAX_DESCRIPTION_LENGTH} caracteres`);
             setLoading(false);
             return;
-        }
-
-        if (!isValidDate(formData.event_date)) {
+        }        if (!isValidEventDate(formData.event_date)) {
             toast.error("La fecha del evento no puede ser anterior a hoy");
             setLoading(false);
             return;

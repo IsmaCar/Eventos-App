@@ -125,13 +125,13 @@ php bin/console doctrine:migrations:version --add --all --no-interaction
 php bin/console doctrine:migrations:migrate --no-interaction
 ```
 
-## Datos de Prueba Incluidos
+## Datos de Prueba Incluidos Desplegado
 
 El sistema incluye un conjunto completo de datos de prueba:
 
 ### Usuarios (10 registros)
 - 1 administrador + 9 usuarios normales
-- El administrador tiene esta contraseña: `adminMemento123`
+- El administrador tiene esta contraseña: `adminMemento123` (despliegue), `lur123` (datos de prueba, local)
 - Todos los usuarios normales tienen esta contraseña: `lur123`
 - Perfiles con nombres, emails y biografías realistas
 
@@ -151,6 +151,12 @@ El sistema incluye un conjunto completo de datos de prueba:
 ### Amistades (10 registros)
 - Estados variados: aceptada, pendiente, rechazada
 - Red social realista entre usuarios
+
+## Datos de Prueba Incluidos en la Documentación
+Habrá dos archivos script, uno con las tablas que este no será neceesarió en principio
+y otro con datos de prueba para la verificación del funcionamiento en local
+hay datos para todas las tablas para las pruebas pero se recomienda introducir imagenes reales 
+para una verificación completa.
 
 ## Configuración Automática
 

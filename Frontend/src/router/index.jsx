@@ -9,7 +9,6 @@ import CardDetail from "../pages/CardDetail";
 import Profile from "../pages/Profile";
 import ProtectedRoute from "../components/ProtectedRoute";
 import EditProfile from "../pages/EditProfile";
-import EventsUser from "../components/EventsUser";
 import Dashboard from "../pages/Dashboard";
 import PublicProfile from "../pages/PublicProfile";
 import FavoritePhotos from "../pages/FavoritePhotos";
@@ -58,11 +57,6 @@ export const router = createBrowserRouter([
                         path: "edit-profile",
                         element:
                             <EditProfile/>,
-                    },
-                    {
-                        path: "my-events",
-                        element:
-                            <EventsUser/>,
                     },
                 ]
             },

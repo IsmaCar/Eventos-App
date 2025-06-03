@@ -26,7 +26,8 @@ function EventRequest({ onInvitationProcessed }) {
   /**
    * Obtiene todas las invitaciones a eventos recibidas por el usuario
    * desde la API y actualiza el estado local
-   */  const fetchInvitations = async () => {
+   */
+  const fetchInvitations = async () => {
     try {
       setLoading(true);
 

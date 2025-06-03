@@ -43,7 +43,7 @@ function RegisterForm() {
 
       const registerResult = await registerUser(formData);
 
-      // Si hay un error específico del backend (como duplicados), mostrarlo
+      // Si hay un error específico del backend, mostrarlo
       if (registerResult && registerResult.error) {
         error(registerResult.error);
         setLoading(false);

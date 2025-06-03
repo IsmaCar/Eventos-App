@@ -37,7 +37,10 @@ services:
     volumes:
       - ./Backend:/app
       - backend_vendor:/app/vendor
-      - backend_uploads:/app/public/uploads
+      - backend_uploads:/app/public/uploads    
+    environment:
+      - DATABASE_URL=mysql://IsmaCar:secret@database:3306/events
+      - APP_ENV=prod
     depends_on:
       - database
     networks:

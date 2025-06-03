@@ -6,14 +6,15 @@
 */
 import React, { useEffect, useState } from 'react';
 
-const Toast = ({ id, type = 'info', title, message, duration = 5000, onClose }) => {  const [isVisible, setIsVisible] = useState(false);
+const Toast = ({ id, type = 'info', title, message, duration = 5000, onClose }) => {
+  const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
   // Estados de animación
   useEffect(() => {
     // Animación de entrada
     const enterTimer = setTimeout(() => setIsVisible(true), 10);
-    
+
     // Cierre automático
     const dismissTimer = setTimeout(() => {
       handleClose();
@@ -28,7 +29,7 @@ const Toast = ({ id, type = 'info', title, message, duration = 5000, onClose }) 
     setIsExiting(true);
     setTimeout(() => {
       onClose(id);
-    }, 300); // Duración de la animación
+    }, 400); // Duración de la animación
   };
 
   // Configuraciones de tipos de toast
@@ -80,22 +81,25 @@ const Toast = ({ id, type = 'info', title, message, duration = 5000, onClose }) 
   };
 
   const config = typeConfig[type] || typeConfig.info;
-  return (    <div
+  return (
+    <div
       className={`
         min-w-80 max-w-sm sm:max-w-md w-full ${config.bgColor} ${config.borderColor} border rounded-lg shadow-lg overflow-hidden
         transform transition-all duration-300 ease-in-out
-        ${isVisible && !isExiting 
-          ? 'translate-x-0 opacity-100 scale-100' 
+        ${isVisible && !isExiting
+          ? 'translate-x-0 opacity-100 scale-100'
           : 'translate-x-full opacity-0 scale-95'
         }
       `}
       role="alert"
-    ><div className="p-4">        <div className="flex items-start gap-4">
+    >
+      <div className="p-4">
+        <div className="flex items-start gap-4">
           {/* Icono */}
           <div className={`flex-shrink-0 ${config.iconColor} mt-0.5`}>
             {config.icon}
           </div>
-          
+
           {/* Contenido - Espaciado mejorado con más padding a la derecha */}
           <div className="flex-1 min-w-0 pr-3">
             {title && (
@@ -108,7 +112,7 @@ const Toast = ({ id, type = 'info', title, message, duration = 5000, onClose }) 
                 {message}
               </p>
             )}          </div>
-          
+
           {/* Botón de cerrar - Mejor posicionado con más espacio */}
           <div className="flex-shrink-0 ml-2">
             <button
@@ -126,16 +130,15 @@ const Toast = ({ id, type = 'info', title, message, duration = 5000, onClose }) 
             </button>
           </div>
         </div>      </div>
-      
+
       {/* Barra de progreso */}
       <div className="h-1 bg-gray-200">
-        <div 
-          className={`h-full ${
-            type === 'success' ? 'bg-green-400' :
-            type === 'error' ? 'bg-red-400' :
-            type === 'warning' ? 'bg-yellow-400' :
-            'bg-blue-400'
-          } transition-all duration-${duration} ease-linear`}
+        <div
+          className={`h-full ${type === 'success' ? 'bg-green-400' :
+              type === 'error' ? 'bg-red-400' :
+                type === 'warning' ? 'bg-yellow-400' :
+                  'bg-blue-400'
+            } transition-all duration-${duration} ease-linear`}
           style={{
             animation: `shrink ${duration}ms linear forwards`
           }}

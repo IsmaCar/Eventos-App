@@ -34,7 +34,7 @@ function FormCreateEvent() {
     const [isDragging, setIsDragging] = useState(false);
     const [descriptionLength, setDescriptionLength] = useState(0);
     const [descriptionError, setDescriptionError] = useState("");
-    const [dateError, setDateError] = useState("");    const MAX_DESCRIPTION_LENGTH = 500;
+    const [dateError, setDateError] = useState(""); const MAX_DESCRIPTION_LENGTH = 500;
 
     // Valida si una fecha es válida para un evento (no puede ser en el pasado)
     const isValidEventDate = (dateString) => {
@@ -57,7 +57,7 @@ function FormCreateEvent() {
 
             setDescriptionLength(value.length);
             setDescriptionError("");
-        }        
+        }
         // Validación para el campo de fecha
         if (name === 'event_date') {
             if (!isValidEventDate(value)) {
@@ -181,7 +181,7 @@ function FormCreateEvent() {
             toast.error(`La descripción no puede exceder los ${MAX_DESCRIPTION_LENGTH} caracteres`);
             setLoading(false);
             return;
-        }        if (!isValidEventDate(formData.event_date)) {
+        } if (!isValidEventDate(formData.event_date)) {
             toast.error("La fecha del evento no puede ser anterior a hoy");
             setLoading(false);
             return;

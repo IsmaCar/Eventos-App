@@ -15,13 +15,13 @@ import Spinner from "./Spinner";
 
 function RegisterForm() {
   const [formData, setFormData] = useState({
-    username: '', 
-    email: '',   
-    password: '',  
+    username: '',
+    email: '',
+    password: '',
   });
-  
-  const [loading, setLoading] = useState(false); 
-  const { registerUser } = useAuth(); 
+
+  const [loading, setLoading] = useState(false);
+  const { registerUser } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
 
@@ -33,7 +33,7 @@ function RegisterForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       if (!formData.username || !formData.email || !formData.password) {
         error('Todos los campos son obligatorios');
@@ -57,7 +57,7 @@ function RegisterForm() {
       }
 
       success('¡Registro exitoso! Redirigiendo al inicio de sesión...');
-      
+
       setTimeout(() => {
         navigate('/login');
       }, 1500);
@@ -71,10 +71,10 @@ function RegisterForm() {
         error('Error al conectar con el servidor');
       }
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   }
-  
+
   return (
     <div className='max-w-md mx-auto my-10 p-5 bg-white rounded-lg shadow-lg'>
       <header className='text-2xl font-semibold text-center text-gray-800'>REGISTRARSE</header>
@@ -93,7 +93,7 @@ function RegisterForm() {
             value={formData.username}
             onChange={handleChange}
             required
-            className='w-full px-4 py-2 text-lg text-gray-900 border                        border-gray-300 rounded-lg focus:outline-none focus:border-gray-500'/>
+            className='w-full px-4 py-2 text-lg text-gray-900 border                        border-gray-300 rounded-lg focus:outline-none focus:border-gray-500' />
         </section>
         <section>
           <label
@@ -108,7 +108,7 @@ function RegisterForm() {
             value={formData.email}
             onChange={handleChange}
             required
-            className='w-full px-4 py-2 text-lg text-gray-900 border                        border-gray-300 rounded-lg focus:outline-none focus:border-gray-500' />
+            className='w-full px-4 py-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500' />
         </section>
         <section>
           <label
@@ -123,19 +123,19 @@ function RegisterForm() {
             value={formData.password}
             onChange={handleChange}
             required
-            className='w-full px-4 py-2 text-lg text-gray-900 border                        border-gray-300 rounded-lg focus:outline-none focus:border-gray-500'/>
-        </section>        
+            className='w-full px-4 py-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500' />
+        </section>
         <button
           type="submit"
           className="w-full px-4 py-2 text-lg font-semibold text-white bg-gradient-to-r from-fuchsia-400 to-indigo-400 rounded-lg hover:scale-105 transition duration-300"
         >          {loading ? (
-            <span className="flex items-center justify-center gap-3 w-full">
-              <Spinner size="xs" color="white" />
-              <span>Registrando...</span>
-            </span>
-          ) : (
-            'Registrarse'
-          )}        
+          <span className="flex items-center justify-center gap-3 w-full">
+            <Spinner size="xs" color="white" />
+            <span>Registrando...</span>
+          </span>
+        ) : (
+          'Registrarse'
+        )}
         </button>
       </form>
     </div>

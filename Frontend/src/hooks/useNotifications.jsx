@@ -78,7 +78,7 @@ export const useNotifications = () => {
     if (token) {
       const intervalId = setInterval(() => {
         fetchNotifications();
-      }, 30000); // Actualizar cada 30 segundos
+      }, 60000); // Actualizar cada minuto
 
       return () => clearInterval(intervalId);
     }

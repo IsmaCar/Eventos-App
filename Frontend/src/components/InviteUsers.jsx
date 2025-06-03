@@ -20,26 +20,26 @@ function InviteUsers({ eventId, onInvitationSent }) {
   const { token } = useAuth();
   const toast = useToast();
   const [selectedUser, setSelectedUser] = useState(null);
-  
-  const [status, setStatus] = useState({ 
-    loading: false  
+
+  const [status, setStatus] = useState({
+    loading: false
   });
 
- // Hook useUserSearch para gestionar la búsqueda de usuarios
+  // Hook useUserSearch para gestionar la búsqueda de usuarios
   const {
-    searchTerm,            
-    searchResults,         
-    isSearching,           
-    handleSearchTermChange, 
-    resetSearch,           
-    setSearchTerm} = useUserSearch({
-    endpoint: '/api/tools/users/search',  
-    paramName: 'query',               
-    minLength: 2,                     
-    debounceTime: 100                 
-  });
+    searchTerm,
+    searchResults,
+    isSearching,
+    handleSearchTermChange,
+    resetSearch,
+    setSearchTerm } = useUserSearch({
+      endpoint: '/api/tools/users/search',
+      paramName: 'query',
+      minLength: 2,
+      debounceTime: 100
+    });
 
-   //Valida si una cadena tiene formato de email válido 
+  //Valida si una cadena tiene formato de email válido 
   const isValidEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
@@ -50,7 +50,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
    */
   const selectUser = (user) => {
     setSelectedUser(user);
-    setSearchTerm(user.email); 
+    setSearchTerm(user.email);
   };
 
   /**
@@ -69,20 +69,20 @@ function InviteUsers({ eventId, onInvitationSent }) {
   const handleInputChange = (e) => {
     const value = e.target.value;
     handleSearchTermChange(value);
-    
+
     // Si el usuario modifica el texto cuando ya había seleccionado un usuario,
     // se considera que ya no está utilizando ese usuario
     if (selectedUser && value !== selectedUser.email) {
       setSelectedUser(null);
     }
   };
-  
-  
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!searchTerm.trim()) return;
-    
+
     const isEmail = isValidEmail(searchTerm.trim());
     if (!isEmail) {
       toast.error('Por favor, introduce un email válido');
@@ -93,7 +93,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
 
     try {
 
-      const payload = { 
+      const payload = {
         email: searchTerm.trim(),
         user_id: selectedUser?.id || null
       };
@@ -113,18 +113,18 @@ function InviteUsers({ eventId, onInvitationSent }) {
       }
 
       const data = await response.json();
-      
+
       const isRegisteredUser = Boolean(data.userExists);
       let successMessage = isRegisteredUser
         ? '¡Invitación enviada al usuario registrado!'
         : '¡Se ha enviado un email de invitación al usuario no registrado!';
-        
+
       toast.success(successMessage);
-      
+
       setSearchTerm('');
       setSelectedUser(null);
       if (onInvitationSent) onInvitationSent();
-      
+
     } catch (error) {
       console.error('Error al enviar invitación:', error);
       toast.error(error.message || 'Error de conexión');
@@ -137,7 +137,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Campo unificado de búsqueda/email - Permite tanto buscar por nombre o email */}
-        <section className="relative">          
+        <section className="relative">
           <label htmlFor="search-email" className="block text-sm font-medium text-gray-700 mb-1">
             Buscar usuario o introducir email
           </label>
@@ -153,42 +153,42 @@ function InviteUsers({ eventId, onInvitationSent }) {
                 ${searchTerm && isValidEmail(searchTerm) ? 'border-green-300 focus:ring-green-500 focus:border-green-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} 
                 rounded-md shadow-sm focus:outline-none`}
               disabled={status.loading}
-            />           
+            />
             {/* Indicador visual de búsqueda en curso */}
             {isSearching && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <Spinner size="xs" color="indigo" />
               </div>
             )}
-            
+
             {/* Indicador visual de email válido - Proporciona feedback inmediato al usuario */}
             {!isSearching && searchTerm && isValidEmail(searchTerm) && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-              </div>            
+              </div>
             )}
           </article>
           {/* Texto de ayuda contextual - Guía al usuario según el estado actual del campo */}
           {searchTerm && !isSearching && (
             <p className="mt-1 text-xs text-gray-500">
-              {isValidEmail(searchTerm) 
-                ? selectedUser 
-                  ? "Usuario registrado seleccionado." 
-                  : "Email válido. Si no es un usuario registrado, se enviará una invitación por email." 
+              {isValidEmail(searchTerm)
+                ? selectedUser
+                  ? "Usuario registrado seleccionado."
+                  : "Email válido. Si no es un usuario registrado, se enviará una invitación por email."
                 : "Continúa escribiendo para buscar usuarios o introduce un email válido."}
             </p>
-          )}            
+          )}
           {/* Visualización del usuario seleccionado - Permite confirmar la selección y editarla */}
           {selectedUser && (
             <aside className="mt-2 bg-indigo-50 p-2 rounded-md flex items-center">
-              <Avatar 
+              <Avatar
                 user={selectedUser}
                 size="sm"
                 className="mr-3"
               />
-              <header className="flex-1">                
+              <header className="flex-1">
                 <p className="text-sm font-medium">{selectedUser.username || "Usuario"}</p>
                 <p className="text-xs text-gray-500">{selectedUser.email}</p>
               </header>
@@ -202,40 +202,39 @@ function InviteUsers({ eventId, onInvitationSent }) {
               </button>
             </aside>
           )}
-        </section>        
+        </section>
         {/* Resultados de búsqueda */}
         {!selectedUser && searchResults.length > 0 && (
           <section className="mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">            {searchResults.map(user => (
-              <article
-                key={user.id}
-                onClick={() => selectUser(user)}
-                className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-              >
-                <Avatar 
-                  user={user}
-                  size="sm"
-                  className="mr-3"
-                />
-                <header>
-                  <p className="text-sm font-medium">{user.username || "Usuario"}</p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
-                </header>
-              </article>            
-            ))}
+            <article
+              key={user.id}
+              onClick={() => selectUser(user)}
+              className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+            >
+              <Avatar
+                user={user}
+                size="sm"
+                className="mr-3"
+              />
+              <header>
+                <p className="text-sm font-medium">{user.username || "Usuario"}</p>
+                <p className="text-xs text-gray-500">{user.email}</p>
+              </header>
+            </article>
+          ))}
           </section>
-        )}        
+        )}
         {/* Botón de envío de invitación */}
         <nav>
           <button
             type="submit"
             disabled={status.loading || !searchTerm.trim() || !isValidEmail(searchTerm.trim())}
-            className={`w-full px-4 py-2 rounded-md text-white font-medium ${
-              status.loading || !searchTerm.trim() || !isValidEmail(searchTerm.trim())
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:from-fuchsia-600 hover:to-indigo-600'
-            }`}
-          >           
-           {status.loading ? (
+            className={`w-full px-4 py-2 rounded-md text-white font-medium ${status.loading || !searchTerm.trim() || !isValidEmail(searchTerm.trim())
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:from-fuchsia-600 hover:to-indigo-600'
+              }`}
+          >
+            {status.loading ? (
               <span className="flex items-center justify-center">
                 <Spinner size="xs" color="white" containerClassName="mr-2" />
                 <span>Enviando...</span>

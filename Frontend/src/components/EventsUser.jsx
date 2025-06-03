@@ -20,7 +20,7 @@ function EventsUser() {
   const [events, setEvents] = useState(null)
   const [loading, setLoading] = useState(false)
 
- 
+
   useEffect(() => {
     const fetchEvents = async () => {
       setLoading(true)

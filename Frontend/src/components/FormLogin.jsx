@@ -14,13 +14,13 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../hooks/useToast";
 import Spinner from "./Spinner";
 
-const LoginForm = () => {  
+const LoginForm = () => {
   const [formData, setFormData] = useState({
-    email: "",    
+    email: "",
     password: "",
   });
-  const [loading, setLoading] = useState(false); 
-  const { loginUser } = useAuth(); 
+  const [loading, setLoading] = useState(false);
+  const { loginUser } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
 
@@ -31,29 +31,29 @@ const LoginForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); 
-    setLoading(true);   
-    
+    e.preventDefault();
+    setLoading(true);
+
     try {
       const response = await loginUser(formData);
-      
+
       if (response && !response.error) {
         success("¡Inicio de sesión exitoso! Bienvenido de vuelta.");
-        navigate("/"); 
+        navigate("/");
       } else {
         error(response.error || 'Error al iniciar sesión');
       }
     } catch (err) {
       error(err.message || "Error al iniciar sesión, intenta de nuevo");
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
-    return (
+  return (
     <div className="max-w-md mx-auto my-10 p-5 bg-white rounded-lg shadow-lg">
       <header className="text-2xl font-semibold text-center text-gray-800">
         INICIAR SESIÓN
-      </header>   
+      </header>
 
       <form onSubmit={handleSubmit} className="space-y-4 mt-6">
         <section>
@@ -70,8 +70,8 @@ const LoginForm = () => {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 mt-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"          />
-        </section>       
+            className="w-full px-4 py-2 mt-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500" />
+        </section>
         <section>
           <label
             htmlFor="password"
@@ -86,21 +86,21 @@ const LoginForm = () => {
             value={formData.password}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 mt-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"          />
-        </section>       
+            className="w-full px-4 py-2 mt-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500" />
+        </section>
         <button
           type="submit"
           className="w-full px-4 py-2 text-lg font-semibold text-white bg-gradient-to-r from-fuchsia-400 to-indigo-400 rounded-lg hover:scale-105 transition duration-300"
         >          {loading ? (
-            <span className="flex items-center justify-center gap-3 w-full">
-              <Spinner size="xs" color="white" />
-              <span>Iniciando sesión...</span>
-            </span>
-          ) : (
-            'Iniciar Sesión'
-          )}
-        </button>      
-      </form>      
+          <span className="flex items-center justify-center gap-3 w-full">
+            <Spinner size="xs" color="white" />
+            <span>Iniciando sesión...</span>
+          </span>
+        ) : (
+          'Iniciar Sesión'
+        )}
+        </button>
+      </form>
       <footer className="mt-4 text-center">
         <p className="text-gray-600">
           ¿No tienes una cuenta?{" "}

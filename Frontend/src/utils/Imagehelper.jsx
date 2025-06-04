@@ -6,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 // Constantes para validación de archivos
 export const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
-export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 /**
  * Valida si un archivo cumple con los requisitos de tamaño y tipo

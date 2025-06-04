@@ -104,7 +104,7 @@ La aplicación incluye **datos de prueba** preconfigurados:
 
 #### Usuario Administrador
 - **Email**: `admin@eventos.com`
-- **Contraseña**: `adminMemento123`
+- **Contraseña**: `adminMemento123` en despliegue, en local con los datos de prueba es  `lur123`
 - **Rol**: Administrador
 
 #### Usuarios Normales

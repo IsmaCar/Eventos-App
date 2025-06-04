@@ -62,23 +62,24 @@ El proyecto incluye configuración automática a través de Docker. No se requie
 
 ### 3. Lanzar la Aplicación
 
+##Dentro de la carpeta Frontend instalar node_modules
+```bash
+npm install
+```
+## Levantar con docker compose el proyecto
 ```bash
 # Construir y ejecutar todos los servicios
 docker-compose up --build
 
 # Ejecutar en segundo plano (opcional)
-docker-compose up -d --build
+docker-compose up --build -d
 ```
 
 ### 4. Verificar la Instalación
-Si la base de datos no se ha creado correctamente (falta alguna tabla o columna)
-Ejecutar estos comandos:
-- **Entrar en el contenedor**: sudo docker exec -it eventos-backend bash
-- **Sincronizodar migraciones**: 
-```bash
-php bin/console doctrine:migrations:version --add --all --no-interaction
-php bin/console doctrine:migrations:migrate --no-interaction
-```
+Comprobar que todos los contenedores están levantados, 
+las migraciones del backend tardan un poco en ejecutarse completamente.
+
+En local utilizar el archivo scripts_datos_prueba.sql dentro de la carpeta documentos (las fotos no son reales solo rellenan los campos de las tablas)
 
 ## La aplicación estará disponible a nivel local en:
 
@@ -103,7 +104,7 @@ La aplicación incluye **datos de prueba** preconfigurados:
 
 #### Usuario Administrador
 - **Email**: `admin@eventos.com`
-- **Contraseña**: `adminMemento123`
+- **Contraseña**: `adminMemento123` en despliegue, en local con los datos de prueba es  `lur123`
 - **Rol**: Administrador
 
 #### Usuarios Normales

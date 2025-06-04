@@ -129,7 +129,8 @@ const Toast = ({ id, type = 'info', title, message, duration = 5000, onClose }) 
               </svg>
             </button>
           </div>
-        </div>      </div>
+        </div>      
+      </div>
 
       {/* Barra de progreso */}
       <div className="h-1 bg-gray-200">

@@ -18,6 +18,12 @@ function FormCreateEvent() {
     const { createEvent } = useEvent();
     const navigate = useNavigate();
     const toast = useToast();
+    const [imagePreview, setImagePreview] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const [descriptionLength, setDescriptionLength] = useState(0);
+    const [descriptionError, setDescriptionError] = useState("");
+    const [dateError, setDateError] = useState(""); const MAX_DESCRIPTION_LENGTH = 500;
 
     const [formData, setFormData] = useState({
         title: "",
@@ -29,12 +35,7 @@ function FormCreateEvent() {
         image: null,
     });
 
-    const [imagePreview, setImagePreview] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
-    const [descriptionLength, setDescriptionLength] = useState(0);
-    const [descriptionError, setDescriptionError] = useState("");
-    const [dateError, setDateError] = useState(""); const MAX_DESCRIPTION_LENGTH = 500;
+
 
     // Valida si una fecha es válida para un evento (no puede ser en el pasado)
     const isValidEventDate = (dateString) => {
@@ -222,7 +223,8 @@ function FormCreateEvent() {
                         value={formData.title}
                         onChange={handleChange}
                         placeholder="Ej: Fiesta de cumpleaños"
-                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-300 focus:border-transparent" required
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-300 focus:border-transparent" 
+                        required
                     />
                 </section>
 
@@ -297,7 +299,8 @@ function FormCreateEvent() {
 
                         {formData.location && (
                             <p className="text-sm text-gray-600 mt-2">
-                                <strong>Dirección seleccionada:</strong> {formData.location}                            </p>
+                                <strong>Dirección seleccionada:</strong> {formData.location}                            
+                            </p>
                         )}
                     </article>
                 </section>
@@ -369,7 +372,8 @@ function FormCreateEvent() {
                         className={`px-8 py-3 bg-gradient-to-r from-fuchsia-400 to-indigo-400 text-white rounded-lg transition duration-200 flex items-center 
                                 ${(dateError || descriptionError) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
                         disabled={loading || !!dateError || !!descriptionError}
-                    >                        {loading ? (
+                    >                        
+                    {loading ? (
                         <span className="flex items-center">
                             <Spinner size="xs" color="white" containerClassName="mr-2" />
                             <span>Creando...</span>

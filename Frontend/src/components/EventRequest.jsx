@@ -159,7 +159,8 @@ function EventRequest({ onInvitationProcessed }) {
         <Spinner size="md" color="fuchsia" containerClassName="py-10" text="Cargando invitaciones..." />
       ) :
 
-        invitations.length > 0 ? (<main className="space-y-4">
+        invitations.length > 0 ? (
+        <main className="space-y-4">
           {invitations.map(invitation => (
             <article key={invitation.id} className="bg-gray-50 p-4 rounded-lg">
               {/* Información básica del evento */}
@@ -168,7 +169,8 @@ function EventRequest({ onInvitationProcessed }) {
                 <EventImage event={invitation.event} className="w-12 h-12" />
                 {/* Detalles del evento */}
                 <section className="ml-4">
-                  <p className="text-gray-800 font-medium">{invitation.event?.title || 'Sin título'}</p>                  <p className="text-gray-500 text-sm">
+                  <p className="text-gray-800 font-medium">{invitation.event?.title || 'Sin título'}</p>                  
+                  <p className="text-gray-500 text-sm">
                     {invitation.event?.eventDate
                       ? formatShortDate(invitation.event.eventDate)
                       : invitation.event?.event_date
@@ -212,7 +214,8 @@ function EventRequest({ onInvitationProcessed }) {
         </main>
         ) : (
           // Estado vacío - No hay invitaciones pendientes
-          <article className="text-center py-10">          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <article className="text-center py-10">          
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l-4-4m4 4l4-4" />
           </svg>
             <p className="text-gray-500">No tienes invitaciones pendientes</p>

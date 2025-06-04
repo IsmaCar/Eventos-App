@@ -52,7 +52,8 @@ function home() {
 
     // Efecto separado para filtrar los eventos
     useEffect(() => {
-        if (!events || loading) {            return;
+        if (!events || loading) {            
+            return;
         }
 
         try {
@@ -67,7 +68,8 @@ function home() {
                     const eventDate = new Date(event.event_date);
                     return !isNaN(eventDate.getTime());
                 });
-            } else {                // Para "próximos" o "pasados", aplicamos el filtro de fecha
+            } else {                
+                // Para "próximos" o "pasados", aplicamos el filtro de fecha
                 filtered = events.filter(event => {
                     if (!event.event_date) return false;
 
@@ -108,7 +110,8 @@ function home() {
     // Manejador para el cambio de filtro
     const handleFilterChange = (e) => {
         setFilter(e.target.value);
-    };    // Función para formatear la fecha de manera legible - Sin hora
+    };    
+    // Función para formatear la fecha de manera legible - Sin hora
     const formatEventDate = (dateString) => {
         const formattedDate = formatLongDate(dateString);
         return formattedDate || "Fecha no disponible";
@@ -167,7 +170,8 @@ function home() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                     </svg>
                                     Crear Evento
-                                </Link>                            )}
+                                </Link>                            
+                            )}
                         </header>
                         {/* Listado de eventos según el filtro */}
                         <section className="mt-6">
@@ -200,7 +204,8 @@ function home() {
                                                                 <span className="text-white text-4xl opacity-80"></span>
                                                             </div>
                                                         </figure>
-                                                    )}                                                    {/* Capa de gradiente para mejorar legibilidad */}
+                                                    )}                                                    
+                                                    {/* Capa de gradiente para mejorar legibilidad */}
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                                                     
                                                     {/* Badge para eventos pasados */}
@@ -255,7 +260,8 @@ function home() {
                         </section>
                     </article>
                 </section>
-            </main>        ) : (
+            </main>        
+            ) : (
             <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-fuchsia-50 py-12 px-4 sm:px-6">
                 <div className="max-w-5xl mx-auto">
                     {/* Sección principal */}

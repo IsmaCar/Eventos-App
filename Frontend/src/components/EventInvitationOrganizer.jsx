@@ -50,7 +50,7 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
       const data = await response.json();
 
       // Solo mostramos las invitaciones pendientes que pueden ser gestionadas    
-      const pendingInvitations = (data.invitations || data || []).filter(inv => inv.status === 'pending');
+      const pendingInvitations = (data.invitations || []).filter(inv => inv.status === 'pending');
       setInvitations(pendingInvitations);
     } catch (err) {
       toast.error('No se pudieron cargar las invitaciones');
@@ -158,9 +158,10 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                     {translateStatus(invitation.status)}
-                  </span>                </td>
+                  </span>                
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatLongDate(invitation.createdAt || invitation.created_at) || "Fecha desconocida"}
+                  {formatLongDate(invitation.created_at) || "Fecha desconocida"}
                 </td>                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   {invitation.status === 'pending' && (
                     <nav className="flex justify-end">

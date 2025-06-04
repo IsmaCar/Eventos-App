@@ -24,7 +24,6 @@ export const useUserSearch = (options = {}) => {
 
 
   // Maneja el cambio en el término de búsqueda con debounce
-
   const handleSearchTermChange = (query) => {
     setSearchTerm(query);
     setError(null);
@@ -49,7 +48,6 @@ export const useUserSearch = (options = {}) => {
 
 
   // Realiza la búsqueda de usuarios
-
   const searchUsers = async (query) => {
     if (!token || !query || query.length < minLength) {
       setIsSearching(false);
@@ -100,7 +98,6 @@ export const useUserSearch = (options = {}) => {
   };
 
   // Actualiza un usuario específico en los resultados de búsqueda
-
   const updateUserInResults = (userId, updates) => {
     setSearchResults(prev =>
       prev.map(user =>
@@ -113,7 +110,6 @@ export const useUserSearch = (options = {}) => {
 
 
   // Limpia los resultados y el término de búsqueda
-
   const resetSearch = () => {
     setSearchTerm('');
     setSearchResults([]);

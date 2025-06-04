@@ -23,12 +23,7 @@ function FavoritePhotos() {
   const [error, setError] = useState(null);
   
   // Utilizamos el hook usePhotoUploads con todas las funcionalidades
-  const {
-    expandedPhoto,
-    openExpandedView,
-    closeExpandedView,
-    handleDownloadPhoto
-  } = usePhotoUploads(null, false, null, navigate);
+  const { expandedPhoto, openExpandedView, closeExpandedView, handleDownloadPhoto } = usePhotoUploads(null, false, null, navigate);
   useEffect(() => {
     if (!token) {
       navigate('/login');
@@ -118,7 +113,8 @@ function FavoritePhotos() {
               key={photo.id} 
               className="relative group overflow-hidden rounded-lg shadow-md aspect-square cursor-pointer"
               onClick={() => openExpandedView(photo)}
-            >              <figure className="w-full h-full">
+            >              
+              <figure className="w-full h-full">
                 <img
                   src={getImageUrl(`/uploads/event_photos/${photo.filename}`)}
                   alt={`Foto de evento`}

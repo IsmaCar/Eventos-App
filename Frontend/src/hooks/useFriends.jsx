@@ -70,7 +70,6 @@ export const useFriends = (options = {}) => {
 
 
   // Envía una solicitud de amistad a un usuario
-
   const sendFriendRequest = async (userId) => {
     if (!token || !userId) {
       return { success: false, error: 'Datos de solicitud incompletos' };
@@ -168,7 +167,7 @@ export const useFriends = (options = {}) => {
       toast.error('ID de amistad no válido');
       return { success: false, error: 'ID de amistad no válido' };
     }
-    
+
     // Guardamos el ID para usar en la confirmación
     setRemoveFriendId(friendshipId);
     setShowRemoveConfirmation(true);
@@ -220,9 +219,8 @@ export const useFriends = (options = {}) => {
     }
   }, [token, removeFriendId, fetchFriends, refreshCallback, toast]);
 
-  
-   // Verifica el estado de amistad con un usuario
-  
+
+  // Verifica el estado de amistad con un usuario
   const checkFriendshipStatus = async (userId) => {
     if (!token || !userId) {
       return { status: 'none' };
@@ -248,9 +246,8 @@ export const useFriends = (options = {}) => {
     }
   };
 
-  
-   // Busca el ID de amistad en la lista de amigos
-   
+
+  // Busca el ID de amistad en la lista de amigos
   const findFriendshipId = (userId) => {
     if (!friends || !friends.length) return null;
 

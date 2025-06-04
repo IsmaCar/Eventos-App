@@ -36,7 +36,7 @@ function Navbar() {
     useEffect(() => {
         setMobileMenuOpen(false);
     }, [location.pathname]);
- 
+
     // Cierra el tooltip después de 2 segundos
     useEffect(() => {
         if (showNoNotificationsTooltip) {
@@ -106,7 +106,8 @@ function Navbar() {
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:mr-0 lg:mr-1" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                                     </svg>
-                                    <span className="hidden lg:inline">Administrar</span>                                </Link>
+                                    <span className="hidden lg:inline">Administrar</span>                                
+                                </Link>
                             )}
                         </aside>
 
@@ -141,7 +142,8 @@ function Navbar() {
                                         {/* Indicador de notificaciones sin leer */}
                                         {hasNotifications && (
                                             <span className="absolute top-0 right-0 transform translate-x-1 -translate-y-1 w-3 h-3 bg-purple-500 rounded-full animate-pulse"></span>
-                                        )}                                        {/* Tooltip para indicar que no hay notificaciones */}
+                                        )}
+                                        {/* Tooltip para indicar que no hay notificaciones */}
                                         {showNoNotificationsTooltip && (
                                             <aside className="absolute top-12 right-0 bg-zinc-700 text-white text-sm rounded-lg px-4 py-2 shadow-lg z-50 w-48">
                                                 No tienes notificaciones nuevas
@@ -198,7 +200,8 @@ function Navbar() {
                                     )}
                                 </button>
 
-                                {/* Indicador de notificaciones para móvil */}                                {hasNotifications && (
+                                {/* Indicador de notificaciones para móvil */}                                
+                                {hasNotifications && (
                                     <span className="absolute top-0 right-0 transform translate-x-1 -translate-y-1 w-2.5 h-2.5 bg-purple-500 rounded-full animate-pulse"></span>
                                 )}
                             </aside>
@@ -232,7 +235,7 @@ function Navbar() {
 
                                 {hasNotifications && (
                                     <span className="absolute top-1 right-1 transform w-2.5 h-2.5 bg-purple-500 rounded-full animate-pulse"></span>
-                                )}                                
+                                )}
                                 {/* Tooltip para móvil */}
                                 {showNoNotificationsTooltip && (
                                     <aside className="absolute top-10 left-0 bg-zinc-700 text-white text-sm rounded-lg px-4 py-2 shadow-lg z-50 w-full">
@@ -240,7 +243,7 @@ function Navbar() {
                                     </aside>
                                 )}
                             </button>
-                           {/* Perfil en versión móvil */}
+                            {/* Perfil en versión móvil */}
                             <Link
                                 to="/profile"
                                 className="flex items-center text-white px-3 py-2 rounded-lg hover:bg-zinc-700 transition duration-300 ease-in-out"
@@ -270,7 +273,8 @@ function Navbar() {
                                 className="w-full flex items-center text-white px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 transition duration-300 ease-in-out"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />                                </svg>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />                                
+                                </svg>
                                 Cerrar Sesión
                             </button>
                         </nav>

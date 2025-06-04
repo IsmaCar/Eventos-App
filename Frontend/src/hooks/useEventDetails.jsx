@@ -15,12 +15,10 @@ export function useEventDetails(eventId) {
   const { getEventById, getImageUrl } = useEvent();
   const { token } = useAuth();
   
-  // Estados para el evento
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Estados para fotos
+
   const [photos, setPhotos] = useState([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [photoFavorites, setPhotoFavorites] = useState({});

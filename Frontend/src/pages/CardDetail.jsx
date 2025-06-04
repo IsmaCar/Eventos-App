@@ -28,6 +28,8 @@ function CardDetail() {
   const navigate = useNavigate()
   const { user, token } = useAuth()
   const [activeTab, setActiveTab] = useState('invite')
+  const [deletingEvent, setDeletingEvent] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const toast = useToast()
 
   // Hook para los detalles del evento
@@ -46,7 +48,7 @@ function CardDetail() {
   const { attendees, loadingAttendees, processingAction, isCurrentUserAttending,
     isAttendeeOrganizer, cancelAttendance, confirmCancelAttendance, showCancelConfirmation,
     setShowCancelConfirmation, removeAttendee, confirmRemoveAttendee, showRemoveConfirmation,
-    setShowRemoveConfirmation, attendeeToRemove } = useEventAttendees(id, isEventCreator());
+    setShowRemoveConfirmation, attendeeToRemove, setAttendeeToRemove } = useEventAttendees(id, isEventCreator());
 
 
   // Hook personalizado para gestionar la galería de fotos del evento
@@ -56,8 +58,6 @@ function CardDetail() {
     handleDownloadPhoto } = usePhotoUploads(id, isEventCreator(), fetchEventPhotos, navigate);
 
 
-  const [deletingEvent, setDeletingEvent] = useState(false);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   /**
    * Inicia el proceso de confirmación para eliminar evento
    */
@@ -150,7 +150,8 @@ function CardDetail() {
             <h1 className="text-3xl font-bold drop-shadow-lg">{event.title}</h1>
             {event.subtitle && (
               <p className="text-xl text-gray-200 mt-2 drop-shadow-md">{event.subtitle}</p>
-            )}          </div>
+            )}          
+          </div>
         </div>
       </header>
       {/* Contenido con padding */}
@@ -195,7 +196,8 @@ function CardDetail() {
                   scrollbarColor: '#d8b4fe #f0f0f0'
                 }}
               >
-                <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>              </div>
+                <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>              
+              </div>
             </div>
           </article>
           {/* Ubicación - más pequeña */}
@@ -680,7 +682,8 @@ function CardDetail() {
                     <span>No asistiré</span>
                   </>
                 )}
-              </button>            </div>
+              </button>            
+            </div>
           </div>
         </div>
       )}

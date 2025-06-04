@@ -26,13 +26,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
   });
 
   // Hook useUserSearch para gestionar la búsqueda de usuarios
-  const {
-    searchTerm,
-    searchResults,
-    isSearching,
-    handleSearchTermChange,
-    resetSearch,
-    setSearchTerm } = useUserSearch({
+  const { searchTerm, searchResults, isSearching, handleSearchTermChange, resetSearch, setSearchTerm } = useUserSearch({
       endpoint: '/api/tools/users/search',
       paramName: 'query',
       minLength: 2,
@@ -198,14 +192,17 @@ function InviteUsers({ eventId, onInvitationSent }) {
                 className="text-indigo-600 hover:text-indigo-800"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />                </svg>
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
+                  clipRule="evenodd" />                
+                </svg>
               </button>
             </aside>
           )}
         </section>
         {/* Resultados de búsqueda */}
         {!selectedUser && searchResults.length > 0 && (
-          <section className="mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">            {searchResults.map(user => (
+          <section className="mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">            
+          {searchResults.map(user => (
             <article
               key={user.id}
               onClick={() => selectUser(user)}

@@ -200,7 +200,8 @@ function Profile() {
     {/* Modal para búsqueda de amigos */}
       {showFriendSearch && (
         <div className="fixed inset-0 bg-gray-500/10 backdrop-blur-[2px] z-50 flex items-center justify-center">
-          <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200"><header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+          <section className="bg-white/95 rounded-xl shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-hidden flex flex-col border border-gray-200">
+            <header className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-lg font-semibold text-gray-800">Buscar amigos</h3>
             </header>
             {/* Barra de búsqueda */}
@@ -215,7 +216,8 @@ function Profile() {
                 />
                 <div className="absolute left-3 top-2.5 text-gray-400">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />                  </svg>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />                  
+                  </svg>
                 </div>
               </div>
               {searchTerm.length > 0 && searchTerm.length < 3 && (

@@ -12,7 +12,6 @@ function EditProfile() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const { success, error } = useToast();
-  // Estados para formulario y UI
   const [formData, setFormData] = useState({
     username: user?.username || '',
     email: user?.email || '',

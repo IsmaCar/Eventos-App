@@ -93,7 +93,7 @@ function RegisterForm() {
             value={formData.username}
             onChange={handleChange}
             required
-            className='w-full px-4 py-2 text-lg text-gray-900 border                        border-gray-300 rounded-lg focus:outline-none focus:border-gray-500' />
+            className='w-full px-4 py-2 text-lg text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500' />
         </section>
         <section>
           <label
@@ -128,7 +128,8 @@ function RegisterForm() {
         <button
           type="submit"
           className="w-full px-4 py-2 text-lg font-semibold text-white bg-gradient-to-r from-fuchsia-400 to-indigo-400 rounded-lg hover:scale-105 transition duration-300"
-        >          {loading ? (
+        >          
+        {loading ? (
           <span className="flex items-center justify-center gap-3 w-full">
             <Spinner size="xs" color="white" />
             <span>Registrando...</span>

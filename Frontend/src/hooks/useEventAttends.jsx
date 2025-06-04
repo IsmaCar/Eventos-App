@@ -14,8 +14,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 export function useEventAttendees(eventId, isEventCreator) {
   const { user, token } = useAuth();
   const toast = useToast();
-
-  // Estados para asistentes
   const [attendees, setAttendees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -100,7 +98,9 @@ export function useEventAttendees(eventId, isEventCreator) {
     } finally {
       setProcessingAction(false);
     }
-  };  // Eliminar asistente (solo organizador) - Inicia el proceso de confirmación
+  };  
+  
+  // Eliminar asistente (solo organizador) - Inicia el proceso de confirmación
   const removeAttendee = (attendeeId) => {
     setAttendeeToRemove(attendeeId);
     setShowRemoveConfirmation(true);
@@ -163,7 +163,9 @@ export function useEventAttendees(eventId, isEventCreator) {
     if (!attendees.length) return false;
     const attendee = attendees.find(a => parseInt(a.id) === parseInt(attendeeId));
     return attendee ? attendee.isCreator : false;
-  }, [attendees]); return {
+  }, [attendees]);  
+  
+  return {
     attendees,
     loading,
     error,
@@ -179,6 +181,7 @@ export function useEventAttendees(eventId, isEventCreator) {
     showRemoveConfirmation,
     setShowRemoveConfirmation,
     attendeeToRemove,
+    setAttendeeToRemove,
     refreshAttendees: fetchAttendees
   };
 }

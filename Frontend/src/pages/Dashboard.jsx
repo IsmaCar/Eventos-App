@@ -132,9 +132,9 @@ function Dashboard() {
     // Función para cambiar entre paneles
     const togglePanel = (panel) => {
         if (activePanel === panel) {
-            setActivePanel(null); 
+            setActivePanel(null);
         } else {
-            setActivePanel(panel); 
+            setActivePanel(panel);
 
             // Cargar datos específicos según el panel seleccionado
             if (panel === 'users') {
@@ -223,7 +223,8 @@ function Dashboard() {
                 user.id === userId
                     ? { ...user, banned: !currentlyActive }
                     : user
-            ));            // Actualizar estadísticas después de cambiar el estado
+            ));
+            // Actualizar estadísticas después de cambiar el estado
             fetchStats();
 
         } catch (error) {
@@ -255,7 +256,8 @@ function Dashboard() {
                 event.id === eventId
                     ? { ...event, banned: newBannedStatus }
                     : event
-            ));            // Actualizar estadísticas después de cambiar el estado
+            ));
+            // Actualizar estadísticas después de cambiar el estado
             fetchStats();
 
         } catch (error) {
@@ -288,7 +290,7 @@ function Dashboard() {
                         </section>
                         <p className="text-gray-600 max-w-3xl">
                             Bienvenido al panel de administración. Aquí puedes gestionar los usuarios y eventos de la plataforma.
-                        </p>                   
+                        </p>
                     </header>
                     {/* Resumen estadístico modificado - sin indicadores activos/bloqueados */}
                     <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">

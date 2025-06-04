@@ -27,7 +27,6 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
 
 
   // Valida un archivo antes de su carga
-
   const validateFile = (file) => {
     setUploadError(null);
 
@@ -49,7 +48,6 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
 
 
   // Maneja el cambio de archivo seleccionado
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setUploadError(null);
@@ -67,7 +65,6 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
 
 
   // Sube una foto al evento
-
   const uploadPhoto = async () => {
     if (!selectedFile || !token || !eventId) {
       return { success: false, error: 'No hay archivo seleccionado o no estás autenticado' };
@@ -136,7 +133,6 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
 
 
   // Verifica si un usuario puede eliminar una foto
-
   const canDeletePhoto = useCallback((photo) => {
     if (!user || !token) return false;
 
@@ -149,7 +145,6 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
 
 
   // Elimina una foto
-
   const deletePhoto = async (photoId, photos, e) => {
     if (e) e.stopPropagation();
     if (!token) return { success: false, error: 'No autenticado' };
@@ -242,7 +237,6 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
 
 
   // Abre la vista expandida de una foto
-
   const openExpandedView = (photo) => {
     setExpandedPhoto(photo);
     document.body.style.overflow = 'hidden';
@@ -250,7 +244,6 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
 
 
   // Cierra la vista expandida
-
   const closeExpandedView = () => {
     setExpandedPhoto(null);
     document.body.style.overflow = 'auto';
@@ -258,7 +251,6 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
 
 
   // Limpia el archivo seleccionado
-
   const clearSelectedFile = () => {
     setSelectedFile(null);
     setUploadError(null);

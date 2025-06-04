@@ -30,15 +30,8 @@ function PublicProfile() {
   const [friendshipId, setFriendshipId] = useState(null);
 
   // Utilizar el hook de amigos con un callback de actualización
-  const { 
-    sendFriendRequest, 
-    removeFriend, 
-    confirmRemoveFriend,
-    showRemoveConfirmation,
-    setShowRemoveConfirmation,
-    checkFriendshipStatus, 
-    findFriendshipId
-  } = useFriends({
+  const { sendFriendRequest, removeFriend, confirmRemoveFriend, showRemoveConfirmation,
+    setShowRemoveConfirmation, checkFriendshipStatus, findFriendshipId } = useFriends({
     refreshCallback: async () => {
       // Actualizar el estado de amistad tras operaciones
       if (token && id) {
@@ -391,7 +384,8 @@ function PublicProfile() {
               <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
             </svg>
             Eventos creados
-          </header>          {events.length === 0 ? (
+          </header>          
+          {events.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-5xl mb-4">📅</div>
               <p className="text-gray-500 text-lg">Este usuario aún no ha creado eventos.</p>
@@ -400,7 +394,8 @@ function PublicProfile() {
             <div>
               {/* Contenedor con desplazamiento horizontal */}
               <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-fuchsia-300 scrollbar-track-gray-100 pb-4">
-                <div className="flex gap-4" style={{ minWidth: 'min-content', width: '100%' }}>          {events.map(event => (
+                <div className="flex gap-4" style={{ minWidth: 'min-content', width: '100%' }}>          
+                  {events.map(event => (
                   <article
                     key={event.id}
                     className="relative group rounded-lg overflow-hidden h-48 shadow-md flex-shrink-0"

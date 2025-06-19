@@ -67,7 +67,15 @@ final class InvitationController extends AbstractController
                 return $this->json(['message' => 'No puedes invitarte a ti mismo'], Response::HTTP_BAD_REQUEST);
             }
 
-            if(new \DateTime() > $event->getEventDate()) {
+            // Validar que el evento no haya pasado (permitir invitaciones el mismo día)
+            $eventDate = $event->getEventDate();
+            $today = new \DateTime();
+
+            // Comparar solo fechas, no horas - permite invitaciones durante todo el día del evento
+            $eventDateOnly = $eventDate->format('Y-m-d');
+            $todayOnly = $today->format('Y-m-d');
+
+            if ($eventDateOnly < $todayOnly) {
                 return $this->json(['message' => 'No puedes invitar a un evento que ya ha pasado'], Response::HTTP_BAD_REQUEST);
             }
 
@@ -87,7 +95,7 @@ final class InvitationController extends AbstractController
                 if (!$invitedUser) {
                     return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
                 }
-                
+
                 // Verificar si el usuario está baneado
                 if ($invitedUser->isBanned()) {
                     return $this->json(['message' => 'Este usuario está baneado y no puede ser invitado'], Response::HTTP_FORBIDDEN);
@@ -120,7 +128,7 @@ final class InvitationController extends AbstractController
                     if ($existingUser->isBanned()) {
                         return $this->json(['message' => 'Este usuario está baneado y no puede ser invitado'], Response::HTTP_FORBIDDEN);
                     }
-                    
+
                     // Usuario registrado: asociar con la invitación
                     $invitation->setInvitedUser($existingUser);
                     $userExists = true;
@@ -156,7 +164,7 @@ final class InvitationController extends AbstractController
                     'id' => $invitation->getId(),
                     'status' => $invitation->getStatus(),
                     'email' => $invitation->getEmail(),
-                    'createdAt' => $invitation->getCreatedAt()->format('Y-m-d'),
+                    'created_at' => $invitation->getCreatedAt()->format('Y-m-d'),
                     'token' => $userExists ? null : $invitation->getToken(), // Solo incluir token si no existe usuario
                     'invitedUser' => $invitation->getInvitedUser() ? [
                         'id' => $invitation->getInvitedUser()->getId(),
@@ -282,7 +290,7 @@ final class InvitationController extends AbstractController
                 'id' => $invitation->getId(),
                 'email' => $invitation->getEmail(),
                 'status' => $invitation->getStatus(),
-                'createdAt' => $invitation->getCreatedAt()->format('Y-m-d H:i:s'),
+                'created_at' => $invitation->getCreatedAt()->format('Y-m-d H:i:s'),
                 'token' => $invitation->getToken(), // null para usuarios registrados
                 // Crear objeto invitedUser explícitamente
                 'invitedUser' => $invitedUser ? [
@@ -328,7 +336,7 @@ final class InvitationController extends AbstractController
         ]);
     }
 
-    #[Route('/invitations/user/received', name: 'app_invitations_received', methods: ['GET'])]    
+    #[Route('/invitations/user/received', name: 'app_invitations_received', methods: ['GET'])]
     public function getReceivedInvitations(
         Security $security,
         InvitationRepository $invitationRepository
@@ -350,7 +358,7 @@ final class InvitationController extends AbstractController
                 'status' => $invitation->getStatus(),
                 'createdAt' => $invitation->getCreatedAt()->format('Y-m-d H:i:s'),
                 'email' => $invitation->getEmail(),
-                'token' => $invitation->getToken(),                        
+                'token' => $invitation->getToken(),
                 'event' => [
                     'id' => $event ? $event->getId() : null,
                     'title' => $event ? $event->getTitle() : 'Evento desconocido',

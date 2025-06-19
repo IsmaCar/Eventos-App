@@ -442,7 +442,8 @@ function CardDetail() {
                       src={`${API_URL}/uploads/event_photos/${photo.filename}`}
                       alt={`Foto de ${event.title}`}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                    />                    
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
                       <figcaption className="flex justify-between items-center mb-1">
                         <p className="text-white text-sm font-medium">{photo.user?.username || "Usuario"}</p>
                         {/* Botones de acción para la foto */}

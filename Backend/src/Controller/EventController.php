@@ -47,8 +47,8 @@ final class EventController extends AbstractController
             return $this->json(['error' => 'Titulo, descripción y fecha son obligatorios'], Response::HTTP_BAD_REQUEST);
         }
 
-        if(strlen($title) < 5 || strlen($title) > 20) {
-            return $this->json(['error' => 'El título debe tener entre 5 y 100 caracteres'], Response::HTTP_BAD_REQUEST);
+        if(strlen($title) < 5 || strlen($title) > 40) {
+            return $this->json(['error' => 'El título debe tener entre 5 y 40 caracteres'], Response::HTTP_BAD_REQUEST);
         }
 
         // Validar longitud de la descripción

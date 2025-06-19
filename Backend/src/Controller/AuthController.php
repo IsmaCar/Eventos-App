@@ -223,7 +223,7 @@ final class AuthController extends AbstractController
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             return $this->json(
-                ['error' => 'An error occurred', 'message' => $e->getMessage()],
+                ['error' => $e->getMessage()],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }

@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
 
       if (!response.ok) {
         return {
-          error: data.message || data.error || 'Error al iniciar sesión'
+          error: data.error || 'Error al iniciar sesión'
         };
       }
 

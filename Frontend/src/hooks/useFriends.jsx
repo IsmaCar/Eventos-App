@@ -254,10 +254,7 @@ export const useFriends = (options = {}) => {
     const parsedUserId = parseInt(userId);
 
     for (const friend of friends) {
-      if (
-        (friend.user_id === parsedUserId || friend.id === parsedUserId) &&
-        friend.friendship_id
-      ) {
+      if ((friend.id === parsedUserId) && friend.friendship_id) {
         return friend.friendship_id;
       }
     }

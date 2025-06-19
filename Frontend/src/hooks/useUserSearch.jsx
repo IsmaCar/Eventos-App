@@ -74,7 +74,7 @@ export const useUserSearch = (options = {}) => {
       const data = await response.json();
 
       // Obtener la lista de usuarios del resultado (adaptable a diferentes formatos)
-      let users = data.users || data.results || data;
+      let users = data.users;
 
       // Filtrar usuario actual si es necesario
       if (filterCurrentUser && user?.id) {

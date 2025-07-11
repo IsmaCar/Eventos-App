@@ -10,10 +10,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 export const useFriends = (options = {}) => {
   const {
     friendsEndpoint = '/api/friends',
-    requestEndpoint = '/api/friends/request',
     acceptEndpoint = '/api/friends/accept',
     onFriendsLoaded = null,
-    onRequestSent = null,
     onRequestAccepted = null,
     refreshCallback = null
   } = options;
@@ -60,7 +58,7 @@ export const useFriends = (options = {}) => {
       return friendsList;
     } catch (err) {
       const errorMessage = err.message || 'Error al cargar los amigos';
-      setError(errorMessage);
+      toast.error(errorMessage);
       setFriends([]);
       return [];
     } finally {

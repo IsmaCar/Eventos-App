@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import useToast from './useToast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -13,8 +14,8 @@ export const useNotifications = () => {
     hasNotifications: false
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
+  const toast = useToast();
+  
   // Función para obtener las estadísticas de notificaciones del usuario
   const fetchNotifications = useCallback(async () => {
   // No hacer nada si no hay token
@@ -29,7 +30,6 @@ export const useNotifications = () => {
   }
 
   setLoading(true);
-  setError(null);
 
   try {
     const response = await fetch(`${API_URL}/api/user/stats`, {
@@ -62,8 +62,8 @@ export const useNotifications = () => {
     setStats(updatedStats);
     return updatedStats; 
   } catch (err) {
-    setError(err.message);
-  } finally {
+    toast.error(err.message);
+    } finally {
     setLoading(false);
   }
 }, [token]);
@@ -88,7 +88,6 @@ export const useNotifications = () => {
     stats,
     hasNotifications: stats.hasNotifications,
     loading,
-    error,
     refreshNotifications: fetchNotifications
   };
 };

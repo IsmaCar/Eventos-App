@@ -16,69 +16,66 @@ const API_URL = import.meta.env.VITE_API_URL;
 export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navigate) {
   const { user, token } = useAuth();
   const { success, error } = useToast();
+  
+  // Estados necesarios
   const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
   const [deletingPhotoId, setDeletingPhotoId] = useState(null);
   const [expandedPhoto, setExpandedPhoto] = useState(null);
+  
   // Constantes de validación
   const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-
   // Valida un archivo antes de su carga
   const validateFile = (file) => {
-    setUploadError(null);
-
     if (!file) {
-      setUploadError('No se ha seleccionado ningún archivo');
+      error('No se ha seleccionado ningún archivo');
       return false;
     }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setUploadError('El formato del archivo no es válido. Por favor, sube una imagen (JPG, PNG o WEBP)');
+      error('El formato del archivo no es válido. Por favor, sube una imagen (JPG, PNG o WEBP)');
       return false;
-    }    if (file.size > MAX_FILE_SIZE) {
-      setUploadError('El archivo es demasiado grande. El tamaño máximo es de 1MB');
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      error('El archivo es demasiado grande. El tamaño máximo es de 1MB');
       return false;
     }
 
     return true;
   };
 
-
   // Maneja el cambio de archivo seleccionado
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setUploadError(null);
 
-    if (file) {
-      if (validateFile(file)) {
-        setSelectedFile(file);
-      } else {
-        setSelectedFile(null);
-      }
+    if (file && validateFile(file)) {
+      setSelectedFile(file);
     } else {
       setSelectedFile(null);
     }
   };
 
-
-  // Sube una foto al evento
-  const uploadPhoto = async () => {
-    if (!selectedFile || !token || !eventId) {
-      return { success: false, error: 'No hay archivo seleccionado o no estás autenticado' };
+  // Sube una foto al evento (versión con toast integrado)
+  const handleUploadPhoto = async () => {
+    if (!selectedFile) {
+      error('Selecciona una foto primero');
+      return;
     }
 
-    // Validación adicional antes de subir
-    if (!validateFile(selectedFile)) {
-      return { success: false, error: uploadError };
+    if (!token) {
+      error('Debes iniciar sesión para subir fotos');
+      if (navigate) {
+        navigate('/login', { state: { from: `/events/${eventId}` } });
+      }
+      return;
     }
+
+    // Validación final antes de subir
+    if (!validateFile(selectedFile)) return;
 
     try {
-      setUploading(true);
-      setUploadError(null);
-
       const formData = new FormData();
       formData.append('photo', selectedFile);
 
@@ -97,40 +94,17 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
 
       // Éxito - limpiar la selección de archivo
       setSelectedFile(null);
+      success('Foto subida correctamente');
 
       // Refrescar la lista de fotos
       if (refreshPhotosList) {
         await refreshPhotosList();
       }
 
-      return { success: true };
-    } catch (error) {
-      console.error('Error al subir foto:', error);
-      setUploadError(error.message);
-      return { success: false, error: error.message };
-    } finally {
-      setUploading(false);
+    } catch (err) {
+      error(`Error al subir la foto: ${err.message}`);
     }
   };
-
-  // Maneja el proceso completo de subida con toast y redirecciones
-  const handleUploadPhoto = async () => {
-    if (!selectedFile) return;
-
-    if (!token) {
-      if (navigate) {
-        navigate('/login', { state: { from: `/events/${eventId}` } });
-      }
-      return;
-    }    const result = await uploadPhoto();
-
-    if (result.success) {
-      success('Foto subida correctamente');
-    } else {
-      error(`Error al subir la foto: ${result.error}`);
-    }
-  };
-
 
   // Verifica si un usuario puede eliminar una foto
   const canDeletePhoto = useCallback((photo) => {
@@ -143,17 +117,24 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
     return photo.user?.id === user.id;
   }, [user, token, isEventCreator]);
 
-
-  // Elimina una foto
-  const deletePhoto = async (photoId, photos, e) => {
+  // Elimina una foto (versión con toast integrado)
+  const handleDeletePhoto = async (photoId, photos, e) => {
     if (e) e.stopPropagation();
-    if (!token) return { success: false, error: 'No autenticado' };
+    
+    if (!token) {
+      error('Debes iniciar sesión');
+      return;
+    }
 
     const photoToDelete = photos.find(photo => photo.id === photoId);
-    if (!photoToDelete) return { success: false, error: 'Foto no encontrada' };
+    if (!photoToDelete) {
+      error('Foto no encontrada');
+      return;
+    }
 
     if (!canDeletePhoto(photoToDelete)) {
-      return { success: false, error: 'No tienes permiso para eliminar esta foto' };
+      error('No tienes permiso para eliminar esta foto');
+      return;
     }
 
     try {
@@ -171,8 +152,10 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
         throw new Error(errorData.error || 'No se pudo eliminar la foto');
       }
 
+      success('Foto eliminada correctamente');
+
       // Si la foto expandida es la que estamos eliminando, cerrar el modal
-      if (expandedPhoto && expandedPhoto.id === photoId) {
+      if (expandedPhoto?.id === photoId) {
         closeExpandedView();
       }
 
@@ -181,18 +164,15 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
         await refreshPhotosList();
       }
 
-      return { success: true };
-    } catch (error) {
-      console.error("Error eliminando foto:", error);
-      return { success: false, error: error.message };
+    } catch (err) {
+      error(`Error al eliminar: ${err.message}`);
     } finally {
       setDeletingPhotoId(null);
     }
   };
 
-
-  // Descarga una foto 
-  const downloadPhoto = async (photo, eventTitle, e) => {
+  // Descarga una foto (versión con toast integrado)
+  const handleDownloadPhoto = async (photo, eventTitle, e) => {
     if (e) e.stopPropagation();
 
     try {
@@ -219,22 +199,10 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
         URL.revokeObjectURL(blobUrl);
       }, 100);
 
-      return { success: true };
-    } catch (error) {
-      console.error("Error descargando foto:", error);
-      return { success: false, error: error.message };
+    } catch (err) {
+      error(`Error al descargar: ${err.message}`);
     }
   };
-
-  // Maneja el proceso completo de descarga con toast
-  const handleDownloadPhoto = async (photo, eventTitle, e) => {
-    const result = await downloadPhoto(photo, eventTitle, e);
-
-    if (!result.success) {
-      error(`Error al descargar la foto: ${result.error}`);
-    }
-  };
-
 
   // Abre la vista expandida de una foto
   const openExpandedView = (photo) => {
@@ -242,33 +210,26 @@ export function usePhotoUploads(eventId, isEventCreator, refreshPhotosList, navi
     document.body.style.overflow = 'hidden';
   };
 
-
   // Cierra la vista expandida
   const closeExpandedView = () => {
     setExpandedPhoto(null);
     document.body.style.overflow = 'auto';
   };
 
-
   // Limpia el archivo seleccionado
   const clearSelectedFile = () => {
     setSelectedFile(null);
-    setUploadError(null);
   };
 
   return {
     selectedFile,
-    uploadError,
-    uploading,    // Acciones de archivos
     handleFileChange,
-    uploadPhoto,
-    handleUploadPhoto,  // Método con toast
+    handleUploadPhoto,    // Solo versión con toast
     clearSelectedFile,
     deletingPhotoId,
     canDeletePhoto,
-    deletePhoto,
-    downloadPhoto,
-    handleDownloadPhoto, // Método con toast
+    handleDeletePhoto,    // Solo versión con toast
+    handleDownloadPhoto,  // Solo versión con toast
     expandedPhoto,
     openExpandedView,
     closeExpandedView,

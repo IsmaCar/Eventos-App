@@ -8,12 +8,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useEvent } from '../context/EventContext';
+import useToast from './useToast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export function useEventDetails(eventId) {
   const { getEventById, getImageUrl } = useEvent();
   const { token } = useAuth();
+  const toast = useToast();
   
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,14 +36,13 @@ export function useEventDetails(eventId) {
         setEvent(data.event || data);
         setError(null);
       } catch (err) {
-        console.error("Error cargando el evento:", err);
-        setError("No se pudo cargar el evento");
+        toast.error("Error cargando el evento:", err);
         setEvent(null);
       } finally {
         setLoading(false);
       }
     }
-    
+
     loadEventData();
   }, [eventId, getEventById]);
 
@@ -66,7 +67,7 @@ export function useEventDetails(eventId) {
         fetchFavoritesStatus(photosArray);
       }
     } catch (error) {
-      console.error('Error al cargar las fotos:', error);
+      toast.error('Error al cargar las fotos:', error);
     } finally {
       setLoadingPhotos(false);
     }
@@ -93,7 +94,7 @@ export function useEventDetails(eventId) {
       
       setPhotoFavorites(favoritesMap);
     } catch (error) {
-      console.error('Error al cargar estado de favoritos:', error);
+      toast.error('Error al cargar estado de favoritos:', error);
     }
   };
 
@@ -121,7 +122,7 @@ export function useEventDetails(eventId) {
       }
       return false;
     } catch (error) {
-      console.error('Error al cambiar favorito:', error);
+      toast.error('Error al cambiar favorito:', error);
       return false;
     }
   };

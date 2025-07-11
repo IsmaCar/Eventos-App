@@ -92,7 +92,6 @@ export function useEventAttendees(eventId, isEventCreator) {
       setShowCancelConfirmation(false);
       return { success: true };
     } catch (error) {
-      console.error("Error cancelando asistencia:", error);
       toast.error(`Error: ${error.message}`);
       return { success: false, error: error.message };
     } finally {
@@ -143,8 +142,8 @@ export function useEventAttendees(eventId, isEventCreator) {
       setAttendeeToRemove(null);
 
       return { success: true };
+      
     } catch (error) {
-      console.error("Error eliminando asistente:", error);
       toast.error(`Error: ${error.message}`);
       return { success: false, error: error.message };
     } finally {

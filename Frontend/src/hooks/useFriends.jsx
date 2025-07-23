@@ -16,10 +16,9 @@ export const useFriends = (options = {}) => {
     refreshCallback = null
   } = options;
   const { user, token } = useAuth();
-  const toast = useToast();
+  const { success,error } = useToast();
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
   const [removeFriendId, setRemoveFriendId] = useState(null);
 
@@ -31,7 +30,6 @@ export const useFriends = (options = {}) => {
 
     try {
       setLoading(true);
-      setError(null);
 
       const response = await fetch(`${API_URL}${friendsEndpoint}`, {
         method: 'GET',
@@ -58,7 +56,7 @@ export const useFriends = (options = {}) => {
       return friendsList;
     } catch (err) {
       const errorMessage = err.message || 'Error al cargar los amigos';
-      toast.error(errorMessage);
+      error(errorMessage);
       setFriends([]);
       return [];
     } finally {
@@ -109,7 +107,6 @@ export const useFriends = (options = {}) => {
       if (options.refreshCallback && typeof options.refreshCallback === 'function') {
         options.refreshCallback();
       }
-
       return { success: true, data };
     } catch (error) {
       return { success: false, error: 'Error de conexión' };
@@ -152,17 +149,14 @@ export const useFriends = (options = {}) => {
 
       return { success: true };
     } catch (err) {
-      return {
-        success: false,
-        error: err.message || 'Error al aceptar la solicitud'
-      };
+      return { success: false, error: err.message || 'Error al aceptar la solicitud' };
     }
   };
 
   // Elimina una amistad existente - solo muestra modal de confirmación
   const removeFriend = useCallback((friendshipId) => {
     if (!token || !friendshipId) {
-      toast.error('ID de amistad no válido');
+      error('ID de amistad no válido');
       return { success: false, error: 'ID de amistad no válido' };
     }
 
@@ -170,7 +164,8 @@ export const useFriends = (options = {}) => {
     setRemoveFriendId(friendshipId);
     setShowRemoveConfirmation(true);
     return { success: true };
-  }, [token, toast]);
+  }, [token, error]);
+
 
   // Confirma y ejecuta la eliminación de la amistad
   const confirmRemoveFriend = useCallback(async () => {
@@ -203,13 +198,13 @@ export const useFriends = (options = {}) => {
 
       setShowRemoveConfirmation(false);
       setRemoveFriendId(null);
-      toast.success('Amistad eliminada correctamente');
+      success('Amistad eliminada correctamente');
 
       return { success: true };
     } catch (err) {
       setShowRemoveConfirmation(false);
       setRemoveFriendId(null);
-      toast.error('Error al eliminar la amistad');
+      error('Error al eliminar la amistad');
       return {
         success: false,
         error: err.message || 'Error al eliminar la amistad'

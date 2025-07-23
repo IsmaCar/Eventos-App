@@ -15,11 +15,9 @@ const API_URL = import.meta.env.VITE_API_URL;
 export function useEventDetails(eventId) {
   const { getEventById, getImageUrl } = useEvent();
   const { token } = useAuth();
-  const toast = useToast();
-  
+  const { error } = useToast();  
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const [photos, setPhotos] = useState([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
@@ -36,7 +34,7 @@ export function useEventDetails(eventId) {
         setEvent(data.event || data);
         setError(null);
       } catch (err) {
-        toast.error("Error cargando el evento:", err);
+        error("Error cargando el evento:", err);
         setEvent(null);
       } finally {
         setLoading(false);
@@ -94,7 +92,7 @@ export function useEventDetails(eventId) {
       
       setPhotoFavorites(favoritesMap);
     } catch (error) {
-      toast.error('Error al cargar estado de favoritos:', error);
+      error('Error al cargar estado de favoritos:', error);
     }
   };
 
@@ -122,7 +120,7 @@ export function useEventDetails(eventId) {
       }
       return false;
     } catch (error) {
-      toast.error('Error al cambiar favorito:', error);
+      error('Error al cambiar favorito:', error);
       return false;
     }
   };

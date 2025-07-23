@@ -2,7 +2,7 @@
  * Componente que muestra los eventos creados por el usuario actual
  * Se utiliza en el perfil del usuario para listar todos sus eventos
  */
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Link } from 'react-router-dom'
 import { useEvent } from '../context/EventContext'
@@ -16,7 +16,7 @@ const API_URL = import.meta.env.VITE_API_URL
 function EventsUser() {
   const { getImageUrl } = useEvent()
   const { token } = useAuth()
-  const toast = useToast()
+  const { error } = useToast()
   const [events, setEvents] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -39,8 +39,8 @@ function EventsUser() {
           event.status === 'activated' &&
           event.banned !== true)
         setEvents(filteredEvents)
-      } catch (error) {
-        toast.error(error.message)
+      } catch (err) {
+        error(err.message)
         setEvents([])
       } finally {
         setLoading(false)

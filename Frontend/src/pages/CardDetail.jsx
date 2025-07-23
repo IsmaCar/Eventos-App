@@ -8,7 +8,7 @@
  * - Galería de fotos con funcionalidad de favoritos
  * - Acciones específicas según el rol del usuario
  */
-import React, { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { LocationPicker } from '../components/Maps'
@@ -91,7 +91,6 @@ function CardDetail() {
       toast.success('Evento eliminado correctamente');
       navigate('/');
     } catch (error) {
-      console.error("Error eliminando el evento:", error);
       toast.error('Error: ' + error.message);
     } finally {
       setDeletingEvent(false);

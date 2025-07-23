@@ -17,7 +17,7 @@ import { isDatePassed } from '../utils/DateHelper';
 function FormCreateEvent() {
     const { createEvent } = useEvent();
     const navigate = useNavigate();
-    const toast = useToast();
+    const { success, error } = useToast();
     const [imagePreview, setImagePreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -109,13 +109,13 @@ function FormCreateEvent() {
             // Validación del tipo de archivo
             const allowedTypes = ['image/jpeg', 'image/png'];
             if (!allowedTypes.includes(file.type)) {
-                toast.error("El archivo no es válido. Solo se permiten imágenes JPG o PNG.");
+                error("El archivo no es válido. Solo se permiten imágenes JPG o PNG.");
                 return;
             }
             // Validación del tamaño máximo
             const maxSize = 1 * 1024 * 1024;
             if (file.size > maxSize) {
-                toast.error(`La imagen es demasiado grande. El tamaño máximo es 1MB.`);
+                error(`La imagen es demasiado grande. El tamaño máximo es 1MB.`);
                 return;
             }
 
@@ -179,11 +179,11 @@ function FormCreateEvent() {
 
         // Validaciones finales antes de enviar al servidor
         if (descriptionLength > MAX_DESCRIPTION_LENGTH) {
-            toast.error(`La descripción no puede exceder los ${MAX_DESCRIPTION_LENGTH} caracteres`);
+            error(`La descripción no puede exceder los ${MAX_DESCRIPTION_LENGTH} caracteres`);
             setLoading(false);
             return;
         } if (!isValidEventDate(formData.event_date)) {
-            toast.error("La fecha del evento no puede ser anterior a hoy");
+            error("La fecha del evento no puede ser anterior a hoy");
             setLoading(false);
             return;
         }
@@ -192,18 +192,17 @@ function FormCreateEvent() {
             // Enviar datos al servidor mediante el contexto
             const response = await createEvent(formData);
             if (response && !response.error) {
-                toast.success("¡Evento creado exitosamente!");
+                success("¡Evento creado exitosamente!");
                 navigate("/");
                 setLoading(false);
             } else {
-                toast.error(response.error || 'Error al crear el evento');
+                error(response.error || 'Error al crear el evento');
                 setLoading(false);
                 return;
             }
-        } catch (error) {
-            toast.error("Error al crear el evento. Inténtalo de nuevo.");
+        } catch (err) {
+            error("Error al crear el evento. Inténtalo de nuevo.");
             setLoading(false);
-            console.error(error);
         }
     };
     return (

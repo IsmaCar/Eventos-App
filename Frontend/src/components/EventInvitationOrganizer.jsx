@@ -2,7 +2,7 @@
  * Componente para gestionar las invitaciones de un evento desde la perspectiva del organizador
  * Permite visualizar todas las invitaciones pendientes y cancelarlas si es necesario
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Spinner from './Spinner';
 import { formatLongDate } from '../utils/DateHelper';
@@ -25,7 +25,7 @@ const translateStatus = (status) => {
 
 function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
   const { token } = useAuth();
-  const toast = useToast();
+  const { success, error } = useToast();
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +53,7 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
       const pendingInvitations = (data.invitations || []).filter(inv => inv.status === 'pending');
       setInvitations(pendingInvitations);
     } catch (err) {
-      toast.error('No se pudieron cargar las invitaciones');
+      error('No se pudieron cargar las invitaciones');
     } finally {
       setLoading(false);
     }
@@ -76,7 +76,7 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
         // Actualiza el estado local eliminando la invitación cancelada
         setInvitations(invitations.filter(inv => inv.id !== invitationId));
 
-        toast.success('Invitación cancelada correctamente');
+        success('Invitación cancelada correctamente');
 
         // Notifica al componente del cambio 
         if (typeof onInvitationProcessed === 'function') {
@@ -86,7 +86,7 @@ function EventInvitationOrganizer({ eventId, onInvitationProcessed }) {
         throw new Error('Error al cancelar la invitación');
       }
     } catch (err) {
-      toast.error('No se pudo cancelar la invitación');
+      error('No se pudo cancelar la invitación');
     }
   };
 

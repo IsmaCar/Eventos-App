@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { GoogleMap, useLoadScript, Marker, Autocomplete } from '@react-google-maps/api';
 
 // Configuración del mapa

@@ -8,7 +8,7 @@
  * - Redirecciona al usuario a la página principal tras autenticación exitosa
  * - Ofrece enlace a registro para usuarios nuevos
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../hooks/useToast";
@@ -26,8 +26,8 @@ const LoginForm = () => {
 
 
   const handleChange = (e) => {
-    const nombre = e.target.name;
-    setFormData(prev => ({ ...prev, [nombre]: e.target.value.trim() }));
+    const name = e.target.name;
+    setFormData(prev => ({ ...prev, [name]: e.target.value.trim() }));
   };
 
   const handleSubmit = async (e) => {

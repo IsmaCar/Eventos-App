@@ -7,7 +7,7 @@
  * - Proporcionar feedback visual del estado de la invitación
  * - Validar datos antes de enviar la invitación
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Spinner from './Spinner';
 import useUserSearch from '../hooks/useUserSearch';
@@ -18,7 +18,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 function InviteUsers({ eventId, onInvitationSent }) {
   const { token } = useAuth();
-  const toast = useToast();
+  const { success, error } = useToast();
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [status, setStatus] = useState({
@@ -79,7 +79,7 @@ function InviteUsers({ eventId, onInvitationSent }) {
 
     const isEmail = isValidEmail(searchTerm.trim());
     if (!isEmail) {
-      toast.error('Por favor, introduce un email válido');
+      error('Por favor, introduce un email válido');
       return;
     }
 
@@ -113,15 +113,14 @@ function InviteUsers({ eventId, onInvitationSent }) {
         ? '¡Invitación enviada al usuario registrado!'
         : '¡Se ha enviado un email de invitación al usuario no registrado!';
 
-      toast.success(successMessage);
+      success(successMessage);
 
       setSearchTerm('');
       setSelectedUser(null);
       if (onInvitationSent) onInvitationSent();
 
-    } catch (error) {
-      console.error('Error al enviar invitación:', error);
-      toast.error(error.message || 'Error de conexión');
+    } catch (err) {
+      error(err.message || 'Error de conexión');
     } finally {
       setStatus({ loading: false });
     }

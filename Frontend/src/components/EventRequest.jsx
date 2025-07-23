@@ -19,7 +19,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 function EventRequest({ onInvitationProcessed }) {
 
   const { token } = useAuth();
-  const toast = useToast();
+  const { success, error } = useToast();
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,8 +49,7 @@ function EventRequest({ onInvitationProcessed }) {
       const pendingInvitations = (data.invitations || []).filter(inv => inv.status === 'pending');
       setInvitations(pendingInvitations);
     } catch (err) {
-      console.error('Error obteniendo invitaciones:', err);
-      toast.error('Error al cargar invitaciones');
+      error('Error al cargar invitaciones');
       setInvitations([]);
     } finally {
       setLoading(false);
@@ -93,7 +92,7 @@ function EventRequest({ onInvitationProcessed }) {
 
       // Mostrar mensaje de éxito
       const actionText = status === 'accepted' ? 'aceptada' : 'rechazada';
-      toast.success(`Invitación ${actionText} correctamente`);
+      success(`Invitación ${actionText} correctamente`);
 
       // Notificar al componente padre del cambio si se proporciona callback
       if (typeof onInvitationProcessed === 'function') {
@@ -101,8 +100,6 @@ function EventRequest({ onInvitationProcessed }) {
       }
 
     } catch (err) {
-      console.error('Error respondiendo a invitación:', err);
-
       // Revierte el estado visual de procesamiento en caso de error
       setInvitations(prevInvitations =>
         prevInvitations.map(inv =>
@@ -113,7 +110,7 @@ function EventRequest({ onInvitationProcessed }) {
       );
 
       const actionText = status === 'accepted' ? 'aceptar' : 'rechazar';
-      toast.error(`No se pudo ${actionText} la invitación`);
+      error(`No se pudo ${actionText} la invitación`);
     }
   };
 
@@ -135,7 +132,6 @@ function EventRequest({ onInvitationProcessed }) {
             alt={event?.title || 'Evento'}
             className="w-full h-full object-cover"
             onError={(e) => {
-              console.error('Error cargando imagen:', imageUrl);
               e.target.onerror = null;
             }}
           />

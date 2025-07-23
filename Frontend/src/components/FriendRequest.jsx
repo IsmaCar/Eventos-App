@@ -8,7 +8,7 @@
  * Utiliza el hook personalizado useFriends para la gestión de aceptación
  * y mantiene sincronizado el estado local con las acciones del usuario
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Spinner from './Spinner';
 import { useFriends } from '../hooks/useFriends';
@@ -20,7 +20,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 function FriendRequests({ onRequestProcessed }) {
 
   const { token } = useAuth();
-  const toast = useToast();
+  const { success, error } = useToast();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +57,7 @@ function FriendRequests({ onRequestProcessed }) {
       } const data = await response.json();
       setRequests(data.requests || []);
     } catch (err) {
-      toast.error("Error al cargar las solicitudes");
+      error("Error al cargar las solicitudes");
       setRequests([]);
     } finally {
       setLoading(false);
@@ -68,9 +68,9 @@ function FriendRequests({ onRequestProcessed }) {
   const handleAcceptFriendRequest = async (requestId) => {
     const result = await hookAcceptRequest(requestId);
     if (!result.success) {
-      toast.error(result.error || 'No se pudo aceptar la solicitud de amistad');
+      error(result.error || 'No se pudo aceptar la solicitud de amistad');
     } else {
-      toast.success('Solicitud de amistad aceptada');
+      success('Solicitud de amistad aceptada');
     }
   };
 
@@ -101,7 +101,7 @@ function FriendRequests({ onRequestProcessed }) {
         onRequestProcessed();
       }
     } catch (err) {
-      toast.error('No se pudo rechazar la solicitud de amistad');
+      error('No se pudo rechazar la solicitud de amistad');
     }
   };
 

@@ -13,7 +13,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export function useEventAttendees(eventId, isEventCreator) {
   const { user, token } = useAuth();
-  const { error } = useToast();
+  const { success, error } = useToast();
   const [attendees, setAttendees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [processingAction, setProcessingAction] = useState(false);
@@ -85,7 +85,7 @@ export function useEventAttendees(eventId, isEventCreator) {
       }
 
       // Mostrar mensaje de éxito con toast
-      toast.success('Has cancelado tu asistencia al evento correctamente');
+      success('Has cancelado tu asistencia al evento correctamente');
       setShowCancelConfirmation(false);
       return { success: true };
     } catch (error) {
@@ -133,7 +133,7 @@ export function useEventAttendees(eventId, isEventCreator) {
       // Mostrar mensaje de éxito con toast
       const removedAttendee = attendees.find(a => parseInt(a.id) === parseInt(attendeeToRemove));
       const attendeeName = removedAttendee ? removedAttendee.username : 'Usuario';
-      toast.success(`${attendeeName} ha sido eliminado del evento correctamente`);
+      success(`${attendeeName} ha sido eliminado del evento correctamente`);
       // Limpiar estado
       setShowRemoveConfirmation(false);
       setAttendeeToRemove(null);

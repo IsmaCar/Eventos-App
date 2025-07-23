@@ -20,13 +20,11 @@ export const useUserSearch = (options = {}) => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState(null);
-  const [error, setError] = useState(null);
-
+  const { error } = useToast();
 
   // Maneja el cambio en el término de búsqueda con debounce
   const handleSearchTermChange = (query) => {
     setSearchTerm(query);
-    setError(null);
 
     // Limpia el timeout anterior para evitar múltiples solicitudes
     if (searchTimeout) clearTimeout(searchTimeout);
@@ -89,9 +87,8 @@ export const useUserSearch = (options = {}) => {
         onResultsLoaded(users);
       }
     } catch (error) {
-      console.error('Error en la búsqueda de usuarios:', error);
       setSearchResults([]);
-      setError(error.message || 'Error en la búsqueda');
+      error(error.message || 'Error en la búsqueda');
     } finally {
       setIsSearching(false);
     }
@@ -114,7 +111,6 @@ export const useUserSearch = (options = {}) => {
     setSearchTerm('');
     setSearchResults([]);
     setIsSearching(false);
-    setError(null);
     if (searchTimeout) clearTimeout(searchTimeout);
   };
 

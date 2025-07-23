@@ -14,8 +14,8 @@ export const useNotifications = () => {
     hasNotifications: false
   });
   const [loading, setLoading] = useState(false);
-  const toast = useToast();
-  
+  const { error } = useToast();
+
   // Función para obtener las estadísticas de notificaciones del usuario
   const fetchNotifications = useCallback(async () => {
   // No hacer nada si no hay token
@@ -62,7 +62,7 @@ export const useNotifications = () => {
     setStats(updatedStats);
     return updatedStats; 
   } catch (err) {
-    toast.error(err.message);
+    error(err.message);
     } finally {
     setLoading(false);
   }

@@ -13,10 +13,9 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export function useEventAttendees(eventId, isEventCreator) {
   const { user, token } = useAuth();
-  const toast = useToast();
+  const { error } = useToast();
   const [attendees, setAttendees] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [processingAction, setProcessingAction] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
@@ -28,7 +27,6 @@ export function useEventAttendees(eventId, isEventCreator) {
 
     try {
       setLoading(true);
-      setError(null);
 
       const response = await fetch(`${API_URL}/api/events/${eventId}/attendees`, {
         headers: {
@@ -43,8 +41,7 @@ export function useEventAttendees(eventId, isEventCreator) {
       const data = await response.json();
       setAttendees(data.attendees || []);
     } catch (error) {
-      console.error('Error al cargar los asistentes:', error);
-      setError(error.message);
+      error(error.message);
     } finally {
       setLoading(false);
     }
@@ -62,7 +59,7 @@ export function useEventAttendees(eventId, isEventCreator) {
   // Confirmar cancelación de asistencia
   const confirmCancelAttendance = async () => {
     if (!token || !eventId) {
-      toast.error('No autenticado o ID de evento inválido');
+      error('No autenticado o ID de evento inválido');
       return { success: false, error: 'No autenticado o ID de evento inválido' };
     }
 
@@ -92,7 +89,7 @@ export function useEventAttendees(eventId, isEventCreator) {
       setShowCancelConfirmation(false);
       return { success: true };
     } catch (error) {
-      toast.error(`Error: ${error.message}`);
+      error(`Error: ${error.message}`);
       return { success: false, error: error.message };
     } finally {
       setProcessingAction(false);
@@ -110,7 +107,7 @@ export function useEventAttendees(eventId, isEventCreator) {
     if (!attendeeToRemove) return { success: false, error: 'No hay asistente seleccionado' };
 
     if (!token || !isEventCreator || !eventId) {
-      toast.error('No tienes permisos para realizar esta acción');
+      error('No tienes permisos para realizar esta acción');
       return { success: false, error: 'No tienes permisos para realizar esta acción' };
     }
 
@@ -144,7 +141,7 @@ export function useEventAttendees(eventId, isEventCreator) {
       return { success: true };
       
     } catch (error) {
-      toast.error(`Error: ${error.message}`);
+      error(`Error: ${error.message}`);
       return { success: false, error: error.message };
     } finally {
       setProcessingAction(false);

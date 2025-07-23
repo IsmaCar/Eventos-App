@@ -54,7 +54,7 @@ function EditProfile() {
       });
 
       if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json();
       error(errorData.error || errorData.message || 'Error al subir el avatar');
       setUpdating(false);
       return;

@@ -3,7 +3,7 @@
  * Permite ver información, eventos creados, lista de amigos 
  * y gestionar la relación de amistad
  */
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEvent } from '../context/EventContext';

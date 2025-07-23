@@ -8,7 +8,7 @@
  * - Paneles administrativos con acciones masivas
  * - Solo accesible para usuarios con rol de administrador
  */
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, Navigate } from 'react-router-dom';
 import Pagination from '../components/Pagination';
@@ -19,7 +19,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 function Dashboard() {
     const { user, token } = useAuth();
-    const toast = useToast();
+    const { error } = useToast();
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(null);
     const [checked, setChecked] = useState(false);
@@ -72,8 +72,7 @@ function Dashboard() {
                 } setChecked(true);
                 setLoading(false);
             } catch (err) {
-                console.error("Error verificando rol:", err);
-                toast.error("Error verificando permisos");
+                error("Error verificando permisos");
                 setIsAdmin(false);
                 setChecked(true);
                 setLoading(false);
@@ -107,8 +106,6 @@ function Dashboard() {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error("Error en respuesta:", errorText);
                 throw new Error('Error al cargar estadísticas');
             }
 
@@ -123,9 +120,8 @@ function Dashboard() {
                 activeEvents: data.events?.active || 0,
                 bannedEvents: data.events?.banned || 0
             });
-        } catch (error) {
-            console.error("Error obteniendo estadísticas:", error);
-            toast.error('Error al cargar estadísticas');
+        } catch (err) {
+            error('Error al cargar estadísticas', err.message);
         }
     };
 
@@ -154,8 +150,6 @@ function Dashboard() {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error("Error cargando usuarios:", errorText);
                 throw new Error('Error al cargar usuarios');
             }
 
@@ -168,9 +162,8 @@ function Dashboard() {
                 totalItems: data.pagination?.totalItems.users,
                 totalPages: data.pagination?.totalPages.users
             });
-        } catch (error) {
-            console.error("Error obteniendo usuarios:", error);
-            toast.error('Error al cargar la lista de usuarios');
+        } catch (err) {
+            error('Error al cargar la lista de usuarios', err.message);
         }
     };
 
@@ -183,8 +176,6 @@ function Dashboard() {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error("Error cargando eventos:", errorText);
                 throw new Error('Error al cargar eventos');
             }
 
@@ -197,9 +188,8 @@ function Dashboard() {
                 totalItems: data.pagination?.totalItems.events,
                 totalPages: data.pagination?.totalPages.events
             });
-        } catch (error) {
-            console.error("Error obteniendo eventos:", error);
-            toast.error('Error al cargar la lista de eventos');
+        } catch (err) {
+            error('Error al cargar la lista de eventos', err.message);
         }
     };
 
@@ -227,8 +217,8 @@ function Dashboard() {
             // Actualizar estadísticas después de cambiar el estado
             fetchStats();
 
-        } catch (error) {
-            toast.error(`Error al cambiar estado del usuario: ${error.message}`);
+        } catch (err) {
+            error(`Error al cambiar estado del usuario: ${err.message}`);
         }
     };
 
@@ -246,8 +236,6 @@ function Dashboard() {
             });
 
             if (!response.ok) {
-                const errorData = await response.text();
-                console.error("Error en respuesta:", errorData);
                 throw new Error(`Error al cambiar estado (${response.status})`);
             }
 
@@ -260,9 +248,8 @@ function Dashboard() {
             // Actualizar estadísticas después de cambiar el estado
             fetchStats();
 
-        } catch (error) {
-            console.error("Error al cambiar estado del evento:", error);
-            toast.error(`Error al cambiar estado del evento: ${error.message}`);
+        } catch (err) {
+            error(`Error al cambiar estado del evento: ${err.message}`);
         }
     };
 

@@ -3,7 +3,7 @@
  * Permite ver, descargar y eliminar fotos de la colección de favoritos
  * Incluye vista ampliada y navegación entre eventos
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePhotoUploads } from '../hooks/usePhotoUploads';

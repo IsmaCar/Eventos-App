@@ -30,7 +30,7 @@ function CardDetail() {
   const [activeTab, setActiveTab] = useState('invite')
   const [deletingEvent, setDeletingEvent] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const toast = useToast()
+  const { success } = useToast()
 
   // Hook para los detalles del evento
   const { event, loading, error, getImageUrl, photos, loadingPhotos, photoFavorites,
@@ -88,7 +88,7 @@ function CardDetail() {
       }
 
       // Éxito: mostrar mensaje y redirigir a la página de inicio
-      toast.success('Evento eliminado correctamente');
+      success('Evento eliminado correctamente');
       navigate('/');
     } catch (error) {
       toast.error('Error: ' + error.message);

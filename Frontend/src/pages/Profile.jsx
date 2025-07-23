@@ -3,9 +3,9 @@
  * Gestiona perfil personal, amigos, notificaciones y eventos
  * Incluye pestañas dinámicas y modales para diferentes funcionalidades
  */
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { getAvatarUrl, handleAvatarError, Avatar } from '../utils/Imagehelper';
+import { getAvatarUrl, Avatar } from '../utils/Imagehelper';
 import { useAuth } from '../context/AuthContext'
 import { useNotifications } from '../hooks/useNotifications'
 import { useToast } from '../hooks/useToast'
@@ -24,7 +24,7 @@ function Profile() {
   const { stats, refreshNotifications } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
-  const toast = useToast();
+  const { success, error } = useToast();
   const isMainProfile = location.pathname === '/profile';
   const [loading, setLoading] = useState(true);
   // Estado para modales
@@ -55,7 +55,7 @@ function Profile() {
         friendship_status: 'requested',
         friendship_id: null
       });
-      toast.success('Solicitud de amistad enviada');
+      success('Solicitud de amistad enviada');
     },
     onRequestAccepted: () => {
       // Actualizar la lista de amigos
@@ -108,7 +108,7 @@ function Profile() {
   const handleSendFriendRequest = async (userId) => {
     const result = await sendFriendRequest(userId);
     if (!result.success) {
-      toast.error(result.error || 'Error al enviar solicitud');
+      error(result.error || 'Error al enviar solicitud');
     }
   };
 
@@ -118,7 +118,7 @@ function Profile() {
   const handleAcceptFriendRequest = async (requestId) => {
     const result = await acceptFriendRequest(requestId);
     if (!result.success) {
-      toast.error('No se pudo aceptar la solicitud de amistad');
+      error('No se pudo aceptar la solicitud de amistad');
     }
   };
 

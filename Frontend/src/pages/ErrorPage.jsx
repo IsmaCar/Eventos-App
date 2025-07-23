@@ -3,7 +3,6 @@
  * Muestra información del error y opciones de navegación para el usuario
  * Se activa cuando hay errores 404, 500 o problemas de carga de rutas
  */
-import React from 'react';
 import { Link, useRouteError } from 'react-router-dom';
 
 

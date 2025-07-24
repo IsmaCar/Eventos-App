@@ -10,18 +10,17 @@
  */
 import { createContext, useContext, useEffect, useState } from "react";
 const API_URL = import.meta.env.VITE_API_URL;
+import Cookies from "js-cookie"
 
 const AuthContext = createContext();
-
 /**
  * Proveedor del contexto de autenticación
  * Envuelve la aplicación y proporciona funcionalidades de auth a todos los componentes
  */
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);         
-  const [token, setToken] = useState(sessionStorage.getItem("token")); 
   const [isAdmin, setIsAdmin] = useState(false);   
- 
+  const [ token, setToken ] = useState(false);
   /**
    * Verifica si un usuario tiene rol de administrador
    */
@@ -37,9 +36,12 @@ export const AuthProvider = ({ children }) => {
    */
   useEffect(() => {
     const storedUser = sessionStorage.getItem("user");
-    if (storedUser) {
+    const cookieToken = Cookies.get('token');
+
+    if (storedUser && cookieToken) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
+      setToken(cookieToken);
 
       setIsAdmin(
         parsedUser &&
@@ -98,7 +100,11 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       setToken(data.token);
       
-      sessionStorage.setItem("token", data.token);
+      Cookies.set('token', data.token, {
+        expires: 1, //1 día
+        sameSite: 'strict' // Protección CSRF
+      });
+
       sessionStorage.setItem("user", JSON.stringify(data.user));
 
       const adminStatus = checkAdminRole(data.user);
@@ -136,7 +142,7 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setIsAdmin(false);
     
-    sessionStorage.removeItem("token");
+    Cookies.remove('token');
     sessionStorage.removeItem("user");
   };
 
